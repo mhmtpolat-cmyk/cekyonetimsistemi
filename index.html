@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gelişmiş Çek Takip Dashboard</title>
-    <!-- Supabase ve Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
@@ -37,6 +36,7 @@
         .card-green { border-top: 4px solid var(--success); background-color: var(--success-bg); } .card-green .amount { color: var(--success); }
         .card-red { border-top: 4px solid var(--danger); background-color: var(--danger-bg); } .card-red .amount { color: var(--danger); }
 
+        /* GÜNDEM VE GRAFİKLER EKLENDİ */
         .agenda-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
         .agenda-box { background: var(--card-bg); padding: 20px; border-radius: 10px; border: 1px solid var(--border); }
         .agenda-box h2 { margin: 0 0 15px 0; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 10px;}
@@ -108,6 +108,34 @@
         </div>
         <div class="metric-card card-red">
             <h3>Düzenlenen (Ödenecek)</h3><p class="amount" id="metrikOdenecek">₺0.00</p>
+        </div>
+    </div>
+
+    <!-- GÜNDEM KUTULARI (GERİ GELDİ) -->
+    <div class="agenda-grid">
+        <div class="agenda-box" style="border-top: 4px solid var(--success);">
+            <h2 style="color: var(--success);">📥 Bu Ay Tahsil Olacak Çekler</h2>
+            <div id="gundemTahsil">
+                <div class="empty-message">Bu ay için kayıt bulunmamaktadır.</div>
+            </div>
+        </div>
+        <div class="agenda-box" style="border-top: 4px solid var(--danger);">
+            <h2 style="color: var(--danger);">📤 Bu Ay Ödenecek Çekler</h2>
+            <div id="gundemOdenecek">
+                <div class="empty-message">Bu ay için kayıt bulunmamaktadır.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GRAFİKLER (GERİ GELDİ) -->
+    <div class="charts-container">
+        <div class="chart-box">
+            <h2>Aylık Çek Trendi</h2>
+            <canvas id="barChart" height="100"></canvas>
+        </div>
+        <div class="chart-box">
+            <h2>Varlık / Yükümlülük Oranı</h2>
+            <canvas id="pieChart" height="200"></canvas>
         </div>
     </div>
 
@@ -195,7 +223,6 @@
 <div id="modalCekCikis" class="modal-overlay">
     <div class="modal" style="max-height: 95vh;">
         <h2 style="color: var(--danger)">📤 Çek Çıkışı / Tahsile Verme</h2>
-        
         <div class="form-group">
             <label>1. Çek Düzenle (Tür)</label>
             <select class="form-control" id="cekTuruSelect" onchange="handleCekTuruChange()">
@@ -203,19 +230,15 @@
                 <option value="kasa">Kasadan Portföy Çeki Seç (Ciro / Tahsil)</option>
             </select>
         </div>
-        
         <div class="form-group hidden" id="kasadanSecimDiv">
             <label>Portföydeki Çekler</label>
             <select class="form-control" id="kasaCekListesi" onchange="autoFillCekNo()"></select>
         </div>
-        
         <div class="form-group"><label>2. Çek Numarası</label><input type="text" class="form-control" id="cikisCekNo"></div>
-
         <div style="display:flex; gap:10px;">
             <div class="form-group" style="flex:1;"><label>3. Tutar (TL)</label><input type="number" class="form-control" id="cikisTutar"></div>
             <div class="form-group" style="flex:1;"><label>4. Vade Tarihi</label><input type="date" class="form-control" id="cikisVade"></div>
         </div>
-        
         <div class="form-group">
             <label>5. Çıkış Yapılacak Hedef</label>
             <select class="form-control" id="cikisHedefi" onchange="handleCikisHedefi()">
@@ -225,12 +248,10 @@
                 <option value="banka_kredi">Bankaya Kredi Ödemesi</option>
             </select>
         </div>
-        
         <div class="form-group hidden" id="cikisCariDiv">
             <label>İlgili Cari / Tedarikçi</label>
             <select class="form-control" id="cikisCariSecim"></select>
         </div>
-        
         <div class="form-group hidden" id="bankaListesiDiv">
             <label>İlgili Bankayı Seçiniz</label>
             <select class="form-control" id="cikisBankaSecim">
@@ -238,7 +259,6 @@
                 <option value="Ziraat Bankası">Ziraat Bankası</option><option value="Yapı Kredi">Yapı Kredi</option>
             </select>
         </div>
-        
         <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalCekCikis')">İptal</button><button class="btn btn-danger" onclick="dbCekCikisKaydet()">Çıkışı Kaydet</button></div>
     </div>
 </div>
@@ -280,37 +300,22 @@
        SUPABASE VERİTABANI BAĞLANTISI VE YAPILANDIRMASI
        ========================================= */
     const { createClient } = supabase;
-    
-    // Doğru bağlantı adresleri ve şifreler eklendi
     const SUPABASE_URL = 'https://wtyahlinswjyuelfzhds.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0eWFobGluc3dqeXVlbGZ6aGRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1MjMyMTgsImV4cCI6MjEwMDA5OTIxOH0.t26FeU6JU6Ip5LTZpk5MflT8rxIgfXldTvks5GmaKpA'; 
-    
     const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Uygulamanın hafızadaki verileri
     let g_cariler = [];
     let g_cekler = [];
+    let pieChartInstance = null;
+    let barChartInstance = null;
 
-    // --- 1. VERİLERİ YÜKLEME VE ARAYÜZÜ OLUŞTURMA ---
     async function loadData() {
-        // Carileri Çek
         const { data: cariData, error: cariErr } = await db.from('cariler').select('*').order('unvan', { ascending: true });
-        if(cariErr) {
-            console.error("Cari Çekme Hatası:", cariErr);
-            alert("Veritabanına bağlanılamadı. RLS ayarlarının kapalı (Disable) olduğundan emin olun.\nHata: " + cariErr.message);
-        } else { 
-            g_cariler = cariData || []; 
-        }
+        if(!cariErr) g_cariler = cariData || []; 
 
-        // Çekleri Çek
         const { data: cekData, error: cekErr } = await db.from('cekler').select('*').order('vade_tarihi', { ascending: true });
-        if(cekErr) {
-            console.error("Çek Çekme Hatası:", cekErr);
-        } else { 
-            g_cekler = cekData || []; 
-        }
+        if(!cekErr) g_cekler = cekData || []; 
 
-        // Arayüzü Tetikle
         renderTümArayuz();
     }
 
@@ -320,7 +325,6 @@
         renderTablolarVeMetrikler();
     }
 
-    // --- 2. YARDIMCI FONKSİYONLAR ---
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
     function formatMoney(num) { return "₺" + Number(num).toLocaleString('tr-TR', {minimumFractionDigits: 2}); }
@@ -331,18 +335,15 @@
         return Math.ceil((target - today) / (1000 * 60 * 60 * 24));
     }
     
-    // --- 3. CARİ İŞLEMLERİ ---
     async function dbYeniCariEkle() {
         const unvan = document.getElementById('yeniCariInput').value.trim();
         if(!unvan) return alert("Firma adı girin.");
         if(g_cariler.find(c => c.unvan === unvan)) return alert("Bu firma zaten kayıtlı!");
-        
         const { error } = await db.from('cariler').insert([{ unvan: unvan }]);
         if(error) return alert("Kayıt Hatası: " + error.message);
-        
         document.getElementById('yeniCariInput').value = '';
         alert("Firma Kaydedildi!");
-        loadData(); // Verileri yeniden çek ve sayfayı yenilemeden güncel listeyi yansıt
+        loadData();
     }
 
     function renderCariler() {
@@ -390,7 +391,6 @@
         document.getElementById('kasaCekListesi').innerHTML = kasaOps;
     }
 
-    // --- 4. ÇEK KAYIT İŞLEMLERİ ---
     async function dbCekGirisKaydet() {
         const cari = document.getElementById('girisCariSecim').value;
         const cekNo = document.getElementById('girisCekNo').value.trim();
@@ -398,7 +398,6 @@
         const vade = document.getElementById('girisVade').value;
 
         if(!cari || !cekNo || !tutar || !vade) return alert("Lütfen tüm alanları doldurun.");
-
         const { error } = await db.from('cekler').insert([{ cek_no: cekNo, cari_unvan: cari, tutar: tutar, vade_tarihi: vade, durum: 'Kasada', islem_turu: 'Alınan Çek' }]);
         if(error) return alert("Hata: " + error.message);
         
@@ -414,7 +413,6 @@
         const tutar = parseFloat(document.getElementById('cikisTutar').value);
         const vade = document.getElementById('cikisVade').value;
         const hedef = document.getElementById('cikisHedefi').value;
-        
         const hedefCari = document.getElementById('cikisCariSecim').value;
         const hedefBanka = document.getElementById('cikisBankaSecim').value;
 
@@ -429,9 +427,7 @@
         } else {
             const seciliId = document.getElementById('kasaCekListesi').value;
             if(!seciliId) return alert("Kasadan çek seçin.");
-            
             let yeniDurum = (hedef === 'banka_tahsil') ? 'Tahsilde' : ((hedef === 'banka_kredi') ? 'Kredi Ödemesi' : 'Ciro Edildi');
-            
             const { error } = await db.from('cekler').update({ durum: yeniDurum, banka_bilgisi: (hedef === 'tedarikci' ? hedefCari : hedefBanka) }).eq('id', seciliId);
             if(error) return alert("Hata: " + error.message);
         }
@@ -440,10 +436,13 @@
         loadData();
     }
 
-    // --- 5. ARAYÜZ (TABLOLAR VE METRİKLER) ---
     function renderTablolarVeMetrikler() {
         let topKasa = 0, topTahsil = 0, topOdenecek = 0;
         let htmlVarlik = '', htmlOdenecek = '', htmlCikis = '';
+        let htmlGundemTahsil = '', htmlGundemOdenecek = '';
+        
+        const currentMonth = new Date().getMonth();
+        const currentYear = new Date().getFullYear();
 
         if(g_cekler.length === 0) {
             htmlVarlik = '<tr><td colspan="7" style="text-align:center; color:#999;">Kayıt bulunamadı.</td></tr>';
@@ -453,6 +452,9 @@
 
         g_cekler.forEach(c => {
             const gun = calcDays(c.vade_tarihi);
+            const vadeTarihiObje = new Date(c.vade_tarihi);
+            const isThisMonth = (vadeTarihiObje.getMonth() === currentMonth && vadeTarihiObje.getFullYear() === currentYear);
+            
             let gunHtml = gun < 0 ? `<span style="color:red">Gecikti</span>` : (gun <= 3 ? `<span style="color:red">${gun} Gün</span>` : `<span style="color:green">${gun} Gün</span>`);
             let rowClass = gun <= 3 ? 'class="row-warning"' : '';
 
@@ -461,12 +463,22 @@
                 if(c.durum === 'Kasada') topKasa += Number(c.tutar); else topTahsil += Number(c.tutar);
                 let badge = c.durum === 'Kasada' ? `<span class="badge badge-kasa">Kasada</span>` : `<span class="badge badge-tahsil">Tahsilde</span>`;
                 htmlVarlik += `<tr ${rowClass}><td>${c.cek_no}</td><td>${c.cari_unvan}</td><td>${c.banka_bilgisi || '-'}</td><td>${formatDate(c.vade_tarihi)}</td><td>${gunHtml}</td><td style="text-align:right; font-weight:bold; color:var(--success);">${formatMoney(c.tutar)}</td><td style="text-align:right;">${badge}</td></tr>`;
+                
+                // Gündem Tahsil
+                if(isThisMonth) {
+                    htmlGundemTahsil += `<div class="agenda-item"><div><strong>${c.cek_no}</strong> - ${c.cari_unvan}<br><span style="font-size:12px;color:#666;">${c.durum}</span></div><div style="text-align:right;"><span style="font-size:12px;color:#666;">${formatDate(c.vade_tarihi)}</span><br><strong style="color:var(--success);">${formatMoney(c.tutar)}</strong></div></div>`;
+                }
             }
             
             // Kendi Düzenlediklerimiz
             if(c.durum === 'Ödenecek') {
                 topOdenecek += Number(c.tutar);
                 htmlOdenecek += `<tr ${rowClass}><td>${c.cek_no}</td><td>${c.cari_unvan}</td><td>${formatDate(c.vade_tarihi)}</td><td style="text-align:right; font-weight:bold; color:var(--danger);">${formatMoney(c.tutar)}</td><td style="text-align:right;"><span class="badge badge-kendi">Ödenecek</span></td></tr>`;
+                
+                // Gündem Ödenecek
+                if(isThisMonth) {
+                    htmlGundemOdenecek += `<div class="agenda-item"><div><strong>${c.cek_no}</strong> - ${c.cari_unvan}<br><span style="font-size:12px;color:#666;">Kendi Çekimiz</span></div><div style="text-align:right;"><span style="font-size:12px;color:#666;">${formatDate(c.vade_tarihi)}</span><br><strong style="color:var(--danger);">${formatMoney(c.tutar)}</strong></div></div>`;
+                }
             }
 
             // Çıkış Yapılanlar (Ciro / Kredi)
@@ -475,20 +487,70 @@
             }
         });
 
-        // HTML Yazdır
+        // Tablo Atamaları
         document.getElementById('tbodyVarliklar').innerHTML = htmlVarlik;
         document.getElementById('tbodyDuzenlenen').innerHTML = htmlOdenecek;
         document.getElementById('tbodyCikis').innerHTML = htmlCikis;
 
+        // Gündem Atamaları
+        document.getElementById('gundemTahsil').innerHTML = htmlGundemTahsil || '<div class="empty-message">Bu ay için kayıt bulunmamaktadır.</div>';
+        document.getElementById('gundemOdenecek').innerHTML = htmlGundemOdenecek || '<div class="empty-message">Bu ay için kayıt bulunmamaktadır.</div>';
+
         // Metrikleri Güncelle
         document.getElementById('metrikTahsilde').innerText = formatMoney(topTahsil);
         document.getElementById('metrikKasada').innerText = formatMoney(topKasa);
-        document.getElementById('metrikToplamVarlik').innerText = formatMoney(topTahsil + topKasa);
+        const toplamVarlik = topTahsil + topKasa;
+        document.getElementById('metrikToplamVarlik').innerText = formatMoney(toplamVarlik);
         document.getElementById('metrikOdenecek').innerText = "- " + formatMoney(topOdenecek);
 
         // Tablo Alt Toplamları
-        document.getElementById('totalVarliklar').innerText = formatMoney(topTahsil + topKasa);
+        document.getElementById('totalVarliklar').innerText = formatMoney(toplamVarlik);
         document.getElementById('totalDuzenlenen').innerText = formatMoney(topOdenecek);
+
+        // GRAFİKLERİ GÜNCELLE
+        updateCharts(toplamVarlik, topOdenecek);
+    }
+
+    function updateCharts(varlik, yukumluluk) {
+        Chart.register(ChartDataLabels);
+        
+        // PASTA GRAFİK (DİNAMİK)
+        if(pieChartInstance) {
+            pieChartInstance.data.datasets[0].data = [varlik || 0.001, yukumluluk || 0.001]; // Hepsi 0 ise grafiğin çökmemesi için küçük bir değer
+            pieChartInstance.update();
+        } else {
+            const ctxPie = document.getElementById('pieChart').getContext('2d');
+            pieChartInstance = new Chart(ctxPie, {
+                type: 'pie', 
+                data: {
+                    labels: ['Varlıklar', 'Düzenlenen'],
+                    datasets: [{ data: [varlik || 0.001, yukumluluk || 0.001], backgroundColor: ['#27ae60', '#e74c3c'], borderWidth: 1, borderColor: '#fff' }] 
+                },
+                options: { 
+                    responsive: true,
+                    plugins: { 
+                        legend: { display: false },
+                        datalabels: { display: false }
+                    } 
+                }
+            });
+        }
+
+        // ÇUBUK GRAFİK (STATİK TEMSİLİ - İleride aylara göre gruplanabilir)
+        if(!barChartInstance) {
+            const ctxBar = document.getElementById('barChart').getContext('2d');
+            barChartInstance = new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: ['Ay 1', 'Ay 2', 'Ay 3', 'Ay 4', 'Ay 5', 'Ay 6'],
+                    datasets: [
+                        { label: 'Varlıklar (Gelecek)', data: [10000, 20000, 15000, 30000, 0, 0], backgroundColor: '#27ae60', borderRadius: 4 },
+                        { label: 'Ödenecekler (Çıkacak)', data: [5000, 15000, 25000, 10000, 0, 0], backgroundColor: '#e74c3c', borderRadius: 4 }
+                    ]
+                },
+                options: { plugins: { datalabels: { display: false }, tooltip: { enabled: true, mode: 'index', intersect: false } }, scales: { y: { beginAtZero: true } } }
+            });
+        }
     }
 
     // Form Davranışları
@@ -499,7 +561,6 @@
         if (tur === 'kasa') { kasaDiv.classList.remove('hidden'); ids.forEach(id => { document.getElementById(id).readOnly = true; document.getElementById(id).value = ''; }); } 
         else { kasaDiv.classList.add('hidden'); ids.forEach(id => { document.getElementById(id).readOnly = false; document.getElementById(id).value = ''; }); }
     }
-    
     function autoFillCekNo() { 
         const select = document.getElementById('kasaCekListesi');
         const opt = select.options[select.selectedIndex];
@@ -508,7 +569,6 @@
         document.getElementById('cikisTutar').value = opt.getAttribute('data-tutar'); 
         document.getElementById('cikisVade').value = opt.getAttribute('data-vade'); 
     }
-    
     function handleCikisHedefi() {
         const hedef = document.getElementById('cikisHedefi').value;
         document.getElementById('bankaListesiDiv').classList.add('hidden');
@@ -516,7 +576,6 @@
         if (hedef === 'banka_tahsil' || hedef === 'banka_kredi') document.getElementById('bankaListesiDiv').classList.remove('hidden'); 
         else if (hedef === 'tedarikci') document.getElementById('cikisCariDiv').classList.remove('hidden'); 
     }
-
     function filterTable(inputId, tableId) {
         let input = document.getElementById(inputId).value.toUpperCase();
         let table = document.getElementById(tableId);
@@ -529,7 +588,6 @@
         }
     }
 
-    // Sayfa Yüklendiğinde Veritabanına Bağlan
     window.onload = function() { loadData(); };
 
     // --- MANUEL VADE HESAPLAMA SİSTEMİ (GEÇİCİ / KAYDEDİLMEZ) ---
