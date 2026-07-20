@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gelişmiş Çek Takip Dashboard</title>
+    <!-- Chart.js ve Datalabels Eklentisi -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
@@ -109,7 +110,7 @@
         </div>
     </div>
 
-    <!-- SIFIRLANMIŞ METRİK KARTLARI -->
+    <!-- METRİK KARTLARI -->
     <div class="metrics-grid">
         <div class="metric-card card-green" onclick="showDetayBilgi('Banka Tahsildeki Çekler')">
             <h3>Banka Tahsildeki Çekler</h3><p class="amount">₺0.00</p>
@@ -125,7 +126,7 @@
         </div>
     </div>
 
-    <!-- SIFIRLANMIŞ GÜNDEM KUTULARI -->
+    <!-- GÜNDEM KUTULARI -->
     <div class="agenda-grid">
         <div class="agenda-box" style="border-top: 4px solid var(--success);">
             <h2 style="color: var(--success);">📥 Bu Ay Tahsil Olacak Çekler</h2>
@@ -149,7 +150,7 @@
         </div>
     </div>
 
-    <!-- SIFIRLANMIŞ LİSTELER -->
+    <!-- LİSTELER -->
     <div class="list-box">
         <div class="list-header">
             <h2>Mevcut Çek Varlıkları (Kasa ve Tahsil)</h2>
@@ -193,18 +194,20 @@
     </div>
 </div>
 
-<!-- ================= EKSİKSİZ MODALLAR ================= -->
+<!-- ================= MODALLAR ================= -->
 
 <div id="modalCariYonetim" class="modal-overlay">
     <div class="modal modal-xl">
         <h2>👥 Cari / Tedarikçi Yönetimi ve Hareketler</h2>
         <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-            <input type="text" class="form-control" placeholder="Yeni Cari Ünvanı Yazın..." style="flex: 1;">
-            <button class="btn btn-success" onclick="alert('Yeni cari eklendi!')">+ Kaydet</button>
+            <!-- ID EKLENDİ -->
+            <input type="text" id="yeniCariInput" class="form-control" placeholder="Yeni Cari Ünvanı Yazın..." style="flex: 1;">
+            <!-- FONKSİYON EKLENDİ -->
+            <button class="btn btn-success" onclick="yeniCariEkle()">+ Kaydet</button>
         </div>
         <div class="cari-layout">
             <div class="cari-list" id="cariListContainer">
-                <div style="padding:15px; color:#999; font-size:13px;">Kayıtlı cari bulunmuyor.</div>
+                <div style="padding:15px; color:#999; font-size:13px; text-align:center;">Kayıtlı cari bulunmuyor.</div>
             </div>
             <div class="cari-details">
                 <h3 id="seciliCariBaslik" style="margin-top: 0; color: var(--primary);">Lütfen soldan bir cari seçin</h3>
@@ -237,7 +240,8 @@
 <div id="modalCekGiris" class="modal-overlay">
     <div class="modal">
         <h2 style="color: var(--success)">📥 Çek Girişi (Kasaya Ekle)</h2>
-        <div class="form-group"><label>1. Cari (Kimden Alındı?)</label><select class="form-control"><option>Cari Seçiniz...</option></select></div>
+        <!-- ID EKLENDİ -->
+        <div class="form-group"><label>1. Cari (Kimden Alındı?)</label><select class="form-control" id="girisCariSecim"><option value="">Cari Seçiniz...</option></select></div>
         <div class="form-group"><label>2. Çek Numarası</label><input type="text" class="form-control" placeholder="Çek seri numarası"></div>
         <div class="form-group"><label>3. Tutar (TL)</label><input type="number" class="form-control" placeholder="0.00"></div>
         <div class="form-group"><label>4. Vade Tarihi</label><input type="date" class="form-control"></div>
@@ -285,8 +289,16 @@
             </select>
         </div>
         
+        <!-- HEDEF TEDARİKÇİ İSE ÇIKAN CARİ SEÇİMİ -->
+        <div class="form-group hidden" id="cikisCariDiv">
+            <!-- ID EKLENDİ -->
+            <label>İlgili Cari / Tedarikçi</label>
+            <select class="form-control" id="cikisCariSecim"><option value="">Cari Seçiniz...</option></select>
+        </div>
+        
+        <!-- HEDEF BANKA İSE ÇIKAN BANKA SEÇİMİ -->
         <div class="form-group hidden" id="bankaListesiDiv">
-            <label>6. İlgili Bankayı Seçiniz</label>
+            <label>İlgili Bankayı Seçiniz</label>
             <select class="form-control">
                 <option>Garanti BBVA</option><option>Türkiye İş Bankası</option><option>Ziraat Bankası</option><option>Akbank</option><option>Yapı Kredi</option>
                 <option>Halkbank</option><option>Vakıfbank</option><option>QNB Finansbank</option><option>TEB</option><option>DenizBank</option>
@@ -390,11 +402,19 @@
     function handleCikisHedefi() {
         const hedef = document.getElementById('cikisHedefi').value;
         const bankaDiv = document.getElementById('bankaListesiDiv');
-        if (hedef === 'banka_tahsil' || hedef === 'banka_kredi') { bankaDiv.classList.remove('hidden'); } 
-        else { bankaDiv.classList.add('hidden'); }
+        const cariDiv = document.getElementById('cikisCariDiv');
+        
+        bankaDiv.classList.add('hidden');
+        cariDiv.classList.add('hidden');
+        
+        if (hedef === 'banka_tahsil' || hedef === 'banka_kredi') { 
+            bankaDiv.classList.remove('hidden'); 
+        } else if (hedef === 'tedarikci') {
+            cariDiv.classList.remove('hidden'); 
+        }
     }
 
-    // --- 3. CARİ / TEDARİKÇİ YÖNETİMİ (SIFIRLANDI) ---
+    // --- 3. CARİ / TEDARİKÇİ YÖNETİMİ (KAYIT SİSTEMİ EKLENDİ) ---
     const cariVerileri = {};
 
     function initCariList() {
@@ -417,13 +437,59 @@
                 
                 let tbody = document.getElementById('cariHareketGövde');
                 tbody.innerHTML = '';
-                cariVerileri[cariAdi].forEach(islem => {
-                    let islemRenk = islem.tur.includes('Alınan') ? 'color: #27ae60;' : 'color: #e74c3c;';
-                    tbody.innerHTML += `<tr><td>${islem.no}</td><td style="${islemRenk} font-weight:bold;">${islem.tur}</td><td>${islem.vade}</td><td style="text-align:right; font-weight:bold;">₺${islem.tutar.toLocaleString()}</td></tr>`;
-                });
+                
+                if(cariVerileri[cariAdi].length === 0) {
+                     tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#999;">Henüz işlem geçmişi yok.</td></tr>';
+                } else {
+                    cariVerileri[cariAdi].forEach(islem => {
+                        let islemRenk = islem.tur.includes('Alınan') ? 'color: #27ae60;' : 'color: #e74c3c;';
+                        tbody.innerHTML += `<tr><td>${islem.no}</td><td style="${islemRenk} font-weight:bold;">${islem.tur}</td><td>${islem.vade}</td><td style="text-align:right; font-weight:bold;">₺${islem.tutar.toLocaleString()}</td></tr>`;
+                    });
+                }
             };
             container.appendChild(div);
         });
+    }
+
+    // YENİ CARİ EKLEME FONKSİYONU
+    function yeniCariEkle() {
+        const inputElement = document.getElementById('yeniCariInput');
+        const cariAdi = inputElement.value.trim();
+        
+        if (cariAdi === "") {
+            alert("Lütfen bir firma/cari ünvanı giriniz.");
+            return;
+        }
+        
+        if (cariVerileri[cariAdi]) {
+            alert("Bu firma zaten sistemde kayıtlı!");
+            return;
+        }
+        
+        // Yeni firmayı listeye ekle (başlangıçta boş işlem geçmişi ile)
+        cariVerileri[cariAdi] = [];
+        inputElement.value = ''; // Kutuyu temizle
+        
+        initCariList(); // Sol paneli güncelle
+        dropdownlariGuncelle(); // Çek Giriş ve Çıkış formlarındaki seçim kutularını güncelle
+        
+        alert(cariAdi + " başarıyla sisteme kaydedildi!");
+    }
+
+    // AÇILIR MENÜLERİ (SELECT) GÜNCELLEME
+    function dropdownlariGuncelle() {
+        let seceneklerHTML = '<option value="">Cari Seçiniz...</option>';
+        Object.keys(cariVerileri).forEach(cariAdi => {
+            seceneklerHTML += `<option value="${cariAdi}">${cariAdi}</option>`;
+        });
+        
+        // Çek Girişi modalındaki Cari Seçimi
+        const girisCariSecim = document.getElementById('girisCariSecim');
+        if(girisCariSecim) girisCariSecim.innerHTML = seceneklerHTML;
+        
+        // Çek Çıkışı modalındaki Cari Seçimi (Tedarikçi ise)
+        const cikisCariSecim = document.getElementById('cikisCariSecim');
+        if(cikisCariSecim) cikisCariSecim.innerHTML = seceneklerHTML;
     }
 
     // --- 4. KALAN GÜN HESAPLAMA (DİNAMİK) ---
@@ -501,7 +567,7 @@
         document.getElementById('ortalamaVadeMetni').innerText = `${ortalamaGun} Gün`;
     }
 
-    // --- 6. DASHBOARD DETAY PENCERESİ (SIFIRLANDI) ---
+    // --- 6. DASHBOARD DETAY PENCERESİ ---
     const dashboardVerileri = {
         'Banka Tahsildeki Çekler': [],
         'Kasadaki Çekler': [],
@@ -536,7 +602,6 @@
         
         for (let i = 0; i < tr.length; i++) {
             let tdArray = tr[i].getElementsByTagName("td");
-            // Placeholder satırını atla
             if (tdArray.length === 1 && tdArray[0].colSpan > 1) continue;
             
             let match = false;
@@ -566,7 +631,6 @@
 
     // --- 8. BAŞLATMA (ONLOAD) ---
     window.onload = function() {
-        // Tablo para birimlerini ayarla ve toplamları hesapla (Eğer satır eklerseniz diye duruyor)
         formatTableCurrency('tableVarliklar'); 
         formatTableCurrency('tableDuzenlenen');
         document.getElementById('searchVarliklar').value = ''; filterTable('searchVarliklar', 'tableVarliklar', 'totalVarliklar');
@@ -574,8 +638,8 @@
         
         kalanGunleriHesapla();
         initCariList();
+        dropdownlariGuncelle(); // Başlangıçta dropdownları hazırla
         
-        // Chart.js Grafikleri Başlat (Sıfırlandı)
         Chart.register(ChartDataLabels);
         const ctxBar = document.getElementById('barChart').getContext('2d');
         new Chart(ctxBar, {
@@ -595,7 +659,7 @@
             type: 'pie', 
             data: {
                 labels: ['Varlıklar', 'Düzenlenen'],
-                datasets: [{ data: [0.001, 0.001], backgroundColor: ['#e0e6ed', '#e0e6ed'], borderWidth: 1, borderColor: '#fff' }] // Sıfır hatası almamak için gri placeholder
+                datasets: [{ data: [0.001, 0.001], backgroundColor: ['#e0e6ed', '#e0e6ed'], borderWidth: 1, borderColor: '#fff' }] 
             },
             options: { 
                 responsive: true,
