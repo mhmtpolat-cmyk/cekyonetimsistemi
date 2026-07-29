@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gelişmiş Çek ve Finans Dashboard</title>
-    <!-- Gerekli Kütüphaneler -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -12,7 +11,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     
-    <!-- Çakışmayı Önlemek İçin Tailwind Preflight'ı Kapatıyoruz -->
     <script>
         tailwind.config = { corePlugins: { preflight: false } }
     </script>
@@ -29,10 +27,26 @@
             --bg: #f4f7f6; --card-bg: #ffffff; --border: #e0e6ed;
         }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: #333; margin: 0; padding: 20px; }
-        .cek-container { max-width: 1200px; margin: 0 auto; }
+        
+        /* YENİ SOL MENÜ (SIDEBAR) TASARIMI */
+        .cek-layout { display: flex; gap: 25px; max-width: 1350px; margin: 0 auto; align-items: flex-start; }
+        .cek-sidebar { width: 240px; flex-shrink: 0; background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; position: sticky; top: 20px; }
+        .cek-main { flex-grow: 1; min-width: 0; display:flex; flex-direction:column;}
+        
+        .btn-menu { width: 100%; text-align: left; padding: 12px 15px; background: #f8f9fa; color: var(--primary); border: 1px solid #eee; font-size: 14px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        .btn-menu:hover { background: var(--primary); color: white; }
+        .btn-finans { background: #f5eef8; color: #8e44ad; border-color: #ebdef0; }
+        .btn-finans:hover { background: #8e44ad; color: white; }
+        .btn-logout { background: #fdedec; color: #c0392b; border-color: #fadbd8; margin-top: 15px; }
+        .btn-logout:hover { background: #c0392b; color: white; }
+
+        @media (max-width: 768px) {
+            .cek-layout { flex-direction: column; }
+            .cek-sidebar { width: 100%; position: relative; top: 0; }
+        }
+
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;}
         .header h1 { margin: 0; color: var(--primary); font-size: 24px; font-weight:bold;}
-        .action-buttons { display: flex; gap: 10px; flex-wrap: wrap; align-items: center;}
         
         .btn { padding: 8px 12px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px; transition: all 0.2s; }
         .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
@@ -81,7 +95,7 @@
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; }
         .cek-modal { background: #fff; width: 450px; border-radius: 10px; padding: 25px; max-height: 90vh; overflow-y: auto; box-sizing:border-box;}
         .modal-large { width: 850px; }
-        .modal-xl { width: 1000px; }
+        .modal-xl { width: 1050px; }
         .cek-modal h2 { margin-top: 0; font-size: 18px; font-weight:bold; color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 10px; }
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 13px; }
@@ -97,25 +111,17 @@
         .cari-item.active { background: var(--accent); color: white; font-weight: bold; }
         .cari-details { flex: 2; border: 1px solid var(--border); border-radius: 5px; padding: 15px; overflow-y: auto; background: #fafbfc;}
         
-        .user-badge { background: #e2e8f0; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 6px; color: var(--primary); }
+        .user-badge { background: #e2e8f0; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; display: flex; align-items: center; justify-content:center; gap: 6px; color: var(--primary); margin-bottom: 10px; border:1px solid #cbd5e1;}
 
         /* =========================================
            VARLIK YÖNETİMİ İÇİN CUSTOM CSS
         ========================================= */
         .fin-modal { display: none; opacity: 0; transition: opacity 0.2s ease-in-out; }
         .fin-modal.active { display: flex; opacity: 1; }
-        
         .varlik-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
         .varlik-scroll::-webkit-scrollbar-track { background: transparent; }
         .varlik-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-        }
-        
+        .glass-panel { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.5); }
         .tailwind-wrapper input, .tailwind-wrapper select, .tailwind-wrapper button { border-style: solid; }
         .tailwind-wrapper table { border-collapse: collapse; }
     </style>
@@ -141,90 +147,68 @@
 </div>
 
 <!-- ========================================================================= -->
-<!-- 1. ÇEK YÖNETİM SİSTEMİ ARAYÜZÜ -->
+<!-- 1. ÇEK YÖNETİM SİSTEMİ ARAYÜZÜ (SOL MENÜLÜ YENİ DÜZEN) -->
 <!-- ========================================================================= -->
-<div id="app-cek" class="cek-container" style="display: none; opacity: 0.2; pointer-events: none;">
-    <div class="header">
-        <h1>Çek Yönetim Sistemi</h1>
-        <div class="action-buttons">
-            <div class="user-badge" id="aktifKullaniciGosterge">👤 Oturum Açılmadı</div>
-            <button class="btn btn-outline" onclick="openModal('modalKullaniciYonetim'); renderKullanicilarListesi();">⚙️ Kullanıcılar</button>
-            <button class="btn btn-primary" style="background-color: #8e44ad; border: none;" onclick="switchMainApp('varlik'); fin_loadData();">💳 Varlık & Harcama</button>
-            <button class="btn btn-warning" onclick="openModal('modalIstatistik'); renderIstatistikler();" style="background-color: var(--warning); color:#333;">📊 İstatistikler</button>
-            <button class="btn btn-outline" onclick="openModal('modalCariYonetim')">👥 Cari / Tedarikçi</button>
-            <button class="btn btn-primary" onclick="openModal('modalCariSecim')">Çek Hareketi</button>
-            <button class="btn btn-danger" onclick="openModal('modalCikisListesi')">📤 Çıkış Yapılanlar</button>
-            <button class="btn btn-success" onclick="openModal('modalVadeHesapla')">⏱ Vade Hesapla</button>
-            <button class="btn btn-outline" style="border-color: var(--danger); color: var(--danger);" onclick="cikisYap()">Çıkış</button>
-        </div>
+<div id="app-cek" class="cek-layout" style="display: none; opacity: 0.2; pointer-events: none;">
+    
+    <!-- YENİ: SOL MENÜ (SIDEBAR) -->
+    <div class="cek-sidebar">
+        <div class="user-badge" id="aktifKullaniciGosterge">👤 Oturum Açılmadı</div>
+        
+        <button class="btn-menu" onclick="openModal('modalKullaniciYonetim'); renderKullanicilarListesi();">⚙️ Kullanıcı Yönetimi</button>
+        <button class="btn-menu btn-finans" id="btnMenuFinans" onclick="switchMainApp('varlik'); fin_loadData();">💳 Varlık & Harcama</button>
+        <button class="btn-menu" onclick="openModal('modalCariSecim')">📥/📤 Çek Giriş / Çıkış</button>
+        <button class="btn-menu" onclick="openModal('modalCariYonetim')">👥 Cari / Tedarikçi</button>
+        <button class="btn-menu" onclick="openModal('modalCikisListesi')">📋 Çıkış Yapılanlar</button>
+        <button class="btn-menu" onclick="openModal('modalVadeHesapla')">⏱ Vade Hesapla Makinesi</button>
+        <button class="btn-menu" onclick="openModal('modalIstatistik'); renderIstatistikler();">📊 Genel İstatistikler</button>
+        
+        <button class="btn-menu btn-logout" onclick="cikisYap()">Çıkış Yap</button>
     </div>
 
-    <!-- METRİK KARTLARI -->
-    <div class="metrics-grid">
-        <div class="metric-card card-green clickable-card" onclick="showMetricDetails('tahsilde')">
-            <div style="font-size:10px; position:absolute; right:10px; top:10px; color:#aaa;">🔍 Detay</div>
-            <h3>Banka Tahsildeki Çekler</h3><p class="amount" id="metrikTahsilde">₺0.00</p>
+    <!-- SAĞ İÇERİK ALANI -->
+    <div class="cek-main">
+        <div class="header">
+            <h1>Çek Yönetim Sistemi</h1>
         </div>
-        <div class="metric-card card-green clickable-card" onclick="showMetricDetails('kasada')">
-            <div style="font-size:10px; position:absolute; right:10px; top:10px; color:#aaa;">🔍 Detay</div>
-            <h3>Kasadaki Çekler (Portföy)</h3><p class="amount" id="metrikKasada">₺0.00</p>
-        </div>
-        <div class="metric-card card-green clickable-card" onclick="showMetricDetails('varlik')">
-            <div style="font-size:10px; position:absolute; right:10px; top:10px; color:#aaa;">🔍 Detay</div>
-            <h3>Toplam Çek Varlıkları</h3><p class="amount" id="metrikToplamVarlik">₺0.00</p>
-        </div>
-        <div class="metric-card card-red clickable-card" onclick="showMetricDetails('odenecek')">
-            <div style="font-size:10px; position:absolute; right:10px; top:10px; color:#aaa;">🔍 Detay</div>
-            <h3>Düzenlenen (Ödenecek)</h3><p class="amount" id="metrikOdenecek">₺0.00</p>
-        </div>
-    </div>
 
-    <!-- GÜNDEM KUTULARI -->
-    <div class="agenda-grid">
-        <div class="agenda-box" style="border-top: 4px solid var(--success);">
-            <h2 style="color: var(--success);">📥 Bu Ay Tahsil Olacak Çekler</h2>
-            <div id="gundemTahsil"><div class="empty-message">Bu ay için kayıt bulunmamaktadır.</div></div>
+        <div class="metrics-grid">
+            <div class="metric-card card-green clickable-card" onclick="showMetricDetails('tahsilde')"><div style="font-size:10px; position:absolute; right:10px; top:10px; color:#aaa;">🔍 Detay</div><h3>Banka Tahsildeki Çekler</h3><p class="amount" id="metrikTahsilde">₺0.00</p></div>
+            <div class="metric-card card-green clickable-card" onclick="showMetricDetails('kasada')"><div style="font-size:10px; position:absolute; right:10px; top:10px; color:#aaa;">🔍 Detay</div><h3>Kasadaki Çekler (Portföy)</h3><p class="amount" id="metrikKasada">₺0.00</p></div>
+            <div class="metric-card card-green clickable-card" onclick="showMetricDetails('varlik')"><div style="font-size:10px; position:absolute; right:10px; top:10px; color:#aaa;">🔍 Detay</div><h3>Toplam Çek Varlıkları</h3><p class="amount" id="metrikToplamVarlik">₺0.00</p></div>
+            <div class="metric-card card-red clickable-card" onclick="showMetricDetails('odenecek')"><div style="font-size:10px; position:absolute; right:10px; top:10px; color:#aaa;">🔍 Detay</div><h3>Düzenlenen (Ödenecek)</h3><p class="amount" id="metrikOdenecek">₺0.00</p></div>
         </div>
-        <div class="agenda-box" style="border-top: 4px solid var(--danger);">
-            <h2 style="color: var(--danger);">📤 Bu Ay Ödenecek Çekler</h2>
-            <div id="gundemOdenecek"><div class="empty-message">Bu ay için kayıt bulunmamaktadır.</div></div>
-        </div>
-    </div>
 
-    <!-- GRAFİKLER -->
-    <div class="charts-container">
-        <div class="chart-box"><h2>Genel Aylık Çek Trendi (Önümüzdeki 6 Ay)</h2><canvas id="barChart" height="100"></canvas></div>
-        <div class="chart-box"><h2>Varlık / Yükümlülük Oranı</h2><canvas id="pieChart" height="200"></canvas></div>
-    </div>
-    <div class="charts-full-container">
-        <div class="chart-box"><h2>Kasadaki Çekler (Portföy) Aylara Göre Gelecek Dağılımı</h2><canvas id="portfoyChart" height="80"></canvas></div>
-    </div>
-
-    <!-- LİSTELER -->
-    <div class="list-box">
-        <div class="list-header">
-            <h2>Mevcut Çek Varlıkları (Kasa ve Tahsil)</h2>
-            <input type="text" id="searchVarliklar" class="search-input" onkeyup="filterTable('searchVarliklar', 'tableVarliklar')" placeholder="🔍 Ara...">
+        <div class="agenda-grid">
+            <div class="agenda-box" style="border-top: 4px solid var(--success);"><h2 style="color: var(--success);">📥 Bu Ay Tahsil Olacak Çekler</h2><div id="gundemTahsil"><div class="empty-message">Bu ay için kayıt bulunmamaktadır.</div></div></div>
+            <div class="agenda-box" style="border-top: 4px solid var(--danger);"><h2 style="color: var(--danger);">📤 Bu Ay Ödenecek Çekler</h2><div id="gundemOdenecek"><div class="empty-message">Bu ay için kayıt bulunmamaktadır.</div></div></div>
         </div>
-        <table class="cek-table" id="tableVarliklar">
-            <thead>
-                <tr><th>Çek No</th><th>Cari / İlgili Kişi</th><th>Banka</th><th>Vade Tarihi</th><th>Kalan Gün</th><th style="text-align: right;">Tutar</th><th style="text-align: right;">Durum</th><th style="text-align: right;">İşlem / Kim Ekledi?</th></tr>
-            </thead>
-            <tbody id="tbodyVarliklar"></tbody>
-            <tfoot><tr><th colspan="5" style="text-align:right;">Toplam:</th><th id="totalVarliklar" style="text-align: right; color:var(--success);">₺0.00</th><th colspan="2"></th></tr></tfoot>
-        </table>
-    </div>
 
-    <div class="list-box">
-        <div class="list-header">
-            <h2>Düzenlenen (Kendi Kestiğimiz) Çekler - Yükümlülükler</h2>
-            <input type="text" id="searchDuzenlenen" class="search-input" onkeyup="filterTable('searchDuzenlenen', 'tableDuzenlenen')" placeholder="🔍 Ara...">
+        <div class="charts-container">
+            <div class="chart-box"><h2>Genel Aylık Çek Trendi (Önümüzdeki 6 Ay)</h2><canvas id="barChart" height="100"></canvas></div>
+            <div class="chart-box"><h2>Varlık / Yükümlülük Oranı</h2><canvas id="pieChart" height="200"></canvas></div>
         </div>
-        <table class="cek-table" id="tableDuzenlenen">
-            <thead><tr><th>Çek No</th><th>Verilen Cari / Tedarikçi</th><th>Banka</th><th>Vade Tarihi</th><th style="text-align: right;">Tutar</th><th style="text-align: right;">Durum</th><th style="text-align: right;">İşlem / Kim Ekledi?</th></tr></thead>
-            <tbody id="tbodyDuzenlenen"></tbody>
-            <tfoot><tr><th colspan="4" style="text-align:right;">Toplam:</th><th id="totalDuzenlenen" style="text-align: right; color:var(--danger);">₺0.00</th><th colspan="2"></th></tr></tfoot>
-        </table>
+        <div class="charts-full-container">
+            <div class="chart-box"><h2>Kasadaki Çekler (Portföy) Aylara Göre Gelecek Dağılımı</h2><canvas id="portfoyChart" height="80"></canvas></div>
+        </div>
+
+        <div class="list-box">
+            <div class="list-header"><h2>Mevcut Çek Varlıkları (Kasa ve Tahsil)</h2><input type="text" id="searchVarliklar" class="search-input" onkeyup="filterTable('searchVarliklar', 'tableVarliklar')" placeholder="🔍 Ara..."></div>
+            <table class="cek-table" id="tableVarliklar">
+                <thead><tr><th>Çek No</th><th>Cari / İlgili Kişi</th><th>Banka</th><th>Vade Tarihi</th><th>Kalan Gün</th><th style="text-align: right;">Tutar</th><th style="text-align: right;">Durum</th><th style="text-align: right;">İşlem / Kim Ekledi?</th></tr></thead>
+                <tbody id="tbodyVarliklar"></tbody>
+                <tfoot><tr><th colspan="5" style="text-align:right;">Toplam:</th><th id="totalVarliklar" style="text-align: right; color:var(--success);">₺0.00</th><th colspan="2"></th></tr></tfoot>
+            </table>
+        </div>
+
+        <div class="list-box">
+            <div class="list-header"><h2>Düzenlenen (Kendi Kestiğimiz) Çekler - Yükümlülükler</h2><input type="text" id="searchDuzenlenen" class="search-input" onkeyup="filterTable('searchDuzenlenen', 'tableDuzenlenen')" placeholder="🔍 Ara..."></div>
+            <table class="cek-table" id="tableDuzenlenen">
+                <thead><tr><th>Çek No</th><th>Verilen Cari / Tedarikçi</th><th>Banka</th><th>Vade Tarihi</th><th style="text-align: right;">Tutar</th><th style="text-align: right;">Durum</th><th style="text-align: right;">İşlem / Kim Ekledi?</th></tr></thead>
+                <tbody id="tbodyDuzenlenen"></tbody>
+                <tfoot><tr><th colspan="4" style="text-align:right;">Toplam:</th><th id="totalDuzenlenen" style="text-align: right; color:var(--danger);">₺0.00</th><th colspan="2"></th></tr></tfoot>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -234,225 +218,134 @@
 <!-- ========================================================================= -->
 <div id="app-varlik" class="tailwind-wrapper varlik-scroll text-slate-700" style="display: none; opacity: 0.2; pointer-events: none;">
     <div class="max-w-7xl mx-auto space-y-4 md:space-y-6 pt-4 pb-10 px-3 md:px-6">
-        
-        <!-- Üst Header -->
         <div class="flex flex-col lg:flex-row justify-between items-center glass-panel p-4 md:p-5 rounded-2xl shadow-sm gap-3">
             <h1 class="text-lg md:text-2xl font-bold text-slate-800 flex items-center cursor-pointer w-full lg:w-auto justify-between lg:justify-start" onclick="fin_switchView('dashboard')">
-                <span class="flex items-center">
-                    <div class="w-9 h-9 md:w-10 md:h-10 bg-indigo-100 text-indigo-500 rounded-xl flex items-center justify-center mr-3 text-sm md:text-base"><i class="fa-solid fa-wallet"></i></div>
-                    Varlık & Harcama Yönetimi
-                </span>
-                <button onclick="fin_sendManualEmail()" class="lg:hidden bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-xl text-xs font-medium border border-emerald-200"><i class="fa-solid fa-envelope"></i> Mail At</button>
+                <span class="flex items-center"><div class="w-9 h-9 md:w-10 md:h-10 bg-indigo-100 text-indigo-500 rounded-xl flex items-center justify-center mr-3 text-sm md:text-base"><i class="fa-solid fa-wallet"></i></div>Varlık & Harcama Yönetimi</span>
             </h1>
             <div class="flex flex-wrap gap-2 w-full lg:w-auto justify-end">
-                <button onclick="switchMainApp('cek')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2.5 rounded-xl font-bold transition shadow-sm text-xs md:text-sm border border-indigo-200 flex-1 lg:flex-none">
-                    <i class="fa-solid fa-money-check mr-1"></i> Çek Paneline Dön
-                </button>
-                <button onclick="fin_sendManualEmail()" class="hidden lg:flex bg-emerald-50 hover:bg-emerald-100 text-emerald-600 px-4 py-2.5 rounded-xl font-medium transition shadow-sm text-sm border border-emerald-200 items-center gap-1.5"><i class="fa-solid fa-envelope"></i> Raporu Mail At</button>
-                <button onclick="fin_openBankModal()" class="bg-white hover:bg-slate-50 text-slate-600 px-3 md:px-4 py-2 md:py-2.5 rounded-xl font-medium transition shadow-sm text-xs md:text-sm border border-slate-100 flex-1 lg:flex-none"><i class="fa-solid fa-building-columns mr-1 text-slate-400"></i> Banka Ekle</button>
-                <button onclick="fin_switchView('contacts')" class="bg-white hover:bg-slate-50 text-slate-600 px-3 md:px-4 py-2 md:py-2.5 rounded-xl font-medium transition shadow-sm text-xs md:text-sm border border-slate-100 flex-1 lg:flex-none"><i class="fa-solid fa-users mr-1 text-slate-400"></i> Cariler</button>
-                <button onclick="fin_openTransactionModal()" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 md:px-5 py-2 md:py-2.5 rounded-xl font-medium transition shadow-md shadow-indigo-200 text-xs md:text-sm w-full lg:w-auto"><i class="fa-solid fa-plus mr-1"></i> Yeni İşlem</button>
+                <button onclick="switchMainApp('cek')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2.5 rounded-xl font-bold transition shadow-sm text-xs md:text-sm border border-indigo-200"><i class="fa-solid fa-money-check mr-1"></i> Çek Paneline Dön</button>
+                <button onclick="fin_openBankModal()" class="bg-white hover:bg-slate-50 text-slate-600 px-3 md:px-4 py-2 rounded-xl font-medium transition shadow-sm text-xs md:text-sm border border-slate-100"><i class="fa-solid fa-building-columns mr-1"></i> Banka Ekle</button>
+                <button onclick="fin_switchView('contacts')" class="bg-white hover:bg-slate-50 text-slate-600 px-3 md:px-4 py-2 rounded-xl font-medium transition shadow-sm text-xs md:text-sm border border-slate-100"><i class="fa-solid fa-users mr-1"></i> Cariler</button>
+                <button onclick="fin_openTransactionModal()" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 md:px-5 py-2 rounded-xl font-medium transition shadow-md text-xs md:text-sm"><i class="fa-solid fa-plus mr-1"></i> Yeni İşlem</button>
             </div>
         </div>
 
-        <!-- ANA SAYFA -->
         <div id="fin-main-dashboard-view" class="space-y-4 md:space-y-6 block fin-view-section">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div class="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4 md:p-6 rounded-2xl shadow-sm border border-indigo-100/50">
-                    <h2 class="text-sm md:text-base font-semibold text-indigo-900/70 mb-3 flex items-center"><i class="fa-solid fa-earth-americas mr-2 text-indigo-400"></i> Toplam Varlık Özeti <span class="text-[10px] md:text-xs ml-2 font-normal opacity-70">(Tahmini Kur)</span></h2>
+                    <h2 class="text-sm md:text-base font-semibold text-indigo-900/70 mb-3 flex items-center"><i class="fa-solid fa-earth-americas mr-2"></i> Toplam Varlık Özeti</h2>
                     <div class="grid grid-cols-2 gap-3">
-                        <div class="bg-white/70 p-3 md:p-4 rounded-xl border border-white/80 shadow-sm"><p class="text-[11px] md:text-xs font-medium text-slate-500 mb-1">TL Karşılığı</p><p class="text-lg md:text-xl font-bold text-slate-800" id="fin-total-try">0.00 <span class="text-xs font-normal text-slate-400">₺</span></p></div>
-                        <div class="bg-white/70 p-3 md:p-4 rounded-xl border border-white/80 shadow-sm"><p class="text-[11px] md:text-xs font-medium text-slate-500 mb-1">Dolar Karşılığı</p><p class="text-lg md:text-xl font-bold text-slate-800" id="fin-total-usd">0.00 <span class="text-xs font-normal text-slate-400">$</span></p></div>
-                        <div class="bg-white/70 p-3 md:p-4 rounded-xl border border-white/80 shadow-sm"><p class="text-[11px] md:text-xs font-medium text-slate-500 mb-1">Euro Karşılığı</p><p class="text-lg md:text-xl font-bold text-slate-800" id="fin-total-eur">0.00 <span class="text-xs font-normal text-slate-400">€</span></p></div>
-                        <div class="bg-white/70 p-3 md:p-4 rounded-xl border border-white/80 shadow-sm"><p class="text-[11px] md:text-xs font-medium text-slate-500 mb-1">Frank Karşılığı</p><p class="text-lg md:text-xl font-bold text-slate-800" id="fin-total-chf">0.00 <span class="text-xs font-normal text-slate-400">CHF</span></p></div>
+                        <div class="bg-white/70 p-3 rounded-xl border border-white/80 shadow-sm"><p class="text-xs text-slate-500 mb-1">TL Karşılığı</p><p class="text-lg font-bold text-slate-800" id="fin-total-try">0.00 ₺</p></div>
+                        <div class="bg-white/70 p-3 rounded-xl border border-white/80 shadow-sm"><p class="text-xs text-slate-500 mb-1">Dolar Karşılığı</p><p class="text-lg font-bold text-slate-800" id="fin-total-usd">0.00 $</p></div>
+                        <div class="bg-white/70 p-3 rounded-xl border border-white/80 shadow-sm"><p class="text-xs text-slate-500 mb-1">Euro Karşılığı</p><p class="text-lg font-bold text-slate-800" id="fin-total-eur">0.00 €</p></div>
+                        <div class="bg-white/70 p-3 rounded-xl border border-white/80 shadow-sm"><p class="text-xs text-slate-500 mb-1">Frank Karşılığı</p><p class="text-lg font-bold text-slate-800" id="fin-total-chf">0.00 CHF</p></div>
                     </div>
                 </div>
-
                 <div class="bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 p-4 md:p-6 rounded-2xl shadow-sm border border-emerald-100/50">
-                    <h2 class="text-sm md:text-base font-semibold text-emerald-900/70 mb-3 flex items-center"><i class="fa-solid fa-sack-dollar mr-2 text-emerald-500"></i> Hesaplardaki Toplam Nakit <span class="text-[10px] md:text-xs ml-2 font-normal opacity-70">(Güncel Bakiye)</span></h2>
+                    <h2 class="text-sm md:text-base font-semibold text-emerald-900/70 mb-3 flex items-center"><i class="fa-solid fa-sack-dollar mr-2"></i> Hesaplardaki Toplam Nakit</h2>
                     <div class="grid grid-cols-2 gap-3">
-                        <div class="bg-white/70 p-3 md:p-4 rounded-xl border border-white/80 shadow-sm"><p class="text-[11px] md:text-xs font-medium text-slate-500 mb-1">TL Bakiyesi</p><p class="text-lg md:text-xl font-bold text-emerald-700" id="fin-liquid-try">0.00 <span class="text-xs font-normal text-slate-400">₺</span></p></div>
-                        <div class="bg-white/70 p-3 md:p-4 rounded-xl border border-white/80 shadow-sm"><p class="text-[11px] md:text-xs font-medium text-slate-500 mb-1">Dolar Bakiyesi</p><p class="text-lg md:text-xl font-bold text-emerald-700" id="fin-liquid-usd">0.00 <span class="text-xs font-normal text-slate-400">$</span></p></div>
-                        <div class="bg-white/70 p-3 md:p-4 rounded-xl border border-white/80 shadow-sm"><p class="text-[11px] md:text-xs font-medium text-slate-500 mb-1">Euro Bakiyesi</p><p class="text-lg md:text-xl font-bold text-emerald-700" id="fin-liquid-eur">0.00 <span class="text-xs font-normal text-slate-400">€</span></p></div>
-                        <div class="bg-white/70 p-3 md:p-4 rounded-xl border border-white/80 shadow-sm"><p class="text-[11px] md:text-xs font-medium text-slate-500 mb-1">Frank Bakiyesi</p><p class="text-lg md:text-xl font-bold text-emerald-700" id="fin-liquid-chf">0.00 <span class="text-xs font-normal text-slate-400">CHF</span></p></div>
+                        <div class="bg-white/70 p-3 rounded-xl border border-white/80 shadow-sm"><p class="text-xs text-slate-500 mb-1">TL Bakiyesi</p><p class="text-lg font-bold text-emerald-700" id="fin-liquid-try">0.00 ₺</p></div>
+                        <div class="bg-white/70 p-3 rounded-xl border border-white/80 shadow-sm"><p class="text-xs text-slate-500 mb-1">Dolar Bakiyesi</p><p class="text-lg font-bold text-emerald-700" id="fin-liquid-usd">0.00 $</p></div>
+                        <div class="bg-white/70 p-3 rounded-xl border border-white/80 shadow-sm"><p class="text-xs text-slate-500 mb-1">Euro Bakiyesi</p><p class="text-lg font-bold text-emerald-700" id="fin-liquid-eur">0.00 €</p></div>
+                        <div class="bg-white/70 p-3 rounded-xl border border-white/80 shadow-sm"><p class="text-xs text-slate-500 mb-1">Frank Bakiyesi</p><p class="text-lg font-bold text-emerald-700" id="fin-liquid-chf">0.00 CHF</p></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Hesaplar Grid -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="fin-accounts-dashboard"></div>
 
-            <!-- Borçlar ve Nakit Girişleri -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div onclick="fin_switchView('debts')" class="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col cursor-pointer hover:shadow-md transition group">
-                    <div class="flex items-center justify-between mb-3">
-                        <div class="flex items-center gap-2"><div class="w-7 h-7 rounded-full bg-orange-50 flex items-center justify-center text-orange-500 group-hover:bg-orange-500 group-hover:text-white transition-colors"><i class="fa-solid fa-hand-holding-dollar text-xs"></i></div><h2 class="text-sm md:text-md font-bold text-slate-700 group-hover:text-orange-600 transition-colors">Toplam Alacaklar</h2></div><i class="fa-solid fa-arrow-right text-slate-300 group-hover:text-orange-400 text-xs"></i>
-                    </div>
-                    <div class="overflow-y-auto max-h-40 pr-1 mb-3">
-                        <table class="w-full text-left border-collapse min-w-full"><tbody id="fin-dash-debt-tbody" class="divide-y divide-slate-50 text-xs md:text-sm"></tbody></table>
-                    </div>
-                    <div class="mt-auto pt-2.5 border-t border-slate-100 flex justify-between items-center bg-orange-50/30 p-2 rounded-xl"><span class="text-[11px] font-bold text-slate-500 uppercase">Toplam (Euro)</span><span class="font-bold text-orange-600 text-base" id="fin-dash-debt-total-eur">0.00 €</span></div>
-                </div>
-
-                <div onclick="fin_switchView('inflows')" class="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col cursor-pointer hover:shadow-md transition group">
-                    <div class="flex items-center justify-between mb-3">
-                        <div class="flex items-center gap-2"><div class="w-7 h-7 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-colors"><i class="fa-solid fa-money-bill-trend-up text-xs"></i></div><h2 class="text-sm md:text-md font-bold text-slate-700 group-hover:text-emerald-600 transition-colors">Son Nakit Girişleri</h2></div><i class="fa-solid fa-arrow-right text-slate-300 group-hover:text-emerald-400 text-xs"></i>
-                    </div>
-                    <div class="overflow-y-auto max-h-40 pr-1 mb-3">
-                        <table class="w-full text-left border-collapse min-w-full"><tbody id="fin-dash-cash-inflow-tbody" class="divide-y divide-slate-50 text-xs md:text-sm"></tbody></table>
-                    </div>
-                    <div class="mt-auto pt-2.5 border-t border-slate-100 flex justify-between items-center bg-emerald-50/30 p-2 rounded-xl"><span class="text-[11px] font-bold text-slate-500 uppercase">Toplam (Euro)</span><span class="font-bold text-emerald-600 text-base" id="fin-dash-cash-total-eur">0.00 €</span></div>
-                </div>
-            </div>
-
-            <!-- İşlem Hareketleri Tablosu -->
             <div id="fin-transaction-section" class="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-100">
-                <div class="p-4 md:p-5 border-b border-slate-50 flex flex-col xl:flex-row gap-3 justify-between items-center bg-slate-50/50">
-                    <h2 class="text-sm md:text-md font-bold text-slate-700 w-full xl:w-auto">İşlem Hareketleri Yönetimi</h2>
-                    <div class="grid grid-cols-2 sm:flex flex-wrap gap-2 w-full xl:w-auto">
-                        <select id="fin-filter-contact" class="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs md:text-sm outline-none w-full sm:w-auto" onchange="fin_renderTable()"></select>
-                        <select id="fin-filter-account" class="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs md:text-sm outline-none w-full sm:w-auto" onchange="fin_renderTable()"><option value="ALL">Tüm Hesaplar</option></select>
-                        <select id="fin-filter-currency" class="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs md:text-sm outline-none w-full sm:w-auto" onchange="fin_renderTable()"><option value="ALL">Tüm Dövizler</option><option value="TRY">TL</option><option value="USD">Dolar</option><option value="EUR">Euro</option><option value="CHF">Frank</option></select>
-                        <button onclick="fin_clearFilters('dashboard')" class="text-xs text-slate-500 hover:text-indigo-600 px-2 py-1.5 font-medium col-span-2 sm:col-span-1 text-center">Temizle</button>
+                <div class="p-4 border-b border-slate-50 flex flex-wrap gap-3 justify-between items-center bg-slate-50/50">
+                    <h2 class="text-md font-bold text-slate-700">İşlem Hareketleri Yönetimi</h2>
+                    <div class="flex flex-wrap gap-2">
+                        <select id="fin-filter-contact" class="px-3 py-1.5 bg-white border rounded-xl text-xs outline-none" onchange="fin_renderTable()"></select>
+                        <select id="fin-filter-account" class="px-3 py-1.5 bg-white border rounded-xl text-xs outline-none" onchange="fin_renderTable()"><option value="ALL">Tüm Hesaplar</option></select>
+                        <select id="fin-filter-currency" class="px-3 py-1.5 bg-white border rounded-xl text-xs outline-none" onchange="fin_renderTable()"><option value="ALL">Tüm Dövizler</option><option value="TRY">TL</option><option value="USD">Dolar</option><option value="EUR">Euro</option><option value="CHF">Frank</option></select>
                     </div>
                 </div>
                 <div class="overflow-x-auto max-h-[500px]">
                     <table class="w-full text-left border-collapse min-w-[700px]">
-                        <thead class="sticky top-0 z-10 bg-white">
-                            <tr class="border-b border-slate-100 text-slate-400 text-[11px] font-medium uppercase"><th class="p-3">Tarih</th><th class="p-3">Hesap</th><th class="p-3">İşlem</th><th class="p-3">Kategori</th><th class="p-3">Kişi / Açıklama</th><th class="p-3 text-right">Tutar</th><th class="p-3 text-center">Düzenle / Sil</th></tr>
-                        </thead>
-                        <tbody id="fin-transaction-tbody" class="divide-y divide-slate-50 text-xs md:text-sm"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Aylık Grafik -->
-            <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-100">
-                <h2 class="text-sm md:text-md font-bold text-slate-700 flex items-center mb-3"><i class="fa-solid fa-chart-column mr-2 text-indigo-500"></i> Aylık Nakit Akışı (TL)</h2>
-                <div class="relative w-full h-60 md:h-72"><canvas id="fin-monthlyChart"></canvas></div>
-            </div>
-        </div>
-
-        <!-- Detay Görünümleri -->
-        <div id="fin-debts-detail-view" class="space-y-4 hidden fin-view-section">
-            <div class="flex justify-between items-center"><button onclick="fin_switchView('dashboard')" class="text-slate-500 text-xs md:text-sm font-medium flex items-center gap-2"><div class="w-7 h-7 rounded-full bg-white border border-slate-200 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></div>Geri Dön</button><div class="flex gap-2"><select id="fin-debts-filter-currency" class="border border-slate-200 bg-white rounded-xl px-2 py-1.5 text-xs outline-none" onchange="fin_renderDebtsView()"><option value="ALL">Tüm Dövizler</option><option value="TRY">TL</option><option value="USD">Dolar</option><option value="EUR">Euro</option><option value="CHF">Frank</option></select><select id="fin-debts-filter-contact" class="border border-slate-200 bg-white rounded-xl px-2 py-1.5 text-xs outline-none" onchange="fin_renderDebtsView()"></select><button onclick="fin_generatePDF('fin-debts-pdf-container', 'Verilen_Borclar')" class="bg-rose-50 text-rose-600 px-3 py-1.5 rounded-xl text-xs font-medium border border-rose-100"><i class="fa-solid fa-file-pdf"></i> PDF</button></div></div>
-            <div id="fin-debts-pdf-container" class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-100 space-y-4"><h2 class="text-lg font-bold">Verilen Borçlar Raporu</h2><div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="fin-debts-currency-totals"></div><div class="overflow-x-auto"><table class="w-full text-left border-collapse min-w-[500px]"><thead><tr class="text-xs text-slate-400 border-b"><th class="p-2">Tarih</th><th class="p-2">Kişi</th><th class="p-2">Açıklama</th><th class="p-2 text-center">Süre</th><th class="p-2 text-right">Tutar</th></tr></thead><tbody id="fin-debts-full-tbody" class="text-xs md:text-sm divide-y"></tbody></table></div></div>
-        </div>
-
-        <div id="fin-inflows-detail-view" class="space-y-4 hidden fin-view-section">
-            <div class="flex justify-between items-center"><button onclick="fin_switchView('dashboard')" class="text-slate-500 text-xs md:text-sm font-medium flex items-center gap-2"><div class="w-7 h-7 rounded-full bg-white border border-slate-200 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></div>Geri Dön</button><div class="flex gap-2"><select id="fin-inflows-filter-currency" class="border border-slate-200 bg-white rounded-xl px-2 py-1.5 text-xs outline-none" onchange="fin_renderInflowsView()"><option value="ALL">Tüm Dövizler</option><option value="TRY">TL</option><option value="USD">Dolar</option><option value="EUR">Euro</option><option value="CHF">Frank</option></select><select id="fin-inflows-filter-contact" class="border border-slate-200 bg-white rounded-xl px-2 py-1.5 text-xs outline-none" onchange="fin_renderInflowsView()"></select><button onclick="fin_generatePDF('fin-inflows-pdf-container', 'Nakit_Girisleri')" class="bg-rose-50 text-rose-600 px-3 py-1.5 rounded-xl text-xs font-medium border border-rose-100"><i class="fa-solid fa-file-pdf"></i> PDF</button></div></div>
-            <div id="fin-inflows-pdf-container" class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-100 space-y-4"><h2 class="text-lg font-bold">Nakit Girişleri Raporu</h2><div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="fin-inflows-currency-totals"></div><div class="overflow-x-auto"><table class="w-full text-left border-collapse min-w-[500px]"><thead><tr class="text-xs text-slate-400 border-b"><th class="p-2">Tarih</th><th class="p-2">Kaynak</th><th class="p-2">Açıklama</th><th class="p-2 text-right">Tutar</th></tr></thead><tbody id="fin-inflows-full-tbody" class="text-xs md:text-sm divide-y"></tbody></table></div></div>
-        </div>
-
-        <div id="fin-account-detail-view" class="space-y-4 hidden fin-view-section">
-            <div class="flex flex-col sm:flex-row justify-between items-center gap-3"><button onclick="fin_switchView('dashboard')" class="text-slate-500 text-xs md:text-sm font-medium flex items-center gap-2"><div class="w-7 h-7 rounded-full bg-white border border-slate-200 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></div>Geri Dön</button><div class="flex items-center gap-2 w-full sm:w-auto justify-end"><button onclick="fin_generatePDF('fin-bank-pdf-container', 'Hesap_Ozeti')" class="bg-rose-50 text-rose-600 px-3 py-2 rounded-xl text-xs font-medium border border-rose-100"><i class="fa-solid fa-file-pdf"></i> PDF İndir</button></div></div>
-            <div id="fin-bank-pdf-container" class="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-100 space-y-5">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 border-b pb-4"><h2 id="fin-detail-account-name" class="text-lg md:text-xl font-bold text-slate-800">Hesap Adı</h2><span class="text-xs font-medium px-3 py-1 bg-slate-100 text-slate-600 rounded-xl">Banka Hesap Özeti</span></div>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-50/60 p-4 rounded-2xl border border-slate-100"><div class="flex flex-col"><span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Toplam Giren</span><div id="fin-sum-incoming" class="space-y-1 text-xs">0.00</div></div><div class="flex flex-col sm:border-x sm:border-slate-200 sm:px-4"><span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Toplam Çıkan</span><div id="fin-sum-outgoing" class="space-y-1 text-xs">0.00</div></div><div class="flex flex-col sm:pl-2"><span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Net Bakiye</span><div id="fin-sum-balance" class="space-y-1 text-xs">0.00</div></div></div>
-                <div class="grid grid-cols-1 sm:grid-cols-5 gap-2.5 bg-slate-50 p-3.5 rounded-2xl border border-slate-100 text-xs">
-                    <div><label class="block font-semibold text-slate-400 uppercase mb-1 text-[10px]">Tarih Ara</label><input type="text" id="fin-filter-tarih" oninput="fin_renderAccountDetailView()" class="w-full p-2 bg-white border border-slate-200 rounded-xl outline-none" placeholder="Örn: 06.04.2026"></div>
-                    <div><label class="block font-semibold text-slate-400 uppercase mb-1 text-[10px]">İşlem Türü</label><select id="fin-filter-islem" onchange="fin_renderAccountDetailView()" class="w-full p-2 bg-white border border-slate-200 rounded-xl outline-none"><option value="ALL">Tümü</option><option value="IN">Giriş</option><option value="OUT">Çıkış</option><option value="TRANSFER">Transfer</option></select></div>
-                    <div><label class="block font-semibold text-slate-400 uppercase mb-1 text-[10px]">Giriş Para Birimi</label><select id="fin-filter-giris-cur" onchange="fin_renderAccountDetailView()" class="w-full p-2 bg-white border border-slate-200 rounded-xl outline-none"><option value="ALL">Tümü</option><option value="TRY">TL (₺)</option><option value="USD">Dolar ($)</option><option value="EUR">Euro (€)</option><option value="CHF">Frank (CHF)</option></select></div>
-                    <div><label class="block font-semibold text-slate-400 uppercase mb-1 text-[10px]">Çıkış Para Birimi</label><select id="fin-filter-cikis-cur" onchange="fin_renderAccountDetailView()" class="w-full p-2 bg-white border border-slate-200 rounded-xl outline-none"><option value="ALL">Tümü</option><option value="TRY">TL (₺)</option><option value="USD">Dolar ($)</option><option value="EUR">Euro (€)</option><option value="CHF">Frank (CHF)</option></select></div>
-                    <div><label class="block font-semibold text-slate-400 uppercase mb-1 text-[10px]">Cari / Hesap</label><select id="fin-filter-cari" onchange="fin_renderAccountDetailView()" class="w-full p-2 bg-white border border-slate-200 rounded-xl outline-none"><option value="ALL">Tüm Cari / Hesaplar</option></select></div>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse min-w-[800px]">
-                        <thead><tr class="text-xs text-slate-400 border-b border-slate-100"><th class="p-3">Tarih</th><th class="p-3">İşlem</th><th class="p-3">Kategori</th><th class="p-3">Cari / Hesap</th><th class="p-3">Açıklama</th><th class="p-3 text-right text-emerald-600">Giriş (Para Birimi)</th><th class="p-3 text-right text-rose-600">Çıkış (Para Birimi)</th><th class="p-3 text-center">İşlem</th></tr></thead>
-                        <tbody id="fin-detail-transaction-tbody" class="text-xs md:text-sm divide-y divide-slate-50"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <div id="fin-contact-detail-view" class="space-y-4 hidden fin-view-section">
-            <div class="flex flex-col sm:flex-row justify-between items-center gap-3"><button onclick="fin_switchView('contacts')" class="text-slate-500 text-xs md:text-sm font-medium flex items-center gap-2"><div class="w-7 h-7 rounded-full bg-white border border-slate-200 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></div>Carilere Dön</button><div class="flex items-center gap-2 w-full sm:w-auto justify-end"><button onclick="fin_generatePDF('fin-contact-pdf-container', 'Cari_Ekstre')" class="bg-rose-50 text-rose-600 px-3 py-2 rounded-xl text-xs font-medium border border-rose-100"><i class="fa-solid fa-file-pdf"></i> PDF İndir</button></div></div>
-            <div id="fin-contact-pdf-container" class="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-100 space-y-5">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 border-b pb-4"><h2 id="fin-cd-name" class="text-lg md:text-xl font-bold text-slate-800">Cari Adı</h2><span class="text-xs font-medium px-3 py-1 bg-slate-100 text-slate-600 rounded-xl">Cari Hesap Ekstresi</span></div>
-                <div id="fin-cd-banks" class="bg-slate-50 p-3 rounded-xl text-xs space-y-1"></div>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-50/60 p-4 rounded-2xl border border-slate-100"><div class="flex flex-col"><span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Toplam Giren</span><div id="fin-cd-sum-incoming" class="space-y-1 text-xs">0.00</div></div><div class="flex flex-col sm:border-x sm:border-slate-200 sm:px-4"><span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Toplam Çıkan</span><div id="fin-cd-sum-outgoing" class="space-y-1 text-xs">0.00</div></div><div class="flex flex-col sm:pl-2"><span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Net Bakiye</span><div id="fin-cd-sum-balance" class="space-y-1 text-xs">0.00</div></div></div>
-                <div class="grid grid-cols-1 sm:grid-cols-4 gap-2.5 bg-slate-50 p-3.5 rounded-2xl border border-slate-100 text-xs">
-                    <div><label class="block font-semibold text-slate-400 uppercase mb-1 text-[10px]">Tarih Ara</label><input type="text" id="fin-cd-filter-tarih" oninput="fin_renderContactDetailView()" class="w-full p-2 bg-white border border-slate-200 rounded-xl outline-none" placeholder="Örn: 01.06.2026"></div>
-                    <div><label class="block font-semibold text-slate-400 uppercase mb-1 text-[10px]">İşlem Türü</label><select id="fin-cd-filter-islem" onchange="fin_renderContactDetailView()" class="w-full p-2 bg-white border border-slate-200 rounded-xl outline-none"><option value="ALL">Tümü</option><option value="IN">Giriş</option><option value="OUT">Çıkış</option><option value="TRANSFER">Transfer</option></select></div>
-                    <div><label class="block font-semibold text-slate-400 uppercase mb-1 text-[10px]">Giriş Para Birimi</label><select id="fin-cd-filter-giris-cur" onchange="fin_renderContactDetailView()" class="w-full p-2 bg-white border border-slate-200 rounded-xl outline-none"><option value="ALL">Tümü</option><option value="TRY">TL (₺)</option><option value="USD">Dolar ($)</option><option value="EUR">Euro (€)</option><option value="CHF">Frank (CHF)</option></select></div>
-                    <div><label class="block font-semibold text-slate-400 uppercase mb-1 text-[10px]">Çıkış Para Birimi</label><select id="fin-cd-filter-cikis-cur" onchange="fin_renderContactDetailView()" class="w-full p-2 bg-white border border-slate-200 rounded-xl outline-none"><option value="ALL">Tümü</option><option value="TRY">TL (₺)</option><option value="USD">Dolar ($)</option><option value="EUR">Euro (€)</option><option value="CHF">Frank (CHF)</option></select></div>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse min-w-[700px]">
-                        <thead><tr class="text-xs text-slate-400 border-b border-slate-100"><th class="p-3">Tarih</th><th class="p-3">İşlem</th><th class="p-3">Hesap</th><th class="p-3">Kategori</th><th class="p-3">Açıklama</th><th class="p-3 text-right text-emerald-600">Giriş (Para Birimi)</th><th class="p-3 text-right text-rose-600">Çıkış (Para Birimi)</th><th class="p-3 text-center">İşlem</th></tr></thead>
-                        <tbody id="fin-cd-transaction-tbody" class="text-xs md:text-sm divide-y divide-slate-50"></tbody>
+                        <thead class="sticky top-0 z-10 bg-white"><tr class="border-b text-slate-400 text-[11px] uppercase"><th class="p-3">Tarih</th><th class="p-3">Hesap</th><th class="p-3">İşlem</th><th class="p-3">Kategori</th><th class="p-3">Kişi / Açıklama</th><th class="p-3 text-right">Tutar</th><th class="p-3 text-center">İşlem</th></tr></thead>
+                        <tbody id="fin-transaction-tbody" class="divide-y text-xs md:text-sm"></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
         <div id="fin-contacts-list-view" class="space-y-4 hidden fin-view-section">
-            <div class="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-100"><h2 class="text-md font-bold text-slate-700">Cari Kartlar Yönetimi</h2><button onclick="fin_openContactModal()" class="bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-xl text-xs font-medium border border-indigo-100"><i class="fa-solid fa-user-plus"></i> Yeni Cari</button></div>
+            <div class="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border"><h2 class="text-md font-bold text-slate-700">Cari Kartlar Yönetimi</h2><button onclick="fin_openContactModal()" class="bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-xl text-xs font-medium"><i class="fa-solid fa-user-plus"></i> Yeni Cari</button></div>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3" id="fin-contacts-grid-container"></div>
         </div>
     </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- ÇEK SİSTEMİ MODALLARI -->
-<!-- ========================================================================= -->
-<!-- KULLANICI YÖNETİMİ MODALI -->
+<!-- ================= MODALLAR ================= -->
+<!-- GELİŞMİŞ KULLANICI YÖNETİMİ MODALI (YENİ EKLENDİ) -->
 <div id="modalKullaniciYonetim" class="modal-overlay">
-    <div class="cek-modal modal-large">
-        <h2 style="color: var(--primary);">⚙️ Kullanıcı Yönetimi</h2>
-        <div style="display: flex; gap: 10px; margin-bottom: 15px; background: #f8f9fa; padding: 12px; border-radius: 8px;">
-            <div style="flex: 1;"><label style="font-size:11px; font-weight:bold;">Kullanıcı Adı</label><input type="text" id="yeniKullaniciAdi" class="form-control" placeholder="mehmet"></div>
+    <div class="cek-modal modal-xl">
+        <h2 style="color: var(--primary);">⚙️ Sistem Kullanıcıları Yönetimi</h2>
+        
+        <div style="display: flex; gap: 10px; margin-bottom: 15px; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
+            <div style="flex: 1;"><label style="font-size:11px; font-weight:bold;">Kullanıcı Adı (Giriş İçin)</label><input type="text" id="yeniKullaniciAdi" class="form-control" placeholder="Örn: mehmet"></div>
+            <div style="flex: 1.5;"><label style="font-size:11px; font-weight:bold;">Ad Soyad (Sistemde Görünecek)</label><input type="text" id="yeniKullaniciAdSoyad" class="form-control" placeholder="Mehmet Polat"></div>
             <div style="flex: 1;"><label style="font-size:11px; font-weight:bold;">Şifre</label><input type="password" id="yeniKullaniciSifre" class="form-control" placeholder="****"></div>
-            <div style="flex: 1.5;"><label style="font-size:11px; font-weight:bold;">Ad Soyad</label><input type="text" id="yeniKullaniciAdSoyad" class="form-control" placeholder="Mehmet Polat"></div>
-            <div style="display: flex; align-items: flex-end;"><button class="btn btn-success" onclick="dbYeniKullaniciEkle()">+ Ekle</button></div>
+            <div style="flex: 1;"><label style="font-size:11px; font-weight:bold;">Finans Ekranı Yetkisi</label>
+                <select id="yeniKullaniciYetki" class="form-control">
+                    <option value="true">Açık (Görsün)</option>
+                    <option value="false">Kapalı (Görmesin)</option>
+                </select>
+            </div>
+            <div style="display: flex; align-items: flex-end;"><button class="btn btn-success" onclick="dbYeniKullaniciEkle()" style="padding: 10px 15px;">+ Kullanıcı Ekle</button></div>
         </div>
-        <table class="cek-table">
-            <thead><tr><th>Kullanıcı Adı</th><th>Ad Soyad</th><th>Şifre</th><th style="text-align:right;">İşlem</th></tr></thead>
-            <tbody id="tbodyKullanicilar"></tbody>
-        </table>
+
+        <div style="overflow-x:auto;">
+            <table class="cek-table">
+                <thead><tr><th>Giriş Adı</th><th>Ad Soyad</th><th>Şifre</th><th>Finans Yetkisi</th><th style="text-align:right;">İşlem</th></tr></thead>
+                <tbody id="tbodyKullanicilar"></tbody>
+            </table>
+        </div>
         <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalKullaniciYonetim')">Kapat</button></div>
     </div>
 </div>
 
-<!-- DİĞER ÇEK MODALLARI -->
+<!-- Çek Modalları -->
 <div id="modalMetricDetay" class="modal-overlay"><div class="cek-modal modal-large"><h2 id="metricDetayBaslik">Detay</h2><table class="cek-table"><thead><tr><th>Çek No</th><th>Cari</th><th>Banka</th><th>Vade</th><th style="text-align:right;">Tutar</th><th>Durum</th></tr></thead><tbody id="tbodyMetricDetay"></tbody></table><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalMetricDetay')">Kapat</button></div></div></div>
 <div id="modalIstatistik" class="modal-overlay"><div class="cek-modal modal-xl"><h2>📊 İstatistik Raporu</h2><table class="cek-table"><thead><tr><th>Tarih</th><th style="text-align:right;">Giren</th><th style="text-align:right;">Tedarikçi</th><th style="text-align:right;">Banka</th></tr></thead><tbody id="tbodyIstatistik"></tbody><tfoot id="tfootIstatistik"></tfoot></table><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalIstatistik')">Kapat</button></div></div></div>
 <div id="modalCariYonetim" class="modal-overlay"><div class="cek-modal modal-xl"><h2>👥 Cari Yönetimi</h2><div style="display:flex; gap:10px; margin-bottom:10px;"><input type="text" id="yeniCariInput" class="form-control" placeholder="Firma Ünvanı"><button class="btn btn-success" onclick="dbYeniCariEkle()">+ Kaydet</button></div><div class="cari-layout"><div class="cari-list" id="cariListContainer"></div><div class="cari-details"><h3 id="seciliCariBaslik">Seçiniz</h3><table class="cek-table hidden" id="cariHareketTablosu"><thead><tr><th>Çek No</th><th>Tür</th><th>Vade</th><th style="text-align:right;">Tutar</th></tr></thead><tbody id="cariHareketGövde"></tbody></table></div></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalCariYonetim')">Kapat</button></div></div></div>
 <div id="modalCariSecim" class="modal-overlay"><div class="cek-modal" style="width:400px;"><h2>Çek Hareketi</h2><div class="action-cards"><div class="action-card" onclick="closeModal('modalCariSecim'); openModal('modalCekGiris');"><h3 style="color:var(--success)">📥 Giriş</h3></div><div class="action-card" onclick="closeModal('modalCariSecim'); openModal('modalCekCikis');"><h3 style="color:var(--danger)">📤 Çıkış</h3></div></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalCariSecim')">Vazgeç</button></div></div></div>
-<div id="modalCekGiris" class="modal-overlay"><div class="cek-modal"><h2>📥 Çek Girişi</h2><div class="form-group"><label>Cari</label><select class="form-control" id="girisCariSecim"></select></div><div class="form-group"><label>Banka</label><select class="form-control" id="girisBankaSecim"><optgroup label="Kamu Bankaları"><option value="T.C. Ziraat Bankası">T.C. Ziraat Bankası</option><option value="Türkiye Halk Bankası">Türkiye Halk Bankası</option><option value="Türkiye Vakıflar Bankası">Türkiye Vakıflar Bankası</option></optgroup><optgroup label="Özel Bankalar"><option value="Türkiye İş Bankası">Türkiye İş Bankası</option><option value="Garanti BBVA">Garanti BBVA</option><option value="Akbank">Akbank</option><option value="Yapı Kredi">Yapı Kredi</option><option value="QNB Finansbank">QNB Finansbank</option><option value="DenizBank">DenizBank</option><option value="Türk Ekonomi Bankası (TEB)">Türk Ekonomi Bankası (TEB)</option><option value="İNG Bank">İNG Bank</option><option value="Şekerbank">Şekerbank</option><option value="Anadolubank">Anadolubank</option><option value="Odea Bank">Odea Bank</option><option value="Fibabanka">Fibabanka</option><option value="Burgan Bank">Burgan Bank</option><option value="Alternatif Bank">Alternatif Bank</option><option value="ICBC Turkey Bank">ICBC Turkey Bank</option><option value="HSBC Bank">HSBC Bank</option></optgroup><optgroup label="Katılım Bankaları"><option value="Kuveyt Türk Katılım Bankası">Kuveyt Türk Katılım Bankası</option><option value="Albaraka Türk Katılım Bankası">Albaraka Türk Katılım Bankası</option><option value="Türkiye Finans Katılım Bankası">Türkiye Finans Katılım Bankası</option><option value="Vakıf Katılım Bankası">Vakıf Katılım Bankası</option><option value="Ziraat Katılım Bankası">Ziraat Katılım Bankası</option><option value="Emlak Katılım Bankası">Emlak Katılım Bankası</option><option value="T.O.M. Katılım Bankası">T.O.M. Katılım Bankası</option><option value="Hayat Finans Katılım Bankası">Hayat Finans Katılım Bankası</option></optgroup></select></div><div class="form-group"><label>Çek No</label><input type="text" class="form-control" id="girisCekNo"></div><div class="form-group"><label>Tutar</label><input type="number" class="form-control" id="girisTutar"></div><div class="form-group"><label>Vade</label><input type="date" class="form-control" id="girisVade"></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalCekGiris')">İptal</button><button class="btn btn-success" onclick="dbCekGirisKaydet()">Kaydet</button></div></div></div>
-<div id="modalCekCikis" class="modal-overlay"><div class="cek-modal"><h2 style="color:var(--danger)">📤 Çek Çıkışı</h2><div class="form-group"><label>Tür</label><select class="form-control" id="cekTuruSelect" onchange="handleCekTuruChange()"><option value="kendi">Kendi Çekimiz</option><option value="kasa">Kasadan Seç</option></select></div><div class="form-group hidden" id="kasadanSecimDiv"><label>Portföy</label><select class="form-control" id="kasaCekListesi" onchange="autoFillCekNo()"></select></div><div class="form-group"><label>Çek No</label><input type="text" class="form-control" id="cikisCekNo"></div><div class="form-group"><label>Tutar</label><input type="number" class="form-control" id="cikisTutar"></div><div class="form-group"><label>Vade</label><input type="date" class="form-control" id="cikisVade"></div><div class="form-group"><label>Hedef</label><select class="form-control" id="cikisHedefi" onchange="handleCikisHedefi()"><option value="tedarikci">Cari</option><option value="banka_tahsil">Tahsil</option></select></div><div class="form-group hidden" id="cikisCariDiv"><label>Cari</label><select class="form-control" id="cikisCariSecim"></select></div><div class="form-group hidden" id="bankaListesiDiv"><label>İlgili Bankayı Seçiniz</label><select class="form-control" id="cikisBankaSecim"><optgroup label="Kamu Bankaları"><option value="T.C. Ziraat Bankası">T.C. Ziraat Bankası</option><option value="Türkiye Halk Bankası">Türkiye Halk Bankası</option><option value="Türkiye Vakıflar Bankası">Türkiye Vakıflar Bankası</option></optgroup><optgroup label="Özel Bankalar"><option value="Türkiye İş Bankası">Türkiye İş Bankası</option><option value="Garanti BBVA">Garanti BBVA</option><option value="Akbank">Akbank</option><option value="Yapı Kredi">Yapı Kredi</option><option value="QNB Finansbank">QNB Finansbank</option><option value="DenizBank">DenizBank</option><option value="Türk Ekonomi Bankası (TEB)">Türk Ekonomi Bankası (TEB)</option><option value="İNG Bank">İNG Bank</option><option value="Şekerbank">Şekerbank</option><option value="Anadolubank">Anadolubank</option><option value="Odea Bank">Odea Bank</option><option value="Fibabanka">Fibabanka</option><option value="Burgan Bank">Burgan Bank</option><option value="Alternatif Bank">Alternatif Bank</option><option value="ICBC Turkey Bank">ICBC Turkey Bank</option><option value="HSBC Bank">HSBC Bank</option></optgroup><optgroup label="Katılım Bankaları"><option value="Kuveyt Türk Katılım Bankası">Kuveyt Türk Katılım Bankası</option><option value="Albaraka Türk Katılım Bankası">Albaraka Türk Katılım Bankası</option><option value="Türkiye Finans Katılım Bankası">Türkiye Finans Katılım Bankası</option><option value="Vakıf Katılım Bankası">Vakıf Katılım Bankası</option><option value="Ziraat Katılım Bankası">Ziraat Katılım Bankası</option><option value="Emlak Katılım Bankası">Emlak Katılım Bankası</option><option value="T.O.M. Katılım Bankası">T.O.M. Katılım Bankası</option><option value="Hayat Finans Katılım Bankası">Hayat Finans Katılım Bankası</option></optgroup></select></div><div class="form-group" id="kendiBankaDiv"><label>Kendi Çekimizin Bankası</label><select class="form-control" id="kendiBankaSecim"><optgroup label="Kamu Bankaları"><option value="T.C. Ziraat Bankası">T.C. Ziraat Bankası</option><option value="Türkiye Halk Bankası">Türkiye Halk Bankası</option><option value="Türkiye Vakıflar Bankası">Türkiye Vakıflar Bankası</option></optgroup><optgroup label="Özel Bankalar"><option value="Türkiye İş Bankası">Türkiye İş Bankası</option><option value="Garanti BBVA">Garanti BBVA</option><option value="Akbank">Akbank</option><option value="Yapı Kredi">Yapı Kredi</option><option value="QNB Finansbank">QNB Finansbank</option><option value="DenizBank">DenizBank</option><option value="Türk Ekonomi Bankası (TEB)">Türk Ekonomi Bankası (TEB)</option><option value="İNG Bank">İNG Bank</option><option value="Şekerbank">Şekerbank</option><option value="Anadolubank">Anadolubank</option><option value="Odea Bank">Odea Bank</option><option value="Fibabanka">Fibabanka</option><option value="Burgan Bank">Burgan Bank</option><option value="Alternatif Bank">Alternatif Bank</option><option value="ICBC Turkey Bank">ICBC Turkey Bank</option><option value="HSBC Bank">HSBC Bank</option></optgroup><optgroup label="Katılım Bankaları"><option value="Kuveyt Türk Katılım Bankası">Kuveyt Türk Katılım Bankası</option><option value="Albaraka Türk Katılım Bankası">Albaraka Türk Katılım Bankası</option><option value="Türkiye Finans Katılım Bankası">Türkiye Finans Katılım Bankası</option><option value="Vakıf Katılım Bankası">Vakıf Katılım Bankası</option><option value="Ziraat Katılım Bankası">Ziraat Katılım Bankası</option><option value="Emlak Katılım Bankası">Emlak Katılım Bankası</option><option value="T.O.M. Katılım Bankası">T.O.M. Katılım Bankası</option><option value="Hayat Finans Katılım Bankası">Hayat Finans Katılım Bankası</option></optgroup></select></div><div class="form-actions"><button class="btn btn-danger" onclick="dbCekCikisKaydet()">Kaydet</button></div></div></div>
-<div id="modalCekDuzenle" class="modal-overlay"><div class="cek-modal"><h2>✏️ Çeki Düzenle</h2><input type="hidden" id="duzenleId"><div class="form-group"><label>Çek No</label><input type="text" class="form-control" id="duzenleCekNo"></div><div class="form-group"><label>Cari</label><input type="text" class="form-control" id="duzenleCari" readonly style="background:#f1f1f1;"></div><div class="form-group"><label>Banka</label><select class="form-control" id="duzenleBanka"><optgroup label="Kamu Bankaları"><option value="T.C. Ziraat Bankası">T.C. Ziraat Bankası</option><option value="Türkiye Halk Bankası">Türkiye Halk Bankası</option><option value="Türkiye Vakıflar Bankası">Türkiye Vakıflar Bankası</option></optgroup><optgroup label="Özel Bankalar"><option value="Türkiye İş Bankası">Türkiye İş Bankası</option><option value="Garanti BBVA">Garanti BBVA</option><option value="Akbank">Akbank</option><option value="Yapı Kredi">Yapı Kredi</option><option value="QNB Finansbank">QNB Finansbank</option><option value="DenizBank">DenizBank</option><option value="Türk Ekonomi Bankası (TEB)">Türk Ekonomi Bankası (TEB)</option><option value="İNG Bank">İNG Bank</option><option value="Şekerbank">Şekerbank</option><option value="Anadolubank">Anadolubank</option><option value="Odea Bank">Odea Bank</option><option value="Fibabanka">Fibabanka</option><option value="Burgan Bank">Burgan Bank</option><option value="Alternatif Bank">Alternatif Bank</option><option value="ICBC Turkey Bank">ICBC Turkey Bank</option><option value="HSBC Bank">HSBC Bank</option></optgroup><optgroup label="Katılım Bankaları"><option value="Kuveyt Türk Katılım Bankası">Kuveyt Türk Katılım Bankası</option><option value="Albaraka Türk Katılım Bankası">Albaraka Türk Katılım Bankası</option><option value="Türkiye Finans Katılım Bankası">Türkiye Finans Katılım Bankası</option><option value="Vakıf Katılım Bankası">Vakıf Katılım Bankası</option><option value="Ziraat Katılım Bankası">Ziraat Katılım Bankası</option><option value="Emlak Katılım Bankası">Emlak Katılım Bankası</option><option value="T.O.M. Katılım Bankası">T.O.M. Katılım Bankası</option><option value="Hayat Finans Katılım Bankası">Hayat Finans Katılım Bankası</option></optgroup></select></div><div class="form-group"><label>Tutar</label><input type="number" class="form-control" id="duzenleTutar"></div><div class="form-group"><label>Vade</label><input type="date" class="form-control" id="duzenleVade"></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalCekDuzenle')">İptal</button><button class="btn btn-primary" onclick="dbCekGuncelleKaydet()">Değişiklikleri Kaydet</button></div></div></div>
-<div id="modalCikisListesi" class="modal-overlay"><div class="cek-modal modal-large"><h2>📤 Çıkış Yapılanlar</h2><table class="cek-table"><thead><tr><th>Çek No</th><th>Sahibi</th><th>Yeri</th><th>Vade</th><th style="text-align:right;">Tutar</th><th style="text-align:right;">İşlem</th></tr></thead><tbody id="tbodyCikis"></tbody></table><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalCikisListesi')">Kapat</button></div></div></div>
-<div id="modalVadeHesapla" class="modal-overlay"><div class="cek-modal modal-large"><h2>⏱ Vade Hesapla</h2><div style="display:flex; gap:10px; margin-bottom:20px; background:#f8f9fa; padding:15px; border-radius:8px;"><div style="flex:1;"><label>Tutar (TL)</label><input type="number" id="hesaplaTutar" class="form-control"></div><div style="flex:1;"><label>Vade</label><input type="date" id="hesaplaVade" class="form-control"></div><div style="display:flex; align-items:flex-end;"><button class="btn btn-primary" onclick="geciciCekEkle()">+ Ekle</button></div></div><table class="cek-table"><thead><tr><th>Sıra</th><th style="text-align:right;">Tutar</th><th style="text-align:right;">Vade Tarihi</th><th style="text-align:right;">Kalan Gün</th></tr></thead><tbody id="vadeTablosu"></tbody></table><div style="margin-top:20px; padding:15px; background:#eafaf1; border-radius:8px; border:1px solid var(--success);"><p><strong>Toplam Tutar:</strong> <span id="toplamTutarMetni">0 TL</span></p><p><strong>Ortalama Vade:</strong> <span id="ortalamaVadeMetni" style="color:var(--danger); font-weight:bold; font-size:18px;">0 Gün</span></p></div><div class="modal-actions"><button class="btn btn-outline" onclick="geciciCekleriTemizle()">Temizle</button><button class="btn btn-outline" onclick="closeModal('modalVadeHesapla')">Kapat</button></div></div></div>
+<div id="modalCekGiris" class="modal-overlay"><div class="cek-modal"><h2>📥 Çek Girişi</h2><div class="form-group"><label>Cari</label><select class="form-control" id="girisCariSecim"></select></div><div class="form-group"><label>Banka</label><select class="form-control" id="girisBankaSecim"><option value="T.C. Ziraat Bankası">Ziraat</option><option value="Türkiye İş Bankası">İş Bankası</option><option value="Garanti BBVA">Garanti</option></select></div><div class="form-group"><label>Çek No</label><input type="text" class="form-control" id="girisCekNo"></div><div class="form-group"><label>Tutar</label><input type="number" class="form-control" id="girisTutar"></div><div class="form-group"><label>Vade</label><input type="date" class="form-control" id="girisVade"></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalCekGiris')">İptal</button><button class="btn btn-success" onclick="dbCekGirisKaydet()">Kaydet</button></div></div></div>
+<div id="modalCekCikis" class="modal-overlay"><div class="cek-modal"><h2 style="color:var(--danger)">📤 Çek Çıkışı</h2><div class="form-group"><label>Tür</label><select class="form-control" id="cekTuruSelect" onchange="handleCekTuruChange()"><option value="kendi">Kendi Çekimiz</option><option value="kasa">Kasadan Seç</option></select></div><div class="form-group hidden" id="kasadanSecimDiv"><label>Portföy</label><select class="form-control" id="kasaCekListesi" onchange="autoFillCekNo()"></select></div><div class="form-group"><label>Çek No</label><input type="text" class="form-control" id="cikisCekNo"></div><div class="form-group"><label>Tutar</label><input type="number" class="form-control" id="cikisTutar"></div><div class="form-group"><label>Vade</label><input type="date" class="form-control" id="cikisVade"></div><div class="form-group"><label>Hedef</label><select class="form-control" id="cikisHedefi" onchange="handleCikisHedefi()"><option value="tedarikci">Cari</option><option value="banka_tahsil">Tahsil</option></select></div><div class="form-group hidden" id="cikisCariDiv"><label>Cari</label><select class="form-control" id="cikisCariSecim"></select></div><div class="form-actions"><button class="btn btn-danger" onclick="dbCekCikisKaydet()">Kaydet</button></div></div></div>
+<div id="modalCikisListesi" class="modal-overlay"><div class="cek-modal modal-large"><h2>📤 Çıkış Yapılanlar</h2><table class="cek-table"><thead><tr><th>Çek No</th><th>Sahibi</th><th>Yeri</th><th>Vade</th><th style="text-align:right;">Tutar</th></tr></thead><tbody id="tbodyCikis"></tbody></table><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalCikisListesi')">Kapat</button></div></div></div>
+<div id="modalVadeHesapla" class="modal-overlay"><div class="cek-modal modal-large"><h2>⏱ Vade Hesapla</h2><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalVadeHesapla')">Kapat</button></div></div></div>
 
-<!-- ================= VARLIK YÖNETİMİ MODALLARI ================= -->
+<!-- Varlık Modalları -->
 <div id="fin-transactionModal" class="fin-modal tailwind-wrapper fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 items-center justify-center p-3 text-slate-700">
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
-        <div class="flex justify-between items-center p-4 border-b bg-white"><h3 id="fin-transactionModalTitle" class="text-md font-bold">Yeni İşlem</h3><button onclick="fin_closeModal('fin-transactionModal')" class="text-slate-400 bg-slate-50 w-7 h-7 rounded-full flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button></div>
-        <div class="p-4 md:p-6 space-y-3 overflow-y-auto text-xs md:text-sm bg-slate-50/30">
-            <div><label class="block font-semibold mb-1 uppercase">Tür</label><select id="fin-form-type" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none" onchange="fin_toggleFormFields()"><option value="IN">Giriş</option><option value="OUT">Çıkış</option><option value="TRANSFER">Transfer</option></select></div>
-            <div><label class="block font-semibold mb-1 uppercase">Hesap</label><select id="fin-form-source-account" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none"></select></div>
-            <div id="fin-account-target-div" style="display:none;"><label class="block font-semibold mb-1 uppercase">Hedef Hesap</label><select id="fin-form-target-account" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none"></select></div>
-            <div id="fin-contact-div"><label class="block font-semibold mb-1 uppercase">Cari</label><select id="fin-form-contact" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none"></select></div>
-            <div class="flex gap-3"><div class="w-1/2"><label class="block font-semibold mb-1 uppercase">Para Birimi</label><select id="fin-form-currency" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none"><option value="TRY">TL</option><option value="USD">Dolar</option><option value="EUR">Euro</option><option value="CHF">Frank</option></select></div><div class="w-1/2"><label class="block font-semibold mb-1 uppercase">Tutar</label><input type="text" id="fin-form-amount" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none" placeholder="0.00" oninput="formatAmountInput(this)"></div></div>
-            <div><label class="block font-semibold mb-1 uppercase">Tarih</label><input type="date" id="fin-form-date" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none"></div>
-            <div><label class="block font-semibold mb-1 uppercase">Açıklama</label><input type="text" id="fin-form-desc" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none" placeholder="Açıklama..."></div>
+        <div class="flex justify-between items-center p-4 border-b bg-white"><h3 id="fin-transactionModalTitle" class="text-md font-bold">Yeni İşlem</h3><button onclick="fin_closeModal('fin-transactionModal')"><i class="fa-solid fa-xmark"></i></button></div>
+        <div class="p-4 md:p-6 space-y-3 overflow-y-auto text-xs md:text-sm">
+            <div><label class="block font-semibold mb-1 uppercase">Tür</label><select id="fin-form-type" class="w-full p-2.5 border rounded-xl" onchange="fin_toggleFormFields()"><option value="IN">Giriş</option><option value="OUT">Çıkış</option><option value="TRANSFER">Transfer</option></select></div>
+            <div><label class="block font-semibold mb-1 uppercase">Hesap</label><select id="fin-form-source-account" class="w-full p-2.5 border rounded-xl"></select></div>
+            <div id="fin-account-target-div" style="display:none;"><label class="block font-semibold mb-1 uppercase">Hedef Hesap</label><select id="fin-form-target-account" class="w-full p-2.5 border rounded-xl"></select></div>
+            <div id="fin-contact-div"><label class="block font-semibold mb-1 uppercase">Cari</label><select id="fin-form-contact" class="w-full p-2.5 border rounded-xl"></select></div>
+            <div class="flex gap-3"><div class="w-1/2"><label class="block font-semibold mb-1 uppercase">Para Birimi</label><select id="fin-form-currency" class="w-full p-2.5 border rounded-xl"><option value="TRY">TL</option><option value="USD">Dolar</option><option value="EUR">Euro</option><option value="CHF">Frank</option></select></div><div class="w-1/2"><label class="block font-semibold mb-1 uppercase">Tutar</label><input type="text" id="fin-form-amount" class="w-full p-2.5 border rounded-xl" placeholder="0.00" oninput="formatAmountInput(this)"></div></div>
+            <div><label class="block font-semibold mb-1 uppercase">Tarih</label><input type="date" id="fin-form-date" class="w-full p-2.5 border rounded-xl"></div>
+            <div><label class="block font-semibold mb-1 uppercase">Açıklama</label><input type="text" id="fin-form-desc" class="w-full p-2.5 border rounded-xl" placeholder="Açıklama..."></div>
         </div>
-        <div class="p-4 border-t bg-white flex justify-end gap-2"><button onclick="fin_closeModal('fin-transactionModal')" class="px-4 py-2 border border-slate-200 rounded-xl text-slate-600">İptal</button><button onclick="fin_saveTransaction()" class="px-4 py-2 bg-indigo-500 text-white rounded-xl">Kaydet</button></div>
+        <div class="p-4 border-t bg-white flex justify-end gap-2"><button onclick="fin_closeModal('fin-transactionModal')" class="px-4 py-2 border rounded-xl">İptal</button><button onclick="fin_saveTransaction()" class="px-4 py-2 bg-indigo-500 text-white rounded-xl">Kaydet</button></div>
     </div>
 </div>
 <div id="fin-contactModal" class="fin-modal tailwind-wrapper fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 items-center justify-center p-3 text-slate-700">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
-        <div class="flex justify-between items-center p-4 border-b bg-white"><h3 class="font-bold">Yeni Cari</h3><button onclick="fin_closeModal('fin-contactModal')" class="text-slate-400 bg-slate-50 w-7 h-7 rounded-full flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button></div>
-        <div class="p-4 space-y-3 bg-slate-50/30 overflow-y-auto"><div><label class="block text-xs font-semibold uppercase mb-1">Ünvan</label><input type="text" id="fin-contact-name" class="w-full p-2 border border-slate-200 rounded-xl text-xs outline-none"></div><div id="fin-contact-bank-list" class="space-y-2"></div><button onclick="fin_addBankRowToContact()" class="mt-2 text-xs text-indigo-500 font-medium">+ Banka Ekle</button></div>
-        <div class="p-4 border-t flex justify-end gap-2 bg-white"><button onclick="fin_closeModal('fin-contactModal')" class="px-4 py-2 border border-slate-200 rounded-xl text-xs text-slate-600">İptal</button><button onclick="fin_saveContact()" class="px-4 py-2 bg-indigo-500 text-white rounded-xl text-xs">Kaydet</button></div>
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col">
+        <div class="flex justify-between items-center p-4 border-b bg-white"><h3 class="font-bold">Yeni Cari</h3><button onclick="fin_closeModal('fin-contactModal')"><i class="fa-solid fa-xmark"></i></button></div>
+        <div class="p-4 space-y-3"><div><label class="block text-xs font-semibold uppercase mb-1">Ünvan</label><input type="text" id="fin-contact-name" class="w-full p-2 border rounded-xl text-xs"></div><div id="fin-contact-bank-list" class="space-y-2"></div><button onclick="fin_addBankRowToContact()" class="text-xs text-indigo-500 font-medium inline-flex items-center"><i class="fa-solid fa-plus mr-1"></i> Banka Ekle</button></div>
+        <div class="p-4 border-t flex justify-end gap-2"><button onclick="fin_closeModal('fin-contactModal')" class="px-4 py-2 border rounded-xl text-xs">İptal</button><button onclick="fin_saveContact()" class="px-4 py-2 bg-indigo-500 text-white rounded-xl text-xs">Kaydet</button></div>
     </div>
 </div>
 <div id="fin-bankModal" class="fin-modal tailwind-wrapper fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 items-center justify-center p-3 text-slate-700">
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col">
-        <div class="flex justify-between items-center p-4 border-b"><h3 class="font-bold">Banka Ekle</h3><button onclick="fin_closeModal('fin-bankModal')" class="text-slate-400 bg-slate-50 w-7 h-7 rounded-full flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button></div>
-        <div class="p-4 bg-slate-50/30"><div><label class="block text-xs font-semibold uppercase mb-1">Banka Adı</label><input type="text" id="fin-bank-name" class="w-full p-2 border border-slate-200 rounded-xl text-xs outline-none" placeholder="Örn: Akbank"></div></div>
-        <div class="p-4 border-t flex justify-end gap-2 bg-white"><button onclick="fin_closeModal('fin-bankModal')" class="px-4 py-2 border border-slate-200 rounded-xl text-xs text-slate-600">İptal</button><button onclick="fin_saveBank()" class="px-4 py-2 bg-indigo-500 text-white rounded-xl text-xs">Ekle</button></div>
+        <div class="flex justify-between items-center p-4 border-b"><h3 class="font-bold">Banka Ekle</h3><button onclick="fin_closeModal('fin-bankModal')"><i class="fa-solid fa-xmark"></i></button></div>
+        <div class="p-4"><div><label class="block text-xs font-semibold uppercase mb-1">Banka Adı</label><input type="text" id="fin-bank-name" class="w-full p-2 border rounded-xl text-xs" placeholder="Örn: Akbank"></div></div>
+        <div class="p-4 border-t flex justify-end gap-2"><button onclick="fin_closeModal('fin-bankModal')" class="px-4 py-2 border rounded-xl text-xs">İptal</button><button onclick="fin_saveBank()" class="px-4 py-2 bg-indigo-500 text-white rounded-xl text-xs">Ekle</button></div>
     </div>
 </div>
 
@@ -469,35 +362,58 @@
     let aktifKullanici = localStorage.getItem('aktif_kullanici_ad') || null;
     let aktifKullaniciAdi = localStorage.getItem('aktif_kullanici') || null;
 
-    // ================= KULLANICI GİRİŞ/ÇIKIŞ =================
+    // ================= KULLANICI GİRİŞ/ÇIKIŞ VE YETKİLENDİRME =================
     async function sistemeGirisYap() {
         const ad = document.getElementById('loginKullaniciAdi').value.trim();
         const sifre = document.getElementById('loginSifre').value.trim();
         if(!ad || !sifre) return alert("Kullanıcı adı ve şifre giriniz.");
         const { data, error } = await db.from('kullanicilar').select('*').eq('kullanici_adi', ad).eq('sifre', sifre).single();
         if(error || !data) { alert("Hatalı kullanıcı adı veya şifre!"); return; }
-        aktifKullanici = data.ad_soyad; aktifKullaniciAdi = data.kullanici_adi;
-        localStorage.setItem('aktif_kullanici', aktifKullaniciAdi); localStorage.setItem('aktif_kullanici_ad', aktifKullanici);
+        
+        aktifKullanici = data.ad_soyad; 
+        aktifKullaniciAdi = data.kullanici_adi;
+        const yetkiFinans = data.yetki_finans === false ? 'false' : 'true'; // Finans ekranı görebilir mi?
+        
+        localStorage.setItem('aktif_kullanici', aktifKullaniciAdi); 
+        localStorage.setItem('aktif_kullanici_ad', aktifKullanici);
+        localStorage.setItem('yetki_finans', yetkiFinans);
+        
         otturumuAc();
     }
 
     function otturumuAc() {
         document.getElementById('modalGiris').style.display = 'none';
         switchMainApp('cek');
+        
+        // Finans ekranı yetkisi yoksa sol menüdeki butonu tamamen gizle
+        const yetkiFinans = localStorage.getItem('yetki_finans');
+        const btnMenuFinans = document.getElementById('btnMenuFinans');
+        if (yetkiFinans === 'false') {
+            btnMenuFinans.style.display = 'none';
+        } else {
+            btnMenuFinans.style.display = 'block';
+        }
+        
         loadData();
-        fin_loadData();
+        if (yetkiFinans !== 'false') fin_loadData();
     }
 
-    function cikisYap() { localStorage.removeItem('aktif_kullanici'); localStorage.removeItem('aktif_kullanici_ad'); location.reload(); }
+    function cikisYap() { 
+        localStorage.removeItem('aktif_kullanici'); localStorage.removeItem('aktif_kullanici_ad'); localStorage.removeItem('yetki_finans'); location.reload(); 
+    }
 
     function switchMainApp(appType) {
         if(appType === 'cek') {
             document.getElementById('app-varlik').style.display = 'none';
-            document.getElementById('app-cek').style.display = 'block'; document.getElementById('app-cek').style.opacity = '1'; document.getElementById('app-cek').style.pointerEvents = 'auto';
+            document.getElementById('app-cek').style.display = 'flex'; 
+            document.getElementById('app-cek').style.opacity = '1'; 
+            document.getElementById('app-cek').style.pointerEvents = 'auto';
             document.getElementById('aktifKullaniciGosterge').innerText = `👤 ${aktifKullanici}`;
         } else {
             document.getElementById('app-cek').style.display = 'none';
-            document.getElementById('app-varlik').style.display = 'block'; document.getElementById('app-varlik').style.opacity = '1'; document.getElementById('app-varlik').style.pointerEvents = 'auto';
+            document.getElementById('app-varlik').style.display = 'block'; 
+            document.getElementById('app-varlik').style.opacity = '1'; 
+            document.getElementById('app-varlik').style.pointerEvents = 'auto';
             fin_switchView('dashboard');
         }
     }
@@ -516,35 +432,62 @@
         }
     }
 
-    // ================= KULLANICI YÖNETİMİ =================
+    // ================= KULLANICI YÖNETİMİ (Ekle, Sil, Düzenle, Yetki) =================
     async function renderKullanicilarListesi() {
         const { data } = await db.from('kullanicilar').select('*').order('kullanici_adi');
         const tbody = document.getElementById('tbodyKullanicilar'); tbody.innerHTML = '';
         (data || []).forEach(u => {
+            const yetkiAcikSecili = (u.yetki_finans !== false) ? 'selected' : '';
+            const yetkiKapaliSecili = (u.yetki_finans === false) ? 'selected' : '';
+            
             tbody.innerHTML += `<tr>
-                <td>${u.kullanici_adi}</td>
-                <td><input type="text" id="k_ad_${u.id}" value="${u.ad_soyad}" class="form-control" style="padding:4px;"></td>
-                <td><input type="text" id="k_sif_${u.id}" value="${u.sifre}" class="form-control" style="padding:4px;"></td>
-                <td style="text-align:right;"><button class="btn btn-warning" style="padding:4px 8px;" onclick="kullaniciGuncelle(${u.id})">Güncelle</button></td>
+                <td><input type="text" id="k_kadi_${u.id}" value="${u.kullanici_adi}" class="form-control" style="padding:6px; font-size:12px;"></td>
+                <td><input type="text" id="k_ad_${u.id}" value="${u.ad_soyad}" class="form-control" style="padding:6px; font-size:12px;"></td>
+                <td><input type="text" id="k_sif_${u.id}" value="${u.sifre}" class="form-control" style="padding:6px; font-size:12px;"></td>
+                <td>
+                    <select id="k_yetki_${u.id}" class="form-control" style="padding:6px; font-size:12px;">
+                        <option value="true" ${yetkiAcikSecili}>Açık</option>
+                        <option value="false" ${yetkiKapaliSecili}>Kapalı</option>
+                    </select>
+                </td>
+                <td style="text-align:right; white-space:nowrap;">
+                    <button class="btn btn-warning" style="padding:6px 10px;" onclick="kullaniciGuncelle(${u.id})">Değiştir</button>
+                    <button class="btn btn-danger" style="padding:6px 10px;" onclick="kullaniciSil(${u.id})">Sil</button>
+                </td>
             </tr>`;
         });
     }
 
     async function dbYeniKullaniciEkle() {
-        const kAdi = document.getElementById('yeniKullaniciAdi').value.trim(); const sifre = document.getElementById('yeniKullaniciSifre').value.trim(); const adSoyad = document.getElementById('yeniKullaniciAdSoyad').value.trim();
+        const kAdi = document.getElementById('yeniKullaniciAdi').value.trim(); 
+        const sifre = document.getElementById('yeniKullaniciSifre').value.trim(); 
+        const adSoyad = document.getElementById('yeniKullaniciAdSoyad').value.trim();
+        const yetkiFinans = document.getElementById('yeniKullaniciYetki').value === 'true';
+
         if(!kAdi || !sifre || !adSoyad) return alert("Tüm alanları doldurun.");
-        const { error } = await db.from('kullanicilar').insert([{ kullanici_adi: kAdi, sifre: sifre, ad_soyad: adSoyad }]);
+        const { error } = await db.from('kullanicilar').insert([{ kullanici_adi: kAdi, sifre: sifre, ad_soyad: adSoyad, yetki_finans: yetkiFinans }]);
         if(error) return alert("Hata: " + error.message);
-        alert("Kullanıcı eklendi!");
+        alert("Kullanıcı başarıyla eklendi!");
         document.getElementById('yeniKullaniciAdi').value = ''; document.getElementById('yeniKullaniciSifre').value = ''; document.getElementById('yeniKullaniciAdSoyad').value = '';
         renderKullanicilarListesi();
     }
 
     async function kullaniciGuncelle(id) {
-        const adSoyad = document.getElementById(`k_ad_${id}`).value.trim(); const sifre = document.getElementById(`k_sif_${id}`).value.trim();
-        const { error } = await db.from('kullanicilar').update({ ad_soyad: adSoyad, sifre: sifre }).eq('id', id);
+        const kAdi = document.getElementById(`k_kadi_${id}`).value.trim();
+        const adSoyad = document.getElementById(`k_ad_${id}`).value.trim(); 
+        const sifre = document.getElementById(`k_sif_${id}`).value.trim();
+        const yetkiFinans = document.getElementById(`k_yetki_${id}`).value === 'true';
+
+        const { error } = await db.from('kullanicilar').update({ kullanici_adi: kAdi, ad_soyad: adSoyad, sifre: sifre, yetki_finans: yetkiFinans }).eq('id', id);
         if(error) return alert("Hata: " + error.message);
-        alert("Kullanıcı güncellendi!"); renderKullanicilarListesi();
+        alert("Kullanıcı bilgileri güncellendi!"); renderKullanicilarListesi();
+    }
+    
+    async function kullaniciSil(id) {
+        if(!confirm("Kullanıcıyı tamamen silmek istediğinize emin misiniz?")) return;
+        const { error } = await db.from('kullanicilar').delete().eq('id', id);
+        if(error) return alert("Hata: " + error.message);
+        renderKullanicilarListesi();
     }
 
 
