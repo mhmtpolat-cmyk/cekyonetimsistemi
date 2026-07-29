@@ -185,7 +185,7 @@
         <table id="tableVarliklar">
             <thead>
                 <tr>
-                    <th>Çek No</th><th>Cari / İlgili Kişi</th><th>Banka</th><th>Vade Tarihi</th><th>Kalan Gün</th><th style="text-align: right;">Tutar</th><th style="text-align: right;">Durum</th><th style="text-align: right;">İşlem</th>
+                    <th>Çek No</th><th>Cari / İlgili Kişi</th><th>Banka</th><th>Vade Tarihi</th><th>Kalan Gün</th><th style="text-align: right;">Tutar</th><th style="text-align: right;">Durum</th><th style="text-align: right;">İşlem / Kim Ekledi?</th>
                 </tr>
             </thead>
             <tbody id="tbodyVarliklar"></tbody>
@@ -199,7 +199,7 @@
             <input type="text" id="searchDuzenlenen" class="search-input" onkeyup="filterTable('searchDuzenlenen', 'tableDuzenlenen')" placeholder="🔍 Ara...">
         </div>
         <table id="tableDuzenlenen">
-            <thead><tr><th>Çek No</th><th>Verilen Cari / Tedarikçi</th><th>Banka</th><th>Vade Tarihi</th><th style="text-align: right;">Tutar</th><th style="text-align: right;">Durum</th><th style="text-align: right;">İşlem</th></tr></thead>
+            <thead><tr><th>Çek No</th><th>Verilen Cari / Tedarikçi</th><th>Banka</th><th>Vade Tarihi</th><th style="text-align: right;">Tutar</th><th style="text-align: right;">Durum</th><th style="text-align: right;">İşlem / Kim Ekledi?</th></tr></thead>
             <tbody id="tbodyDuzenlenen"></tbody>
             <tfoot><tr><th colspan="4" style="text-align:right;">Toplam:</th><th id="totalDuzenlenen" style="text-align: right; color:var(--danger);">₺0.00</th><th colspan="2"></th></tr></tfoot>
         </table>
@@ -219,7 +219,7 @@
     </div>
 </div>
 
-<!-- İSTATİSTİKLER MODALI -->
+<!-- İSTATİSTİKLER MODALI (GENEL TOPLAMLAR EKLENDİ) -->
 <div id="modalIstatistik" class="modal-overlay">
     <div class="modal modal-xl">
         <h2 style="color: var(--warning); border-bottom-color: var(--warning);">📊 Aylık ve Yıllık İstatistik Raporu</h2>
@@ -235,6 +235,7 @@
                 </tr>
             </thead>
             <tbody id="tbodyIstatistik"></tbody>
+            <tfoot id="tfootIstatistik"></tfoot> <!-- GENEL TOPLAMLAR BURAYA GELECEK -->
         </table>
         
         <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalIstatistik')">Kapat</button></div>
@@ -283,7 +284,6 @@
         <div class="form-group"><label>1. Cari (Kimden Alındı?)</label><select class="form-control" id="girisCariSecim"></select></div>
         <div class="form-group"><label>2. Çekin Ait Olduğu Banka</label>
             <select class="form-control" id="girisBankaSecim">
-                <!-- TÜM BANKALAR LİSTESİ -->
                 <optgroup label="Kamu Bankaları"><option value="T.C. Ziraat Bankası">T.C. Ziraat Bankası</option><option value="Türkiye Halk Bankası">Türkiye Halk Bankası</option><option value="Türkiye Vakıflar Bankası">Türkiye Vakıflar Bankası</option></optgroup>
                 <optgroup label="Özel Bankalar"><option value="Türkiye İş Bankası">Türkiye İş Bankası</option><option value="Garanti BBVA">Garanti BBVA</option><option value="Akbank">Akbank</option><option value="Yapı Kredi">Yapı Kredi</option><option value="QNB Finansbank">QNB Finansbank</option><option value="DenizBank">DenizBank</option><option value="Türk Ekonomi Bankası (TEB)">Türk Ekonomi Bankası (TEB)</option><option value="İNG Bank">İNG Bank</option><option value="Şekerbank">Şekerbank</option><option value="Anadolubank">Anadolubank</option><option value="Odea Bank">Odea Bank</option><option value="Fibabanka">Fibabanka</option><option value="Burgan Bank">Burgan Bank</option><option value="Alternatif Bank">Alternatif Bank</option><option value="ICBC Turkey Bank">ICBC Turkey Bank</option><option value="HSBC Bank">HSBC Bank</option></optgroup>
                 <optgroup label="Katılım Bankaları"><option value="Kuveyt Türk Katılım Bankası">Kuveyt Türk Katılım Bankası</option><option value="Albaraka Türk Katılım Bankası">Albaraka Türk Katılım Bankası</option><option value="Türkiye Finans Katılım Bankası">Türkiye Finans Katılım Bankası</option><option value="Vakıf Katılım Bankası">Vakıf Katılım Bankası</option><option value="Ziraat Katılım Bankası">Ziraat Katılım Bankası</option><option value="Emlak Katılım Bankası">Emlak Katılım Bankası</option><option value="T.O.M. Katılım Bankası">T.O.M. Katılım Bankası</option><option value="Hayat Finans Katılım Bankası">Hayat Finans Katılım Bankası</option></optgroup>
@@ -358,7 +358,6 @@
         <div class="form-group"><label>Çek Numarası</label><input type="text" class="form-control" id="duzenleCekNo"></div>
         <div class="form-group"><label>Cari / İlgili Kişi</label><input type="text" class="form-control" id="duzenleCari" readonly style="background:#f1f1f1;"></div>
         <div class="form-group"><label>Banka</label><select class="form-control" id="duzenleBanka">
-             <!-- TÜM BANKALAR LİSTESİ -->
              <optgroup label="Kamu Bankaları"><option value="T.C. Ziraat Bankası">T.C. Ziraat Bankası</option><option value="Türkiye Halk Bankası">Türkiye Halk Bankası</option><option value="Türkiye Vakıflar Bankası">Türkiye Vakıflar Bankası</option></optgroup>
              <optgroup label="Özel Bankalar"><option value="Türkiye İş Bankası">Türkiye İş Bankası</option><option value="Garanti BBVA">Garanti BBVA</option><option value="Akbank">Akbank</option><option value="Yapı Kredi">Yapı Kredi</option><option value="QNB Finansbank">QNB Finansbank</option><option value="DenizBank">DenizBank</option><option value="Türk Ekonomi Bankası (TEB)">Türk Ekonomi Bankası (TEB)</option><option value="İNG Bank">İNG Bank</option><option value="Şekerbank">Şekerbank</option><option value="Anadolubank">Anadolubank</option><option value="Odea Bank">Odea Bank</option><option value="Fibabanka">Fibabanka</option><option value="Burgan Bank">Burgan Bank</option><option value="Alternatif Bank">Alternatif Bank</option><option value="ICBC Turkey Bank">ICBC Turkey Bank</option><option value="HSBC Bank">HSBC Bank</option></optgroup>
              <optgroup label="Katılım Bankaları"><option value="Kuveyt Türk Katılım Bankası">Kuveyt Türk Katılım Bankası</option><option value="Albaraka Türk Katılım Bankası">Albaraka Türk Katılım Bankası</option><option value="Türkiye Finans Katılım Bankası">Türkiye Finans Katılım Bankası</option><option value="Vakıf Katılım Bankası">Vakıf Katılım Bankası</option><option value="Ziraat Katılım Bankası">Ziraat Katılım Bankası</option><option value="Emlak Katılım Bankası">Emlak Katılım Bankası</option><option value="T.O.M. Katılım Bankası">T.O.M. Katılım Bankası</option><option value="Hayat Finans Katılım Bankası">Hayat Finans Katılım Bankası</option></optgroup>
@@ -502,38 +501,63 @@
         openModal('modalMetricDetay');
     }
 
-    // İSTATİSTİK MODALI RENDER FONKSİYONU
+    // İSTATİSTİK MODALI RENDER FONKSİYONU VE GENEL TOPLAM
     function renderIstatistikler() {
         let groups = {};
+        
+        // Genel toplam değişkenleri
+        let genelAlinanTop = 0, genelAlinanAdet = 0;
+        let genelTedarikciTop = 0, genelTedarikciAdet = 0;
+        let genelBankaTop = 0, genelBankaAdet = 0;
+
         g_cekler.forEach(c => {
             let d = new Date(c.vade_tarihi);
             let key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}`;
             if(!groups[key]) {
                 groups[key] = { label: `${monthNames[d.getMonth()]} ${d.getFullYear()}`, alinanTop: 0, alinanAdet: 0, tedarikciTop: 0, tedarikciAdet: 0, bankaTop: 0, bankaAdet: 0 };
             }
-            if(c.islem_turu === 'Alınan Çek') { groups[key].alinanTop += Number(c.tutar); groups[key].alinanAdet++; }
+            if(c.islem_turu === 'Alınan Çek') { 
+                groups[key].alinanTop += Number(c.tutar); groups[key].alinanAdet++; 
+                genelAlinanTop += Number(c.tutar); genelAlinanAdet++;
+            }
             if(c.durum === 'Ciro Edildi' || (c.islem_turu === 'Kendi Çekimiz' && (!c.banka_bilgisi || c.banka_bilgisi === ''))) {
                 groups[key].tedarikciTop += Number(c.tutar); groups[key].tedarikciAdet++;
+                genelTedarikciTop += Number(c.tutar); genelTedarikciAdet++;
             }
             if(c.durum === 'Tahsilde' || c.durum === 'Kredi Ödemesi') {
                 groups[key].bankaTop += Number(c.tutar); groups[key].bankaAdet++;
+                genelBankaTop += Number(c.tutar); genelBankaAdet++;
             }
         });
         
         let sortedKeys = Object.keys(groups).sort().reverse();
         let tbody = document.getElementById('tbodyIstatistik');
+        let tfoot = document.getElementById('tfootIstatistik');
+        
         tbody.innerHTML = '';
-        if(sortedKeys.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Kayıt bulunamadı.</td></tr>'; }
+        if(sortedKeys.length === 0) { 
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Kayıt bulunamadı.</td></tr>'; 
+            tfoot.innerHTML = '';
+            return; 
+        }
         
         sortedKeys.forEach(k => {
             let g = groups[k];
             tbody.innerHTML += `<tr>
-                <td style="font-weight:bold;">${g.label}</td>
-                <td style="text-align:right; color:var(--success);"><strong>${formatMoney(g.alinanTop)}</strong> <br><span style="font-size:11px;color:#666;">${g.alinanAdet} Adet</span></td>
-                <td style="text-align:right; color:#d35400;"><strong>${formatMoney(g.tedarikciTop)}</strong> <br><span style="font-size:11px;color:#666;">${g.tedarikciAdet} Adet</span></td>
-                <td style="text-align:right; color:var(--primary);"><strong>${formatMoney(g.bankaTop)}</strong> <br><span style="font-size:11px;color:#666;">${g.bankaAdet} Adet</span></td>
+                <td style="font-weight:bold; padding: 12px; border-bottom: 1px solid #eee;">${g.label}</td>
+                <td style="text-align:right; color:var(--success); padding: 12px; border-bottom: 1px solid #eee;"><strong>${formatMoney(g.alinanTop)}</strong> <br><span style="font-size:11px;color:#666;">${g.alinanAdet} Adet</span></td>
+                <td style="text-align:right; color:#d35400; padding: 12px; border-bottom: 1px solid #eee;"><strong>${formatMoney(g.tedarikciTop)}</strong> <br><span style="font-size:11px;color:#666;">${g.tedarikciAdet} Adet</span></td>
+                <td style="text-align:right; color:var(--primary); padding: 12px; border-bottom: 1px solid #eee;"><strong>${formatMoney(g.bankaTop)}</strong> <br><span style="font-size:11px;color:#666;">${g.bankaAdet} Adet</span></td>
             </tr>`;
         });
+
+        // Tfoot Genel Toplamı Ekleme
+        tfoot.innerHTML = `<tr>
+            <th style="background:#f1f5f9; padding: 15px; font-size:14px;">GENEL TOPLAM</th>
+            <th style="text-align:right; background:#eafaf1; color:var(--success); padding: 15px; font-size:14px;">${formatMoney(genelAlinanTop)}<br><span style="font-size:11px;color:#666;">${genelAlinanAdet} Adet</span></th>
+            <th style="text-align:right; background:#fef9e7; color:#d35400; padding: 15px; font-size:14px;">${formatMoney(genelTedarikciTop)}<br><span style="font-size:11px;color:#666;">${genelTedarikciAdet} Adet</span></th>
+            <th style="text-align:right; background:#eaf2f8; color:var(--primary); padding: 15px; font-size:14px;">${formatMoney(genelBankaTop)}<br><span style="font-size:11px;color:#666;">${genelBankaAdet} Adet</span></th>
+        </tr>`;
     }
 
     async function dbYeniCariEkle() {
