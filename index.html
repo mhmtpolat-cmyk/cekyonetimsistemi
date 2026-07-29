@@ -111,6 +111,8 @@
         <h1>Çek Yönetim Sistemi</h1>
         <div class="action-buttons">
             <div class="user-badge" id="aktifKullaniciGosterge">👤 Oturum Açılmadı</div>
+            <!-- YENİ KİŞİSEL FİNANS BUTONU -->
+            <button class="btn btn-primary" style="background-color: #8e44ad; border: none;" onclick="openModal('modalKisiselFinans'); loadKisiselFinans();">💳 Kişisel Finans</button>
             <button class="btn btn-warning" onclick="openModal('modalIstatistik'); renderIstatistikler();" style="background-color: var(--warning); color:#333;">📊 İstatistikler</button>
             <button class="btn btn-outline" onclick="openModal('modalCariYonetim')">👥 Cari / Tedarikçi</button>
             <button class="btn btn-primary" onclick="openModal('modalCariSecim')">Çek Hareketi</button>
@@ -120,7 +122,7 @@
         </div>
     </div>
 
-    <!-- METRİK KARTLARI (Tıklanabilir Yapıldı) -->
+    <!-- METRİK KARTLARI -->
     <div class="metrics-grid">
         <div class="metric-card card-green clickable-card" onclick="showMetricDetails('tahsilde')">
             <div style="font-size:10px; position:absolute; right:10px; top:10px; color:#aaa;">🔍 Detay</div>
@@ -168,7 +170,6 @@
         </div>
     </div>
     
-    <!-- YENİ GRAFİK: PORTFÖY DAĞILIMI -->
     <div class="charts-full-container">
         <div class="chart-box">
             <h2>Kasadaki Çekler (Portföy) Aylara Göre Gelecek Dağılımı</h2>
@@ -207,6 +208,67 @@
 </div>
 
 <!-- MODALLAR -->
+
+<!-- YENİ: KİŞİSEL FİNANS MODALI -->
+<div id="modalKisiselFinans" class="modal-overlay">
+    <div class="modal modal-xl">
+        <h2 style="color: #8e44ad; border-bottom: 2px solid #8e44ad;">💳 Kişisel Finans Yönetimi</h2>
+        
+        <!-- Özet Kartları -->
+        <div style="display: flex; gap: 15px; margin-bottom: 20px; margin-top: 15px;">
+            <div style="flex: 1; background: #eafaf1; padding: 15px; border-radius: 8px; border-left: 4px solid var(--success);">
+                <h4 style="margin:0 0 5px 0; color:var(--success);">Toplam Gelir</h4><h3 style="margin:0;" id="kfToplamGelir">₺0.00</h3>
+            </div>
+            <div style="flex: 1; background: #fdedec; padding: 15px; border-radius: 8px; border-left: 4px solid var(--danger);">
+                <h4 style="margin:0 0 5px 0; color:var(--danger);">Toplam Gider</h4><h3 style="margin:0;" id="kfToplamGider">₺0.00</h3>
+            </div>
+            <div style="flex: 1; background: #ebf5fb; padding: 15px; border-radius: 8px; border-left: 4px solid var(--accent);">
+                <h4 style="margin:0 0 5px 0; color:var(--accent);">Net Durum (Bakiye)</h4><h3 style="margin:0;" id="kfNetBakiye">₺0.00</h3>
+            </div>
+        </div>
+
+        <!-- Ekleme Formu -->
+        <div style="display: flex; gap: 10px; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 8px; align-items: flex-end;">
+            <div style="flex: 1;">
+                <label style="font-size: 12px; font-weight: bold;">Tür</label>
+                <select id="kfTur" class="form-control"><option value="Gider">Gider</option><option value="Gelir">Gelir</option></select>
+            </div>
+            <div style="flex: 1.5;">
+                <label style="font-size: 12px; font-weight: bold;">Kategori</label>
+                <input type="text" id="kfKategori" class="form-control" placeholder="Örn: Market, Maaş, Kira">
+            </div>
+            <div style="flex: 2;">
+                <label style="font-size: 12px; font-weight: bold;">Açıklama (Opsiyonel)</label>
+                <input type="text" id="kfAciklama" class="form-control" placeholder="Örn: Ev alışverişi">
+            </div>
+            <div style="flex: 1;">
+                <label style="font-size: 12px; font-weight: bold;">Tutar (TL)</label>
+                <input type="number" id="kfTutar" class="form-control" placeholder="0.00">
+            </div>
+            <div style="flex: 1.2;">
+                <label style="font-size: 12px; font-weight: bold;">Tarih</label>
+                <input type="date" id="kfTarih" class="form-control">
+            </div>
+            <div>
+                <button class="btn btn-primary" style="background-color: #8e44ad; border: none; padding: 11px 15px;" onclick="dbKisiselEkle()">+ Ekle</button>
+            </div>
+        </div>
+
+        <!-- Kayıt Tablosu -->
+        <div style="max-height: 350px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px;">
+            <table style="margin: 0;">
+                <thead style="position: sticky; top: 0; z-index: 1;">
+                    <tr><th>Tarih</th><th>Tür</th><th>Kategori</th><th>Açıklama</th><th style="text-align:right;">Tutar</th><th style="text-align:right;">İşlem</th></tr>
+                </thead>
+                <tbody id="tbodyKisiselFinans"></tbody>
+            </table>
+        </div>
+        <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalKisiselFinans')">Kapat</button></div>
+    </div>
+</div>
+<!-- KİŞİSEL FİNANS MODALI BİTİŞ -->
+
+
 <!-- KART DETAYLARI MODALI -->
 <div id="modalMetricDetay" class="modal-overlay">
     <div class="modal modal-large">
@@ -235,7 +297,7 @@
                 </tr>
             </thead>
             <tbody id="tbodyIstatistik"></tbody>
-            <tfoot id="tfootIstatistik"></tfoot> <!-- GENEL TOPLAMLAR BURAYA GELECEK -->
+            <tfoot id="tfootIstatistik"></tfoot> 
         </table>
         
         <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalIstatistik')">Kapat</button></div>
@@ -414,6 +476,8 @@
 
     let g_cariler = [];
     let g_cekler = [];
+    let g_kisiselFinans = []; // Yeni Kişisel Finans Dizisi
+
     let aktifKullanici = localStorage.getItem('aktif_kullanici_ad') || null;
     let aktifKullaniciAdi = localStorage.getItem('aktif_kullanici') || null;
 
@@ -440,6 +504,10 @@
         document.getElementById('mainContainer').style.opacity = '1';
         document.getElementById('mainContainer').style.pointerEvents = 'auto';
         document.getElementById('aktifKullaniciGosterge').innerText = `👤 ${aktifKullanici}`;
+        
+        // Formdaki tarihi varsayılan olarak bugün yapıyoruz
+        document.getElementById('kfTarih').valueAsDate = new Date(); 
+        
         loadData();
     }
 
@@ -479,6 +547,81 @@
         return Math.ceil((target - today) / (1000 * 60 * 60 * 24));
     }
     
+    // --- YENİ EKLENEN KİŞİSEL FİNANS FONKSİYONLARI ---
+    async function loadKisiselFinans() {
+        const { data, error } = await db.from('kisisel_finans').select('*').order('islem_tarihi', { ascending: false });
+        if (error) { console.error("Kişisel Finans Yükleme Hatası:", error); return; }
+        g_kisiselFinans = data || [];
+        renderKisiselFinans();
+    }
+
+    async function dbKisiselEkle() {
+        const tur = document.getElementById('kfTur').value;
+        const kategori = document.getElementById('kfKategori').value.trim();
+        const aciklama = document.getElementById('kfAciklama').value.trim();
+        const tutar = parseFloat(document.getElementById('kfTutar').value);
+        const tarih = document.getElementById('kfTarih').value;
+
+        if(!kategori || !tutar || !tarih) return alert("Kategori, Tutar ve Tarih alanları zorunludur.");
+
+        const { error } = await db.from('kisisel_finans').insert([{
+            tur: tur, kategori: kategori, aciklama: aciklama, tutar: tutar, islem_tarihi: tarih, ekleyen_kullanici: aktifKullanici
+        }]);
+
+        if(error) return alert("Hata: " + error.message);
+        
+        // Temizlik (Tarih ve Tür kalsın, yazması kolay olsun)
+        document.getElementById('kfKategori').value = '';
+        document.getElementById('kfAciklama').value = '';
+        document.getElementById('kfTutar').value = '';
+        
+        loadKisiselFinans();
+    }
+
+    async function dbKisiselSil(id) {
+        if(!confirm("Bu kaydı kalıcı olarak silmek istediğinize emin misiniz?")) return;
+        const { error } = await db.from('kisisel_finans').delete().eq('id', id);
+        if(error) return alert("Silme Hatası: " + error.message);
+        loadKisiselFinans();
+    }
+
+    function renderKisiselFinans() {
+        let tbody = document.getElementById('tbodyKisiselFinans');
+        let toplamGelir = 0;
+        let toplamGider = 0;
+        tbody.innerHTML = '';
+
+        if(g_kisiselFinans.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#999; padding: 20px;">Henüz kişisel kayıt bulunmuyor.</td></tr>';
+        } else {
+            g_kisiselFinans.forEach(kf => {
+                if(kf.tur === 'Gelir') toplamGelir += Number(kf.tutar);
+                else toplamGider += Number(kf.tutar);
+
+                let renk = kf.tur === 'Gelir' ? 'color: var(--success);' : 'color: var(--danger);';
+                tbody.innerHTML += `<tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 10px;">${formatDate(kf.islem_tarihi)}</td>
+                    <td style="font-weight:bold; ${renk} padding: 10px;">${kf.tur}</td>
+                    <td style="padding: 10px;">${kf.kategori}</td>
+                    <td style="padding: 10px; color:#555;">${kf.aciklama || '-'}</td>
+                    <td style="text-align:right; font-weight:bold; ${renk} padding: 10px;">${formatMoney(kf.tutar)}</td>
+                    <td style="text-align:right; padding: 10px;">
+                        <button class="btn btn-outline" style="padding: 4px 8px; font-size:11px; border-color:var(--danger); color:var(--danger);" onclick="dbKisiselSil(${kf.id})">Sil</button>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        document.getElementById('kfToplamGelir').innerText = formatMoney(toplamGelir);
+        document.getElementById('kfToplamGider').innerText = formatMoney(toplamGider);
+        
+        let net = toplamGelir - toplamGider;
+        let netRenk = net >= 0 ? 'var(--success)' : 'var(--danger)';
+        document.getElementById('kfNetBakiye').innerText = formatMoney(net);
+        document.getElementById('kfNetBakiye').style.color = netRenk;
+    }
+    // --- KİŞİSEL FİNANS FONKSİYONLARI BİTİŞ ---
+
     // TIKLANABİLİR KART DETAYLARI
     function showMetricDetails(type) {
         let baslik = ""; let data = [];
@@ -504,8 +647,6 @@
     // İSTATİSTİK MODALI RENDER FONKSİYONU VE GENEL TOPLAM
     function renderIstatistikler() {
         let groups = {};
-        
-        // Genel toplam değişkenleri
         let genelAlinanTop = 0, genelAlinanAdet = 0;
         let genelTedarikciTop = 0, genelTedarikciAdet = 0;
         let genelBankaTop = 0, genelBankaAdet = 0;
@@ -537,8 +678,7 @@
         tbody.innerHTML = '';
         if(sortedKeys.length === 0) { 
             tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Kayıt bulunamadı.</td></tr>'; 
-            tfoot.innerHTML = '';
-            return; 
+            tfoot.innerHTML = ''; return; 
         }
         
         sortedKeys.forEach(k => {
@@ -551,7 +691,6 @@
             </tr>`;
         });
 
-        // Tfoot Genel Toplamı Ekleme
         tfoot.innerHTML = `<tr>
             <th style="background:#f1f5f9; padding: 15px; font-size:14px;">GENEL TOPLAM</th>
             <th style="text-align:right; background:#eafaf1; color:var(--success); padding: 15px; font-size:14px;">${formatMoney(genelAlinanTop)}<br><span style="font-size:11px;color:#666;">${genelAlinanAdet} Adet</span></th>
@@ -777,7 +916,6 @@
     function updateCharts(varlik, yukumluluk) {
         Chart.register(ChartDataLabels);
         
-        // Pasta Grafik
         if(pieChartInstance) { pieChartInstance.data.datasets[0].data = [varlik || 0.001, yukumluluk || 0.001]; pieChartInstance.update(); } 
         else {
             const ctxPie = document.getElementById('pieChart').getContext('2d');
@@ -792,7 +930,6 @@
         let barLabels = [];
         let monthBuckets = []; 
         
-        // 6 Aylık Eksen
         for(let i=0; i<6; i++) {
             let d = new Date(today.getFullYear(), today.getMonth() + i, 1);
             barLabels.push(monthNamesShort[d.getMonth()] + " '" + d.getFullYear().toString().substr(-2));
@@ -801,7 +938,7 @@
 
         let varlikData = [0, 0, 0, 0, 0, 0];
         let odenecekData = [0, 0, 0, 0, 0, 0];
-        let portfoyData = [0, 0, 0, 0, 0, 0]; // Yeni grafik için
+        let portfoyData = [0, 0, 0, 0, 0, 0]; 
 
         g_cekler.forEach(c => {
             let d = new Date(c.vade_tarihi);
@@ -809,11 +946,10 @@
             if(index !== -1) {
                 if (c.durum === 'Kasada' || c.durum === 'Tahsilde') varlikData[index] += Number(c.tutar);
                 if (c.durum === 'Ödenecek') odenecekData[index] += Number(c.tutar);
-                if (c.durum === 'Kasada') portfoyData[index] += Number(c.tutar); // Sadece portföy
+                if (c.durum === 'Kasada') portfoyData[index] += Number(c.tutar); 
             }
         });
 
-        // Çubuk Grafik (Genel)
         if(barChartInstance) {
             barChartInstance.data.labels = barLabels;
             barChartInstance.data.datasets[0].data = varlikData;
@@ -828,7 +964,6 @@
             });
         }
         
-        // Yeni Çubuk Grafik (Sadece Kasadaki Çekler)
         if(portfoyChartInstance) {
             portfoyChartInstance.data.labels = barLabels;
             portfoyChartInstance.data.datasets[0].data = portfoyData;
