@@ -37,7 +37,7 @@
                 <span class="flex items-center"><div class="w-9 h-9 md:w-10 md:h-10 bg-indigo-100 text-indigo-500 rounded-xl flex items-center justify-center mr-3 text-sm md:text-base"><i class="fa-solid fa-wallet"></i></div>Varlık & Harcama Yönetimi</span>
             </h1>
             <div class="flex flex-wrap gap-2 w-full lg:w-auto justify-end">
-                <!-- DİKKAT: BURAYA cek.html YÖNLENDİRMESİ EKLENDİ -->
+                <!-- DİKKAT: BURASI index.html OLARAK DÜZELTİLDİ -->
                 <button onclick="window.location.href='index.html'" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2.5 rounded-xl font-bold transition shadow-sm text-xs md:text-sm border border-indigo-200"><i class="fa-solid fa-money-check mr-1"></i> Çek Paneline Dön</button>
                 <button onclick="fin_openBankModal()" class="bg-white hover:bg-slate-50 text-slate-600 px-3 md:px-4 py-2 rounded-xl font-medium transition shadow-sm text-xs md:text-sm border border-slate-100"><i class="fa-solid fa-building-columns mr-1"></i> Banka Ekle</button>
                 <button onclick="fin_switchView('contacts')" class="bg-white hover:bg-slate-50 text-slate-600 px-3 md:px-4 py-2 rounded-xl font-medium transition shadow-sm text-xs md:text-sm border border-slate-100"><i class="fa-solid fa-users mr-1"></i> Cariler</button>
@@ -126,9 +126,10 @@
 </div>
 
 <script>
-    // Giriş kontrolü (Eğer aktif_kullanici yoksa cek.html sayfasına yönlendir)
+    // Giriş kontrolü (Eğer aktif_kullanici yoksa index.html sayfasına yönlendir)
+    // DİKKAT: BURASI DA index.html OLARAK DÜZELTİLDİ
     if (!localStorage.getItem('aktif_kullanici')) {
-        window.location.href = 'cek.html';
+        window.location.href = 'index.html';
     }
 
     const aktifKullaniciAdi = localStorage.getItem('aktif_kullanici');
