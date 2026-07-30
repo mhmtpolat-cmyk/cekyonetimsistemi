@@ -15,97 +15,122 @@
     </script>
 
     <style>
-        /* Genel Arka Plan ve Yazı Rengi Daha Yumuşak (Pastel) Hale Getirildi */
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; color: #475569; margin: 0; }
+        /* Daha Canlı ve Ferah Arka Plan */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; color: #334155; margin: 0; }
         .fin-modal { display: none; opacity: 0; transition: opacity 0.2s ease-in-out; }
         .fin-modal.active { display: flex; opacity: 1; }
-        .varlik-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+        .varlik-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
         .varlik-scroll::-webkit-scrollbar-track { background: transparent; }
-        .varlik-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .varlik-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .tailwind-wrapper input, .tailwind-wrapper select, .tailwind-wrapper button { border-style: solid; }
         .tailwind-wrapper table { border-collapse: collapse; }
     </style>
 </head>
 <body>
 
-<div id="app-varlik" class="tailwind-wrapper varlik-scroll text-slate-600" style="display: block;">
+<div id="app-varlik" class="tailwind-wrapper varlik-scroll text-slate-700" style="display: block;">
     <div class="max-w-7xl mx-auto space-y-5 md:space-y-7 pt-5 pb-10 px-4 md:px-6">
         
-        <!-- YUMUŞATILMIŞ ÜST MENÜ ALANI -->
-        <div class="flex flex-col lg:flex-row justify-between items-center bg-white p-4 md:p-5 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.03)] border border-slate-100 gap-4">
-            <h1 class="text-lg md:text-xl font-semibold text-slate-700 flex items-center cursor-pointer w-full lg:w-auto justify-between lg:justify-start" onclick="fin_switchView('dashboard')">
-                <span class="flex items-center"><div class="w-10 h-10 md:w-11 md:h-11 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mr-3 text-base shadow-sm"><i class="fa-solid fa-wallet"></i></div>Varlık Yönetimi</span>
+        <!-- ÜST MENÜ ALANI (Canlı Renkler) -->
+        <div class="flex flex-col lg:flex-row justify-between items-center bg-gradient-to-r from-blue-700 to-indigo-800 p-4 md:p-5 rounded-2xl shadow-lg border border-indigo-900 gap-4 text-white">
+            <h1 class="text-lg md:text-2xl font-bold flex items-center cursor-pointer w-full lg:w-auto justify-between lg:justify-start" onclick="fin_switchView('dashboard')">
+                <span class="flex items-center"><div class="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-full flex items-center justify-center mr-3 text-white shadow-inner"><i class="fa-solid fa-wallet"></i></div>Varlık Yönetimi</span>
             </h1>
             <div class="flex flex-wrap gap-2 w-full lg:w-auto justify-end">
-                <button onclick="window.location.href='index.html'" class="bg-slate-50 hover:bg-slate-100 text-slate-600 px-4 py-2 rounded-xl font-medium transition text-sm border border-slate-200"><i class="fa-solid fa-money-check mr-1.5"></i> Çek Paneli</button>
-                <button onclick="fin_openBankModal()" class="bg-slate-50 hover:bg-slate-100 text-slate-600 px-4 py-2 rounded-xl font-medium transition text-sm border border-slate-200"><i class="fa-solid fa-building-columns mr-1.5"></i> Banka Ekle</button>
-                <button onclick="fin_switchView('contacts')" class="bg-slate-50 hover:bg-slate-100 text-slate-600 px-4 py-2 rounded-xl font-medium transition text-sm border border-slate-200"><i class="fa-solid fa-users mr-1.5"></i> Cariler</button>
-                <button onclick="fin_openTransactionModal()" class="bg-indigo-500 hover:bg-indigo-600 text-white px-5 py-2 rounded-xl font-medium transition shadow-md shadow-indigo-200 text-sm"><i class="fa-solid fa-plus mr-1.5"></i> Yeni İşlem</button>
+                <button onclick="window.location.href='index.html'" class="bg-white/10 hover:bg-white/20 text-white px-4 py-2.5 rounded-xl font-semibold transition text-sm border border-white/20 backdrop-blur-sm"><i class="fa-solid fa-money-check mr-1.5"></i> Çek Paneli</button>
+                <button onclick="fin_openBankModal()" class="bg-white/10 hover:bg-white/20 text-white px-4 py-2.5 rounded-xl font-semibold transition text-sm border border-white/20 backdrop-blur-sm"><i class="fa-solid fa-building-columns mr-1.5"></i> Banka Ekle</button>
+                <button onclick="fin_switchView('contacts')" class="bg-white/10 hover:bg-white/20 text-white px-4 py-2.5 rounded-xl font-semibold transition text-sm border border-white/20 backdrop-blur-sm"><i class="fa-solid fa-users mr-1.5"></i> Cariler</button>
+                <button onclick="fin_openTransactionModal()" class="bg-emerald-500 hover:bg-emerald-400 text-white px-5 py-2.5 rounded-xl font-bold transition shadow-lg text-sm border border-emerald-400"><i class="fa-solid fa-plus mr-1.5"></i> Yeni İşlem</button>
             </div>
         </div>
 
-        <!-- ANA DASHBOARD (YUMUŞAK RENKLER VE ZARİF FONT) -->
-        <div id="fin-main-dashboard-view" class="space-y-5 block fin-view-section">
+        <!-- ANA DASHBOARD -->
+        <div id="fin-main-dashboard-view" class="space-y-6 block fin-view-section">
+            
+            <!-- VARLIK VE NAKİT ÖZETİ (Canlı Renk Geçişleri) -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                <!-- TOPLAM VARLIK ÖZETİ PASTEL KART -->
-                <div class="bg-white p-5 md:p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.03)] border border-slate-100 border-l-4 border-l-indigo-300">
-                    <h2 class="text-sm md:text-base font-semibold text-slate-600 mb-4 flex items-center"><i class="fa-solid fa-earth-americas mr-2 text-indigo-400"></i> Toplam Varlık Özeti</h2>
+                <div class="bg-gradient-to-br from-indigo-600 to-purple-700 p-5 md:p-6 rounded-2xl shadow-lg text-white">
+                    <h2 class="text-base md:text-lg font-bold mb-4 flex items-center"><i class="fa-solid fa-earth-americas mr-2 text-indigo-200"></i> Toplam Varlık Özeti</h2>
                     <div class="grid grid-cols-2 gap-3">
-                        <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100"><p class="text-xs font-medium text-slate-400 mb-1">TL Karşılığı</p><p class="text-lg md:text-xl font-semibold text-slate-700" id="fin-total-try">0.00 ₺</p></div>
-                        <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100"><p class="text-xs font-medium text-slate-400 mb-1">Dolar Karşılığı</p><p class="text-lg md:text-xl font-semibold text-slate-700" id="fin-total-usd">0.00 $</p></div>
-                        <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100"><p class="text-xs font-medium text-slate-400 mb-1">Euro Karşılığı</p><p class="text-lg md:text-xl font-semibold text-slate-700" id="fin-total-eur">0.00 €</p></div>
-                        <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100"><p class="text-xs font-medium text-slate-400 mb-1">Frank Karşılığı</p><p class="text-lg md:text-xl font-semibold text-slate-700" id="fin-total-chf">0.00 CHF</p></div>
+                        <div class="bg-white/10 p-4 rounded-xl border border-white/20 backdrop-blur-sm"><p class="text-xs font-semibold text-indigo-100 mb-1">TL Karşılığı</p><p class="text-xl md:text-2xl font-black text-white" id="fin-total-try">0.00 ₺</p></div>
+                        <div class="bg-white/10 p-4 rounded-xl border border-white/20 backdrop-blur-sm"><p class="text-xs font-semibold text-indigo-100 mb-1">Dolar Karşılığı</p><p class="text-xl md:text-2xl font-black text-white" id="fin-total-usd">0.00 $</p></div>
+                        <div class="bg-white/10 p-4 rounded-xl border border-white/20 backdrop-blur-sm"><p class="text-xs font-semibold text-indigo-100 mb-1">Euro Karşılığı</p><p class="text-xl md:text-2xl font-black text-white" id="fin-total-eur">0.00 €</p></div>
+                        <div class="bg-white/10 p-4 rounded-xl border border-white/20 backdrop-blur-sm"><p class="text-xs font-semibold text-indigo-100 mb-1">Frank Karşılığı</p><p class="text-xl md:text-2xl font-black text-white" id="fin-total-chf">0.00 CHF</p></div>
                     </div>
                 </div>
-                <!-- NAKİT ÖZETİ PASTEL KART -->
-                <div class="bg-white p-5 md:p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.03)] border border-slate-100 border-l-4 border-l-emerald-300">
-                    <h2 class="text-sm md:text-base font-semibold text-slate-600 mb-4 flex items-center"><i class="fa-solid fa-sack-dollar mr-2 text-emerald-400"></i> Hesaplardaki Toplam Nakit</h2>
+                <div class="bg-gradient-to-br from-cyan-600 to-blue-600 p-5 md:p-6 rounded-2xl shadow-lg text-white">
+                    <h2 class="text-base md:text-lg font-bold mb-4 flex items-center"><i class="fa-solid fa-sack-dollar mr-2 text-cyan-200"></i> Hesaplardaki Toplam Nakit</h2>
                     <div class="grid grid-cols-2 gap-3">
-                        <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100"><p class="text-xs font-medium text-slate-400 mb-1">TL Bakiyesi</p><p class="text-lg md:text-xl font-semibold text-emerald-600" id="fin-liquid-try">0.00 ₺</p></div>
-                        <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100"><p class="text-xs font-medium text-slate-400 mb-1">Dolar Bakiyesi</p><p class="text-lg md:text-xl font-semibold text-emerald-600" id="fin-liquid-usd">0.00 $</p></div>
-                        <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100"><p class="text-xs font-medium text-slate-400 mb-1">Euro Bakiyesi</p><p class="text-lg md:text-xl font-semibold text-emerald-600" id="fin-liquid-eur">0.00 €</p></div>
-                        <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100"><p class="text-xs font-medium text-slate-400 mb-1">Frank Bakiyesi</p><p class="text-lg md:text-xl font-semibold text-emerald-600" id="fin-liquid-chf">0.00 CHF</p></div>
+                        <div class="bg-white/10 p-4 rounded-xl border border-white/20 backdrop-blur-sm"><p class="text-xs font-semibold text-cyan-100 mb-1">TL Bakiyesi</p><p class="text-xl md:text-2xl font-black text-white" id="fin-liquid-try">0.00 ₺</p></div>
+                        <div class="bg-white/10 p-4 rounded-xl border border-white/20 backdrop-blur-sm"><p class="text-xs font-semibold text-cyan-100 mb-1">Dolar Bakiyesi</p><p class="text-xl md:text-2xl font-black text-white" id="fin-liquid-usd">0.00 $</p></div>
+                        <div class="bg-white/10 p-4 rounded-xl border border-white/20 backdrop-blur-sm"><p class="text-xs font-semibold text-cyan-100 mb-1">Euro Bakiyesi</p><p class="text-xl md:text-2xl font-black text-white" id="fin-liquid-eur">0.00 €</p></div>
+                        <div class="bg-white/10 p-4 rounded-xl border border-white/20 backdrop-blur-sm"><p class="text-xs font-semibold text-cyan-100 mb-1">Frank Bakiyesi</p><p class="text-xl md:text-2xl font-black text-white" id="fin-liquid-chf">0.00 CHF</p></div>
                     </div>
                 </div>
             </div>
 
             <!-- BANKA KARTLARI LİSTESİ -->
+            <h3 class="text-lg font-bold text-slate-700 mt-6 mb-2 flex items-center"><i class="fa-solid fa-building-columns text-blue-500 mr-2"></i> Banka ve Kasa Hesapları</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5" id="fin-accounts-dashboard"></div>
 
+            <!-- YENİ: GİREN VE ÇIKAN PARA TABLOLARI (ALTA EKLENDİ) -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-6">
+                <!-- Toplam Nakit Girişi -->
+                <div class="bg-gradient-to-br from-emerald-500 to-teal-600 p-5 md:p-6 rounded-2xl shadow-lg text-white">
+                    <h2 class="text-base md:text-lg font-bold mb-4 flex items-center"><i class="fa-solid fa-arrow-turn-down mr-2 text-emerald-200"></i> Toplam Nakit Girişi</h2>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-white/20 p-4 rounded-xl border border-white/30 backdrop-blur-sm"><p class="text-xs font-semibold text-emerald-100 mb-1">TL Girişi</p><p class="text-lg md:text-xl font-bold text-white" id="fin-in-try">0.00 ₺</p></div>
+                        <div class="bg-white/20 p-4 rounded-xl border border-white/30 backdrop-blur-sm"><p class="text-xs font-semibold text-emerald-100 mb-1">Dolar Girişi</p><p class="text-lg md:text-xl font-bold text-white" id="fin-in-usd">0.00 $</p></div>
+                        <div class="bg-white/20 p-4 rounded-xl border border-white/30 backdrop-blur-sm"><p class="text-xs font-semibold text-emerald-100 mb-1">Euro Girişi</p><p class="text-lg md:text-xl font-bold text-white" id="fin-in-eur">0.00 €</p></div>
+                        <div class="bg-white/20 p-4 rounded-xl border border-white/30 backdrop-blur-sm"><p class="text-xs font-semibold text-emerald-100 mb-1">Frank Girişi</p><p class="text-lg md:text-xl font-bold text-white" id="fin-in-chf">0.00 CHF</p></div>
+                    </div>
+                </div>
+                <!-- Toplam Nakit Çıkışı -->
+                <div class="bg-gradient-to-br from-orange-500 to-rose-600 p-5 md:p-6 rounded-2xl shadow-lg text-white">
+                    <h2 class="text-base md:text-lg font-bold mb-4 flex items-center"><i class="fa-solid fa-arrow-turn-up mr-2 text-orange-200"></i> Toplam Nakit Çıkışı (Harcama)</h2>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-white/20 p-4 rounded-xl border border-white/30 backdrop-blur-sm"><p class="text-xs font-semibold text-rose-100 mb-1">TL Çıkışı</p><p class="text-lg md:text-xl font-bold text-white" id="fin-out-try">0.00 ₺</p></div>
+                        <div class="bg-white/20 p-4 rounded-xl border border-white/30 backdrop-blur-sm"><p class="text-xs font-semibold text-rose-100 mb-1">Dolar Çıkışı</p><p class="text-lg md:text-xl font-bold text-white" id="fin-out-usd">0.00 $</p></div>
+                        <div class="bg-white/20 p-4 rounded-xl border border-white/30 backdrop-blur-sm"><p class="text-xs font-semibold text-rose-100 mb-1">Euro Çıkışı</p><p class="text-lg md:text-xl font-bold text-white" id="fin-out-eur">0.00 €</p></div>
+                        <div class="bg-white/20 p-4 rounded-xl border border-white/30 backdrop-blur-sm"><p class="text-xs font-semibold text-rose-100 mb-1">Frank Çıkışı</p><p class="text-lg md:text-xl font-bold text-white" id="fin-out-chf">0.00 CHF</p></div>
+                    </div>
+                </div>
+            </div>
+
             <!-- İŞLEM HAREKETLERİ TABLOSU -->
-            <div id="fin-transaction-section" class="bg-white rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.03)] border border-slate-100 overflow-hidden">
-                <div class="p-5 border-b border-slate-100 flex flex-wrap gap-3 justify-between items-center">
-                    <h2 class="text-base font-semibold text-slate-700">Tüm İşlem Hareketleri</h2>
+            <div id="fin-transaction-section" class="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden mt-6">
+                <div class="p-5 border-b border-slate-200 flex flex-wrap gap-3 justify-between items-center bg-slate-50">
+                    <h2 class="text-lg font-bold text-slate-800 flex items-center"><i class="fa-solid fa-list-ul text-indigo-500 mr-2"></i> Tüm İşlem Hareketleri</h2>
                     <div class="flex flex-wrap gap-2">
-                        <select id="fin-filter-contact" class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 outline-none hover:bg-slate-100 transition" onchange="fin_renderTable()"></select>
-                        <select id="fin-filter-account" class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 outline-none hover:bg-slate-100 transition" onchange="fin_renderTable()"><option value="ALL">Tüm Hesaplar</option></select>
-                        <select id="fin-filter-currency" class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 outline-none hover:bg-slate-100 transition" onchange="fin_renderTable()"><option value="ALL">Tüm Dövizler</option><option value="TRY">TL</option><option value="USD">Dolar</option><option value="EUR">Euro</option><option value="CHF">Frank</option></select>
+                        <select id="fin-filter-contact" class="px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-700 outline-none hover:border-indigo-400 transition shadow-sm" onchange="fin_renderTable()"></select>
+                        <select id="fin-filter-account" class="px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-700 outline-none hover:border-indigo-400 transition shadow-sm" onchange="fin_renderTable()"><option value="ALL">Tüm Hesaplar / Bankalar</option></select>
+                        <select id="fin-filter-currency" class="px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-700 outline-none hover:border-indigo-400 transition shadow-sm" onchange="fin_renderTable()"><option value="ALL">Tüm Dövizler</option><option value="TRY">TL</option><option value="USD">Dolar</option><option value="EUR">Euro</option><option value="CHF">Frank</option></select>
                     </div>
                 </div>
                 <div class="overflow-x-auto max-h-[500px]">
                     <table class="w-full text-left border-collapse min-w-[700px]">
-                        <thead class="sticky top-0 z-10 bg-slate-50/80 backdrop-blur"><tr class="border-b border-slate-100 text-slate-400 text-[11px] font-medium uppercase tracking-wider"><th class="p-4">Tarih</th><th class="p-4">Hesap</th><th class="p-4">İşlem</th><th class="p-4">Cari / Açıklama</th><th class="p-4 text-right">Tutar</th><th class="p-4 text-center">Yönetim</th></tr></thead>
-                        <tbody id="fin-transaction-tbody" class="divide-y divide-slate-50 text-sm"></tbody>
+                        <thead class="sticky top-0 z-10 bg-slate-100"><tr class="border-b border-slate-200 text-slate-600 text-xs font-bold uppercase tracking-wider"><th class="p-4">Tarih</th><th class="p-4">Hesap</th><th class="p-4">İşlem</th><th class="p-4">Cari / Açıklama</th><th class="p-4 text-right">Tutar</th><th class="p-4 text-center">Yönetim</th></tr></thead>
+                        <tbody id="fin-transaction-tbody" class="divide-y divide-slate-100 text-sm"></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- YENİ: BANKA / HESAP DETAY SAYFASI (HAREKETLER DÜZENLENEBİLİR) -->
+        <!-- BANKA / HESAP DETAY SAYFASI -->
         <div id="fin-account-detail-view" class="space-y-5 hidden fin-view-section">
-            <div class="bg-white p-5 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.03)] border border-slate-100 flex flex-wrap justify-between items-center gap-3">
+            <div class="bg-white p-5 rounded-2xl shadow-lg border border-slate-200 flex flex-wrap justify-between items-center gap-3">
                 <div>
-                    <button onclick="fin_switchView('dashboard')" class="text-xs font-medium text-slate-500 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-lg mb-3 inline-flex items-center transition"><i class="fa-solid fa-arrow-left mr-1.5"></i> Ana Sayfaya Dön</button>
-                    <h2 class="text-lg md:text-xl font-semibold text-slate-700 flex items-center"><i class="fa-solid fa-building-columns text-indigo-400 mr-2"></i> <span id="fin-ad-name">Hesap Detayı</span></h2>
+                    <button onclick="fin_switchView('dashboard')" class="text-xs font-bold text-white bg-slate-600 hover:bg-slate-700 px-4 py-2 rounded-lg mb-3 inline-flex items-center transition"><i class="fa-solid fa-arrow-left mr-1.5"></i> Ana Sayfaya Dön</button>
+                    <h2 class="text-xl md:text-2xl font-bold text-slate-800 flex items-center"><i class="fa-solid fa-building-columns text-blue-500 mr-2"></i> <span id="fin-ad-name">Hesap Detayı</span></h2>
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.03)] border border-slate-100 overflow-hidden">
-                <div class="p-5 border-b border-slate-100 bg-white font-medium text-slate-600 text-sm">Hesabın İşlem Geçmişi</div>
+            <div class="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+                <div class="p-5 border-b border-slate-200 bg-slate-50 font-bold text-slate-800 text-base">Hesabın İşlem Geçmişi</div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse min-w-[700px]">
-                        <thead class="bg-slate-50/80"><tr class="border-b border-slate-100 text-slate-400 text-[11px] font-medium uppercase tracking-wider"><th class="p-4">Tarih</th><th class="p-4">Tür</th><th class="p-4">Karşı Taraf / Cari</th><th class="p-4">Açıklama</th><th class="p-4 text-right">Giriş</th><th class="p-4 text-right">Çıkış</th><th class="p-4 text-center">İşlem</th></tr></thead>
-                        <tbody id="fin-ad-transaction-tbody" class="divide-y divide-slate-50 text-sm"></tbody>
+                        <thead class="bg-slate-100"><tr class="border-b border-slate-200 text-slate-600 text-xs font-bold uppercase tracking-wider"><th class="p-4">Tarih</th><th class="p-4">Tür</th><th class="p-4">Karşı Taraf / Cari</th><th class="p-4">Açıklama</th><th class="p-4 text-right">Giriş</th><th class="p-4 text-right">Çıkış</th><th class="p-4 text-center">İşlem</th></tr></thead>
+                        <tbody id="fin-ad-transaction-tbody" class="divide-y divide-slate-100 text-sm"></tbody>
                     </table>
                 </div>
             </div>
@@ -113,28 +138,28 @@
 
         <!-- CARİ LİSTESİ -->
         <div id="fin-contacts-list-view" class="space-y-5 hidden fin-view-section">
-            <div class="flex justify-between items-center bg-white p-5 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.03)] border border-slate-100">
-                <h2 class="text-base font-semibold text-slate-700">Cari Kartlar Yönetimi</h2>
-                <button onclick="fin_openContactModal()" class="bg-indigo-50 text-indigo-600 border border-indigo-100 px-4 py-2 rounded-xl text-xs font-medium hover:bg-indigo-100 transition"><i class="fa-solid fa-user-plus mr-1.5"></i> Yeni Cari Ekle</button>
+            <div class="flex justify-between items-center bg-white p-5 rounded-2xl shadow-lg border border-slate-200">
+                <h2 class="text-lg font-bold text-slate-800 flex items-center"><i class="fa-solid fa-users text-indigo-500 mr-2"></i> Cari Kartlar Yönetimi</h2>
+                <button onclick="fin_openContactModal()" class="bg-indigo-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-700 transition shadow-md"><i class="fa-solid fa-user-plus mr-1.5"></i> Yeni Cari Ekle</button>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5" id="fin-contacts-grid-container"></div>
         </div>
 
         <!-- SEÇİLEN CARİNİN İŞLEM HAREKETLERİ -->
         <div id="fin-contact-detail-view" class="space-y-5 hidden fin-view-section">
-            <div class="bg-white p-5 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.03)] border border-slate-100 flex flex-wrap justify-between items-center gap-3">
+            <div class="bg-white p-5 rounded-2xl shadow-lg border border-slate-200 flex flex-wrap justify-between items-center gap-3">
                 <div>
-                    <button onclick="fin_switchView('contacts')" class="text-xs font-medium text-slate-500 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-lg mb-3 inline-flex items-center transition"><i class="fa-solid fa-arrow-left mr-1.5"></i> Carilere Dön</button>
-                    <h2 class="text-lg md:text-xl font-semibold text-slate-700 flex items-center"><i class="fa-solid fa-user text-indigo-400 mr-2"></i> <span id="fin-cd-name">Cari Detayı</span></h2>
+                    <button onclick="fin_switchView('contacts')" class="text-xs font-bold text-white bg-slate-600 hover:bg-slate-700 px-4 py-2 rounded-lg mb-3 inline-flex items-center transition"><i class="fa-solid fa-arrow-left mr-1.5"></i> Carilere Dön</button>
+                    <h2 class="text-xl md:text-2xl font-bold text-slate-800 flex items-center"><i class="fa-solid fa-user-tie text-indigo-500 mr-2"></i> <span id="fin-cd-name">Cari Detayı</span></h2>
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.03)] border border-slate-100 overflow-hidden">
-                <div class="p-5 border-b border-slate-100 bg-white font-medium text-slate-600 text-sm">Cari İşlem Geçmişi</div>
+            <div class="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+                <div class="p-5 border-b border-slate-200 bg-slate-50 font-bold text-slate-800 text-base">Cari İşlem Geçmişi</div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse min-w-[700px]">
-                        <thead class="bg-slate-50/80"><tr class="border-b border-slate-100 text-slate-400 text-[11px] font-medium uppercase tracking-wider"><th class="p-4">Tarih</th><th class="p-4">Tür</th><th class="p-4">Hesap / Banka</th><th class="p-4">Açıklama</th><th class="p-4 text-right">Giriş</th><th class="p-4 text-right">Çıkış</th><th class="p-4 text-center">İşlem</th></tr></thead>
-                        <tbody id="fin-cd-transaction-tbody" class="divide-y divide-slate-50 text-sm"></tbody>
+                        <thead class="bg-slate-100"><tr class="border-b border-slate-200 text-slate-600 text-xs font-bold uppercase tracking-wider"><th class="p-4">Tarih</th><th class="p-4">Tür</th><th class="p-4">Hesap / Banka</th><th class="p-4">Açıklama</th><th class="p-4 text-right">Giriş</th><th class="p-4 text-right">Çıkış</th><th class="p-4 text-center">İşlem</th></tr></thead>
+                        <tbody id="fin-cd-transaction-tbody" class="divide-y divide-slate-100 text-sm"></tbody>
                     </table>
                 </div>
             </div>
@@ -143,36 +168,36 @@
     </div>
 </div>
 
-<!-- MODALLAR (Yumuşak Tasarıma Uyarlandı) -->
-<div id="fin-transactionModal" class="fin-modal tailwind-wrapper fixed inset-0 bg-slate-800/40 backdrop-blur-sm z-50 items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
-        <div class="flex justify-between items-center p-5 border-b border-slate-100"><h3 id="fin-transactionModalTitle" class="text-base font-semibold text-slate-700">Yeni İşlem</h3><button onclick="fin_closeModal('fin-transactionModal')" class="text-slate-400 bg-slate-50 hover:bg-slate-100 w-8 h-8 rounded-full flex items-center justify-center transition"><i class="fa-solid fa-xmark"></i></button></div>
-        <div class="p-5 space-y-4 overflow-y-auto bg-slate-50/30">
-            <div><label class="block font-medium mb-1.5 text-slate-500 text-[11px] uppercase tracking-wide">Tür</label><select id="fin-form-type" class="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-sm outline-none text-slate-600 transition focus:border-indigo-300" onchange="fin_toggleFormFields()"><option value="IN">Giriş</option><option value="OUT">Çıkış</option><option value="TRANSFER">Transfer</option></select></div>
-            <div><label class="block font-medium mb-1.5 text-slate-500 text-[11px] uppercase tracking-wide">Hesap / Banka</label><select id="fin-form-source-account" class="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-sm outline-none text-slate-600 transition focus:border-indigo-300"></select></div>
-            <div id="fin-account-target-div" style="display:none;"><label class="block font-medium mb-1.5 text-slate-500 text-[11px] uppercase tracking-wide">Hedef Hesap</label><select id="fin-form-target-account" class="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-sm outline-none text-slate-600 transition focus:border-indigo-300"></select></div>
-            <div id="fin-contact-div"><label class="block font-medium mb-1.5 text-slate-500 text-[11px] uppercase tracking-wide">Cari</label><select id="fin-form-contact" class="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-sm outline-none text-slate-600 transition focus:border-indigo-300"></select></div>
-            <div class="flex gap-4"><div class="w-1/2"><label class="block font-medium mb-1.5 text-slate-500 text-[11px] uppercase tracking-wide">Para Birimi</label><select id="fin-form-currency" class="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-sm outline-none text-slate-600 transition focus:border-indigo-300"><option value="TRY">TL</option><option value="USD">Dolar</option><option value="EUR">Euro</option><option value="CHF">Frank</option></select></div><div class="w-1/2"><label class="block font-medium mb-1.5 text-slate-500 text-[11px] uppercase tracking-wide">Tutar</label><input type="text" id="fin-form-amount" class="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-sm outline-none text-slate-600 transition focus:border-indigo-300" placeholder="0.00" oninput="formatAmountInput(this)"></div></div>
-            <div><label class="block font-medium mb-1.5 text-slate-500 text-[11px] uppercase tracking-wide">Tarih</label><input type="date" id="fin-form-date" class="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-sm outline-none text-slate-600 transition focus:border-indigo-300"></div>
-            <div><label class="block font-medium mb-1.5 text-slate-500 text-[11px] uppercase tracking-wide">Açıklama</label><input type="text" id="fin-form-desc" class="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-sm outline-none text-slate-600 transition focus:border-indigo-300" placeholder="İşlem açıklaması girin..."></div>
+<!-- MODALLAR (Renklendirilmiş) -->
+<div id="fin-transactionModal" class="fin-modal tailwind-wrapper fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] border border-slate-200">
+        <div class="flex justify-between items-center p-5 border-b border-slate-200 bg-slate-50"><h3 id="fin-transactionModalTitle" class="text-lg font-bold text-slate-800"><i class="fa-solid fa-file-invoice-dollar text-indigo-500 mr-2"></i>Yeni İşlem</h3><button onclick="fin_closeModal('fin-transactionModal')" class="text-slate-500 hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center transition"><i class="fa-solid fa-xmark"></i></button></div>
+        <div class="p-6 space-y-4 overflow-y-auto">
+            <div><label class="block font-bold mb-1.5 text-slate-600 text-xs uppercase tracking-wide">Tür</label><select id="fin-form-type" class="w-full p-3 bg-white border border-slate-300 rounded-xl text-sm font-semibold outline-none text-slate-700 transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200" onchange="fin_toggleFormFields()"><option value="IN">Nakit Girişi (Tahsilat vb.)</option><option value="OUT">Nakit Çıkışı (Ödeme vb.)</option><option value="TRANSFER">Hesaplar Arası Transfer</option></select></div>
+            <div><label class="block font-bold mb-1.5 text-slate-600 text-xs uppercase tracking-wide">Hesap / Banka</label><select id="fin-form-source-account" class="w-full p-3 bg-white border border-slate-300 rounded-xl text-sm font-semibold outline-none text-slate-700 transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"></select></div>
+            <div id="fin-account-target-div" style="display:none;"><label class="block font-bold mb-1.5 text-slate-600 text-xs uppercase tracking-wide">Hedef Hesap</label><select id="fin-form-target-account" class="w-full p-3 bg-white border border-slate-300 rounded-xl text-sm font-semibold outline-none text-slate-700 transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"></select></div>
+            <div id="fin-contact-div"><label class="block font-bold mb-1.5 text-slate-600 text-xs uppercase tracking-wide">Cari</label><select id="fin-form-contact" class="w-full p-3 bg-white border border-slate-300 rounded-xl text-sm font-semibold outline-none text-slate-700 transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"></select></div>
+            <div class="flex gap-4"><div class="w-1/3"><label class="block font-bold mb-1.5 text-slate-600 text-xs uppercase tracking-wide">Para Birimi</label><select id="fin-form-currency" class="w-full p-3 bg-white border border-slate-300 rounded-xl text-sm font-semibold outline-none text-slate-700 transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"><option value="TRY">TL</option><option value="USD">Dolar</option><option value="EUR">Euro</option><option value="CHF">Frank</option></select></div><div class="w-2/3"><label class="block font-bold mb-1.5 text-slate-600 text-xs uppercase tracking-wide">Tutar</label><input type="text" id="fin-form-amount" class="w-full p-3 bg-white border border-slate-300 rounded-xl text-sm font-semibold outline-none text-slate-700 transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200" placeholder="0.00" oninput="formatAmountInput(this)"></div></div>
+            <div><label class="block font-bold mb-1.5 text-slate-600 text-xs uppercase tracking-wide">Tarih</label><input type="date" id="fin-form-date" class="w-full p-3 bg-white border border-slate-300 rounded-xl text-sm font-semibold outline-none text-slate-700 transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"></div>
+            <div><label class="block font-bold mb-1.5 text-slate-600 text-xs uppercase tracking-wide">Açıklama</label><input type="text" id="fin-form-desc" class="w-full p-3 bg-white border border-slate-300 rounded-xl text-sm font-semibold outline-none text-slate-700 transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200" placeholder="İşlem açıklaması girin..."></div>
         </div>
-        <div class="p-5 border-t border-slate-100 bg-white flex justify-end gap-3"><button onclick="fin_closeModal('fin-transactionModal')" class="px-5 py-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-sm text-slate-600 font-medium transition">İptal</button><button onclick="fin_saveTransaction()" class="px-6 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white font-medium rounded-xl shadow-sm transition">Kaydet</button></div>
+        <div class="p-5 border-t border-slate-200 bg-slate-50 flex justify-end gap-3"><button onclick="fin_closeModal('fin-transactionModal')" class="px-5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-700 font-bold transition hover:bg-slate-100">İptal</button><button onclick="fin_saveTransaction()" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition">Kaydet</button></div>
     </div>
 </div>
 
-<div id="fin-contactModal" class="fin-modal tailwind-wrapper fixed inset-0 bg-slate-800/40 backdrop-blur-sm z-50 items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col">
-        <div class="flex justify-between items-center p-5 border-b border-slate-100"><h3 class="text-base font-semibold text-slate-700">Yeni Cari Ekle</h3><button onclick="fin_closeModal('fin-contactModal')" class="text-slate-400 bg-slate-50 hover:bg-slate-100 w-8 h-8 rounded-full flex items-center justify-center transition"><i class="fa-solid fa-xmark"></i></button></div>
-        <div class="p-5 bg-slate-50/30"><div><label class="block font-medium mb-1.5 text-slate-500 text-[11px] uppercase tracking-wide">Ünvan / Ad Soyad</label><input type="text" id="fin-contact-name" class="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-sm outline-none text-slate-600 focus:border-indigo-300 transition" placeholder="Firma veya Kişi Adı"></div></div>
-        <div class="p-5 border-t border-slate-100 bg-white flex justify-end gap-3"><button onclick="fin_closeModal('fin-contactModal')" class="px-5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-600 font-medium transition">İptal</button><button onclick="fin_saveContact()" class="px-6 py-2.5 bg-indigo-500 text-white font-medium rounded-xl transition">Kaydet</button></div>
+<div id="fin-contactModal" class="fin-modal tailwind-wrapper fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col border border-slate-200">
+        <div class="flex justify-between items-center p-5 border-b border-slate-200 bg-slate-50"><h3 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-user-plus text-indigo-500 mr-2"></i>Yeni Cari Ekle</h3><button onclick="fin_closeModal('fin-contactModal')" class="text-slate-500 hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center transition"><i class="fa-solid fa-xmark"></i></button></div>
+        <div class="p-6"><div><label class="block font-bold mb-1.5 text-slate-600 text-xs uppercase tracking-wide">Ünvan / Ad Soyad</label><input type="text" id="fin-contact-name" class="w-full p-3 bg-white border border-slate-300 rounded-xl text-sm font-semibold outline-none text-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition" placeholder="Firma veya Kişi Adı"></div></div>
+        <div class="p-5 border-t border-slate-200 bg-slate-50 flex justify-end gap-3"><button onclick="fin_closeModal('fin-contactModal')" class="px-5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-700 font-bold transition hover:bg-slate-100">İptal</button><button onclick="fin_saveContact()" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition">Kaydet</button></div>
     </div>
 </div>
 
-<div id="fin-bankModal" class="fin-modal tailwind-wrapper fixed inset-0 bg-slate-800/40 backdrop-blur-sm z-50 items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col">
-        <div class="flex justify-between items-center p-5 border-b border-slate-100"><h3 class="text-base font-semibold text-slate-700">Banka Hesabı Ekle</h3><button onclick="fin_closeModal('fin-bankModal')" class="text-slate-400 bg-slate-50 hover:bg-slate-100 w-8 h-8 rounded-full flex items-center justify-center transition"><i class="fa-solid fa-xmark"></i></button></div>
-        <div class="p-5 bg-slate-50/30"><div><label class="block font-medium mb-1.5 text-slate-500 text-[11px] uppercase tracking-wide">Banka Adı</label><input type="text" id="fin-bank-name" class="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-sm outline-none text-slate-600 focus:border-indigo-300 transition" placeholder="Örn: Akbank veya Ziraat"></div></div>
-        <div class="p-5 border-t border-slate-100 bg-white flex justify-end gap-3"><button onclick="fin_closeModal('fin-bankModal')" class="px-5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-600 font-medium transition">İptal</button><button onclick="fin_saveBank()" class="px-6 py-2.5 bg-indigo-500 text-white font-medium rounded-xl transition">Hesabı Ekle</button></div>
+<div id="fin-bankModal" class="fin-modal tailwind-wrapper fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col border border-slate-200">
+        <div class="flex justify-between items-center p-5 border-b border-slate-200 bg-slate-50"><h3 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-building-columns text-indigo-500 mr-2"></i>Banka Hesabı Ekle</h3><button onclick="fin_closeModal('fin-bankModal')" class="text-slate-500 hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center transition"><i class="fa-solid fa-xmark"></i></button></div>
+        <div class="p-6"><div><label class="block font-bold mb-1.5 text-slate-600 text-xs uppercase tracking-wide">Banka Adı</label><input type="text" id="fin-bank-name" class="w-full p-3 bg-white border border-slate-300 rounded-xl text-sm font-semibold outline-none text-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition" placeholder="Örn: Akbank veya Ziraat"></div></div>
+        <div class="p-5 border-t border-slate-200 bg-slate-50 flex justify-end gap-3"><button onclick="fin_closeModal('fin-bankModal')" class="px-5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-700 font-bold transition hover:bg-slate-100">İptal</button><button onclick="fin_saveBank()" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition">Hesabı Ekle</button></div>
     </div>
 </div>
 
@@ -211,7 +236,7 @@
     const fin_getContactName = (id) => { const contact = fin_contacts.find(c => c.id == id); return contact ? contact.name : ''; };
 
     let fin_currentDetailContactId = null;
-    let fin_currentDetailAccountId = null; // YENİ: Seçili Banka ID'si
+    let fin_currentDetailAccountId = null;
 
     async function fin_loadData() {
         try {
@@ -221,7 +246,7 @@
                 db.from('finans_islemler').select('*').order('date', {ascending: false})
             ]);
             
-            fin_accounts = (accRes.data || []).map(a => ({ id: a.id, name: a.name, type: a.type, color: a.color || 'indigo' }));
+            fin_accounts = (accRes.data || []).map(a => ({ id: a.id, name: a.name, type: a.type, color: a.color || 'blue' }));
             if(fin_accounts.length === 0) fin_accounts = [{ id: 'KASA', name: 'Merkez Kasa', type: 'cash', color: 'emerald' }];
 
             fin_contacts = (conRes.data || []).map(c => ({ id: parseInt(c.id), name: c.name }));
@@ -239,19 +264,28 @@
         if(viewName === 'dashboard') { document.getElementById('fin-main-dashboard-view').style.display = 'block'; fin_updateDashboard(); } 
         else if(viewName === 'contacts') { document.getElementById('fin-contacts-list-view').style.display = 'block'; fin_renderContactsList(); } 
         else if(viewName === 'contactDetail') { document.getElementById('fin-contact-detail-view').style.display = 'block'; fin_renderContactDetailView(); } 
-        else if(viewName === 'accountDetail') { document.getElementById('fin-account-detail-view').style.display = 'block'; fin_renderAccountDetailView(); } // YENİ EKLENDİ
+        else if(viewName === 'accountDetail') { document.getElementById('fin-account-detail-view').style.display = 'block'; fin_renderAccountDetailView(); } 
     }
 
     function fin_updateDashboard() {
         const dashboard = document.getElementById('fin-accounts-dashboard'); dashboard.innerHTML = '';
         const balances = {}; fin_accounts.forEach(acc => { balances[acc.id] = { 'TRY': 0, 'USD': 0, 'EUR': 0, 'CHF': 0 }; });
 
+        let totalIn = { 'TRY': 0, 'USD': 0, 'EUR': 0, 'CHF': 0 };
+        let totalOut = { 'TRY': 0, 'USD': 0, 'EUR': 0, 'CHF': 0 };
+
         fin_transactions.forEach(t => {
             if (!t.account) return; if (!balances[t.account]) balances[t.account] = { 'TRY': 0, 'USD': 0, 'EUR': 0, 'CHF': 0 };
             let amt = parseFloat(t.amount) || 0; let cur = t.currency || 'TRY';
+            
+            // Bakiye Hesaplama
             if (t.type === 'IN') { if(balances[t.account][cur] !== undefined) balances[t.account][cur] += amt; }
             else if (t.type === 'OUT') { if(balances[t.account][cur] !== undefined) balances[t.account][cur] -= amt; }
             else if (t.type === 'TRANSFER') { if(balances[t.account][cur] !== undefined) balances[t.account][cur] -= amt; if (t.targetAccount) { if (!balances[t.targetAccount]) balances[t.targetAccount] = { 'TRY': 0, 'USD': 0, 'EUR': 0, 'CHF': 0 }; if(balances[t.targetAccount][cur] !== undefined) balances[t.targetAccount][cur] += amt; } }
+            
+            // Giren/Çıkan Hesaplama (Sadece IN ve OUT, Transferleri dahil etmiyoruz)
+            if (t.type === 'IN') { totalIn[cur] += amt; }
+            else if (t.type === 'OUT') { totalOut[cur] += amt; }
         });
 
         let totalWealthTRY = 0; let liquidTotals = { 'TRY': 0, 'USD': 0, 'EUR': 0, 'CHF': 0 };
@@ -260,14 +294,20 @@
             let icon = acc.type === 'cash' ? 'fa-wallet' : 'fa-building-columns'; let balancesHTML = '';
             fin_currencies.forEach(cur => {
                 let val = parseFloat(balances[acc.id][cur]) || 0; liquidTotals[cur] += val; totalWealthTRY += val * (fin_exchangeRates[cur] || 1);
-                balancesHTML += `<div class="bg-slate-50/60 p-2.5 rounded-lg border border-slate-100/50"><p class="text-[10px] text-slate-400 font-medium mb-0.5">${cur}</p><p class="text-sm font-semibold ${val < 0 ? 'text-rose-500' : 'text-slate-600'}">${fin_formatMoney(val, cur)}</p></div>`;
+                balancesHTML += `<div class="bg-slate-50 p-3 rounded-xl border border-slate-100"><p class="text-[10px] text-slate-500 font-bold mb-1">${cur}</p><p class="text-sm font-black ${val < 0 ? 'text-rose-600' : 'text-slate-700'}">${fin_formatMoney(val, cur)}</p></div>`;
             });
-            // Kartın Tıklanabilir Yapısı ve Sil Butonunun Kaldırılmış Hali
-            dashboard.innerHTML += `<div onclick="fin_openAccountDetail('${acc.id}')" class="bg-white p-5 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.03)] border border-slate-100 cursor-pointer hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 transition-all duration-200 group"><div class="flex items-center gap-3 mb-4"><div class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-400 text-base"><i class="fa-solid ${icon}"></i></div><h2 class="text-sm font-semibold text-slate-700">${acc.name}</h2></div><div class="grid grid-cols-2 gap-2.5">${balancesHTML}</div><p class="text-[10px] text-indigo-400 font-medium mt-3 text-right group-hover:text-indigo-600 transition">İşlem Geçmişini Gör &rarr;</p></div>`;
+            dashboard.innerHTML += `<div onclick="fin_openAccountDetail('${acc.id}')" class="bg-white p-5 rounded-2xl shadow-lg border-t-4 border-t-blue-500 cursor-pointer hover:-translate-y-1 transition-all duration-200 group"><div class="flex items-center gap-3 mb-4"><div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 text-lg"><i class="fa-solid ${icon}"></i></div><h2 class="text-base font-bold text-slate-800">${acc.name}</h2></div><div class="grid grid-cols-2 gap-3">${balancesHTML}</div><p class="text-[11px] text-blue-500 font-bold mt-4 text-right group-hover:text-blue-700 transition">İşlem Geçmişini Gör &rarr;</p></div>`;
         });
 
+        // Üst Özet Kartları
         document.getElementById('fin-total-try').innerText = fin_formatMoney(totalWealthTRY, 'TRY', false) + ' ₺'; document.getElementById('fin-total-usd').innerText = fin_formatMoney(totalWealthTRY / fin_exchangeRates['USD'], 'USD', false) + ' $'; document.getElementById('fin-total-eur').innerText = fin_formatMoney(totalWealthTRY / fin_exchangeRates['EUR'], 'EUR', false) + ' €'; document.getElementById('fin-total-chf').innerText = fin_formatMoney(totalWealthTRY / fin_exchangeRates['CHF'], 'CHF', false) + ' CHF';
         document.getElementById('fin-liquid-try').innerText = fin_formatMoney(liquidTotals['TRY'], 'TRY', false) + ' ₺'; document.getElementById('fin-liquid-usd').innerText = fin_formatMoney(liquidTotals['USD'], 'USD', false) + ' $'; document.getElementById('fin-liquid-eur').innerText = fin_formatMoney(liquidTotals['EUR'], 'EUR', false) + ' €'; document.getElementById('fin-liquid-chf').innerText = fin_formatMoney(liquidTotals['CHF'], 'CHF', false) + ' CHF';
+
+        // Yeni Eklenen Alt Giren/Çıkan Özet Kartları
+        fin_currencies.forEach(cur => {
+            document.getElementById(`fin-in-${cur.toLowerCase()}`).innerText = fin_formatMoney(totalIn[cur], cur);
+            document.getElementById(`fin-out-${cur.toLowerCase()}`).innerText = fin_formatMoney(totalOut[cur], cur);
+        });
 
         fin_renderTable();
     }
@@ -284,18 +324,17 @@
         });
 
         filtered.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
-        if(filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-400 font-medium">Henüz işlem hareketi yok.</td></tr>'; return; }
+        if(filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-500 font-bold">Henüz işlem hareketi yok.</td></tr>'; return; }
 
         filtered.forEach(t => {
             let typeLabel = t.type === 'IN' ? 'GİRİŞ' : (t.type === 'OUT' ? 'ÇIKIŞ' : 'TRANSFER');
-            let typeColor = t.type === 'IN' ? 'text-emerald-600 bg-emerald-50' : (t.type === 'OUT' ? 'text-rose-600 bg-rose-50' : 'text-blue-600 bg-blue-50');
+            let typeColor = t.type === 'IN' ? 'text-emerald-700 bg-emerald-100' : (t.type === 'OUT' ? 'text-rose-700 bg-rose-100' : 'text-blue-700 bg-blue-100');
             let contactText = fin_getContactName(t.contactId);
             
-            tbody.innerHTML += `<tr class="hover:bg-slate-50/50 transition"><td class="p-4 text-[13px] text-slate-500">${formatDate(t.date)}</td><td class="p-4 text-[13px] font-medium text-slate-700">${fin_getAccountName(t.account)}</td><td class="p-4"><span class="px-2 py-1 rounded text-[10px] font-semibold tracking-wide ${typeColor}">${typeLabel}</span></td><td class="p-4 text-[13px] text-slate-600">${contactText ? contactText + ' - ' : ''}${t.desc}</td><td class="p-4 text-right text-sm font-semibold ${t.type === 'IN' ? 'text-emerald-600' : 'text-rose-600'}">${fin_formatMoney(t.amount, t.currency)}</td><td class="p-4 text-center whitespace-nowrap"><button onclick="fin_editTransaction(${t.id})" class="text-indigo-500 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg text-xs font-medium mr-1.5 transition">Düzenle</button><button onclick="fin_deleteTransaction(${t.id})" class="text-rose-500 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-lg text-xs font-medium transition">Sil</button></td></tr>`;
+            tbody.innerHTML += `<tr class="hover:bg-slate-50 transition"><td class="p-4 text-[13px] font-semibold text-slate-500">${formatDate(t.date)}</td><td class="p-4 text-[13px] font-bold text-slate-800">${fin_getAccountName(t.account)}</td><td class="p-4"><span class="px-2.5 py-1.5 rounded-lg text-[10px] font-bold tracking-wide ${typeColor}">${typeLabel}</span></td><td class="p-4 text-[13px] font-medium text-slate-600">${contactText ? contactText + ' - ' : ''}${t.desc}</td><td class="p-4 text-right text-sm font-bold ${t.type === 'IN' ? 'text-emerald-600' : 'text-rose-600'}">${fin_formatMoney(t.amount, t.currency)}</td><td class="p-4 text-center whitespace-nowrap"><button onclick="fin_editTransaction(${t.id})" class="text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg text-xs font-bold mr-1.5 transition">Düzenle</button><button onclick="fin_deleteTransaction(${t.id})" class="text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-lg text-xs font-bold transition">Sil</button></td></tr>`;
         });
     }
 
-    // YENİ: BANKA / HESAP DETAY SAYFASI
     function fin_openAccountDetail(id) {
         fin_currentDetailAccountId = id;
         fin_switchView('accountDetail');
@@ -309,7 +348,7 @@
         const accTransactions = fin_transactions.filter(t => t.account === acc.id || t.targetAccount === acc.id);
 
         if(accTransactions.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400 font-medium">Bu hesaba ait henüz bir işlem hareketi yok.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-500 font-bold">Bu hesaba ait henüz bir işlem hareketi yok.</td></tr>';
             return;
         }
 
@@ -321,7 +360,7 @@
             let amt = parseFloat(t.amount) || 0;
             
             let typeLabel = t.type === 'IN' ? 'GİRİŞ' : (t.type === 'OUT' ? 'ÇIKIŞ' : 'TRANSFER');
-            let typeColor = isIncoming ? 'text-emerald-600 bg-emerald-50' : 'text-rose-600 bg-rose-50';
+            let typeColor = isIncoming ? 'text-emerald-700 bg-emerald-100' : 'text-rose-700 bg-rose-100';
             
             let contactName = '-';
             if (t.type === 'TRANSFER') {
@@ -331,19 +370,18 @@
                 contactName = fin_getContactName(t.contactId) || '-';
             }
 
-            let inText = isIncoming ? `<span class="font-semibold text-emerald-600">${fin_formatMoney(amt, t.currency)}</span>` : '-';
-            let outText = isOutgoing ? `<span class="font-semibold text-rose-600">${fin_formatMoney(amt, t.currency)}</span>` : '-';
+            let inText = isIncoming ? `<span class="font-bold text-emerald-600">${fin_formatMoney(amt, t.currency)}</span>` : '-';
+            let outText = isOutgoing ? `<span class="font-bold text-rose-600">${fin_formatMoney(amt, t.currency)}</span>` : '-';
 
-            tbody.innerHTML += `<tr class="hover:bg-slate-50/50 transition"><td class="p-4 text-[13px] text-slate-500">${formatDate(t.date)}</td><td class="p-4"><span class="px-2 py-1 rounded text-[10px] font-semibold tracking-wide ${typeColor}">${typeLabel}</span></td><td class="p-4 text-[13px] text-slate-600">${contactName}</td><td class="p-4 text-[13px] text-slate-600">${t.desc}</td><td class="p-4 text-right">${inText}</td><td class="p-4 text-right">${outText}</td><td class="p-4 text-center whitespace-nowrap"><button onclick="fin_editTransaction(${t.id})" class="text-indigo-500 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg text-xs font-medium mr-1.5 transition">Düzenle</button><button onclick="fin_deleteTransaction(${t.id})" class="text-rose-500 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-lg text-xs font-medium transition">Sil</button></td></tr>`;
+            tbody.innerHTML += `<tr class="hover:bg-slate-50 transition"><td class="p-4 text-[13px] font-semibold text-slate-500">${formatDate(t.date)}</td><td class="p-4"><span class="px-2.5 py-1.5 rounded-lg text-[10px] font-bold tracking-wide ${typeColor}">${typeLabel}</span></td><td class="p-4 text-[13px] font-medium text-slate-700">${contactName}</td><td class="p-4 text-[13px] font-medium text-slate-600">${t.desc}</td><td class="p-4 text-right">${inText}</td><td class="p-4 text-right">${outText}</td><td class="p-4 text-center whitespace-nowrap"><button onclick="fin_editTransaction(${t.id})" class="text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg text-xs font-bold mr-1.5 transition">Düzenle</button><button onclick="fin_deleteTransaction(${t.id})" class="text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-lg text-xs font-bold transition">Sil</button></td></tr>`;
         });
     }
 
-
     function fin_renderContactsList() {
         const grid = document.getElementById('fin-contacts-grid-container'); grid.innerHTML = '';
-        if(fin_contacts.length === 0) { grid.innerHTML = '<p class="text-slate-400 text-sm col-span-3 text-center p-6">Kayıtlı cari yok.</p>'; return; }
+        if(fin_contacts.length === 0) { grid.innerHTML = '<p class="text-slate-500 text-sm col-span-3 text-center p-6 font-bold">Kayıtlı cari yok.</p>'; return; }
         fin_contacts.forEach(c => {
-            grid.innerHTML += `<div onclick="fin_openContactDetail(${c.id})" class="bg-white p-5 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.03)] border border-slate-100 cursor-pointer hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 transition-all duration-200 group"><div class="flex justify-between items-start"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 text-base"><i class="fa-solid fa-user"></i></div><h3 class="font-semibold text-sm text-slate-700">${c.name}</h3></div></div><p class="text-[10px] text-indigo-400 font-medium mt-4 text-right group-hover:text-indigo-600 transition">İşlem Geçmişini Gör &rarr;</p></div>`;
+            grid.innerHTML += `<div onclick="fin_openContactDetail(${c.id})" class="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-t-indigo-500 cursor-pointer hover:-translate-y-1 transition-all duration-200 group"><div class="flex justify-between items-start"><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 text-xl"><i class="fa-solid fa-user-tie"></i></div><h3 class="font-bold text-base text-slate-800">${c.name}</h3></div></div><p class="text-[11px] text-indigo-500 font-bold mt-5 text-right group-hover:text-indigo-700 transition">İşlem Geçmişini Gör &rarr;</p></div>`;
         });
     }
 
@@ -360,7 +398,7 @@
         const contactTransactions = fin_transactions.filter(t => t.contactId == c.id);
 
         if(contactTransactions.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400 font-medium">Bu cariye ait işlem hareketi bulunamadı.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-500 font-bold">Bu cariye ait işlem hareketi bulunamadı.</td></tr>';
             return;
         }
 
@@ -369,16 +407,15 @@
         contactTransactions.forEach(t => {
             let isIncoming = (t.type === 'IN'); let isOutgoing = (t.type === 'OUT'); let amt = parseFloat(t.amount) || 0;
             let typeLabel = t.type === 'IN' ? 'GİRİŞ' : (t.type === 'OUT' ? 'ÇIKIŞ' : 'TRANSFER'); 
-            let typeColor = t.type === 'IN' ? 'text-emerald-600 bg-emerald-50' : (t.type === 'OUT' ? 'text-rose-600 bg-rose-50' : 'text-blue-600 bg-blue-50');
+            let typeColor = t.type === 'IN' ? 'text-emerald-700 bg-emerald-100' : (t.type === 'OUT' ? 'text-rose-700 bg-rose-100' : 'text-blue-700 bg-blue-100');
             
-            let inText = isIncoming ? `<span class="font-semibold text-emerald-600">${fin_formatMoney(amt, t.currency)}</span>` : '-'; 
-            let outText = isOutgoing ? `<span class="font-semibold text-rose-600">${fin_formatMoney(amt, t.currency)}</span>` : '-';
+            let inText = isIncoming ? `<span class="font-bold text-emerald-600">${fin_formatMoney(amt, t.currency)}</span>` : '-'; 
+            let outText = isOutgoing ? `<span class="font-bold text-rose-600">${fin_formatMoney(amt, t.currency)}</span>` : '-';
 
-            tbody.innerHTML += `<tr class="hover:bg-slate-50/50 transition"><td class="p-4 text-[13px] text-slate-500">${formatDate(t.date)}</td><td class="p-4"><span class="px-2 py-1 rounded text-[10px] font-semibold tracking-wide ${typeColor}">${typeLabel}</span></td><td class="p-4 text-[13px] font-medium text-slate-700">${fin_getAccountName(t.account)}</td><td class="p-4 text-[13px] text-slate-600">${t.desc}</td><td class="p-4 text-right">${inText}</td><td class="p-4 text-right">${outText}</td><td class="p-4 text-center whitespace-nowrap"><button onclick="fin_editTransaction(${t.id})" class="text-indigo-500 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg text-xs font-medium mr-1.5 transition">Düzenle</button><button onclick="fin_deleteTransaction(${t.id})" class="text-rose-500 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-lg text-xs font-medium transition">Sil</button></td></tr>`;
+            tbody.innerHTML += `<tr class="hover:bg-slate-50 transition"><td class="p-4 text-[13px] font-semibold text-slate-500">${formatDate(t.date)}</td><td class="p-4"><span class="px-2.5 py-1.5 rounded-lg text-[10px] font-bold tracking-wide ${typeColor}">${typeLabel}</span></td><td class="p-4 text-[13px] font-bold text-slate-800">${fin_getAccountName(t.account)}</td><td class="p-4 text-[13px] font-medium text-slate-600">${t.desc}</td><td class="p-4 text-right">${inText}</td><td class="p-4 text-right">${outText}</td><td class="p-4 text-center whitespace-nowrap"><button onclick="fin_editTransaction(${t.id})" class="text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg text-xs font-bold mr-1.5 transition">Düzenle</button><button onclick="fin_deleteTransaction(${t.id})" class="text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-lg text-xs font-bold transition">Sil</button></td></tr>`;
         });
     }
 
-    // FİLTRELEME İÇİN BANKALARI VE HESAPLARI YÜKLE (Sorun giderildi)
     function fin_initializeSelects() {
         const formSource = document.getElementById('fin-form-source-account'); 
         const formTarget = document.getElementById('fin-form-target-account'); 
@@ -386,8 +423,6 @@
         const filterAccount = document.getElementById('fin-filter-account');
 
         formSource.innerHTML = formTarget.innerHTML = '';
-        
-        // Ana Sayfadaki Tablo Filtresine Bankaları Yükleme
         filterAccount.innerHTML = '<option value="ALL">Tüm Hesaplar / Bankalar</option>';
 
         fin_accounts.forEach(a => { 
@@ -407,8 +442,13 @@
     }
 
     function fin_openTransactionModal() { 
-        fin_editingTransactionId = null; document.getElementById('fin-transactionModalTitle').innerText = 'Yeni İşlem Ekle'; document.getElementById('fin-form-amount').value = ''; document.getElementById('fin-form-desc').value = ''; document.getElementById('fin-form-date').valueAsDate = new Date(); 
-        document.getElementById('fin-transactionModal').classList.add('active'); fin_toggleFormFields(); 
+        fin_editingTransactionId = null; 
+        document.getElementById('fin-transactionModalTitle').innerHTML = '<i class="fa-solid fa-file-invoice-dollar text-indigo-500 mr-2"></i>Yeni İşlem'; 
+        document.getElementById('fin-form-amount').value = ''; 
+        document.getElementById('fin-form-desc').value = ''; 
+        document.getElementById('fin-form-date').valueAsDate = new Date(); 
+        document.getElementById('fin-transactionModal').classList.add('active'); 
+        fin_toggleFormFields(); 
     }
 
     function fin_toggleFormFields() {
@@ -421,7 +461,7 @@
     function fin_openBankModal() { document.getElementById('fin-bank-name').value = ''; document.getElementById('fin-bankModal').classList.add('active'); }
     function fin_closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-    // ================= BULUTA KAYDETME (SUPABASE) İŞLEMLERİ =================
+    // ================= BULUTA KAYDETME İŞLEMLERİ =================
     async function fin_saveContact() {
         const name = document.getElementById('fin-contact-name').value;
         if (!name) return alert('Ad Soyad / Ünvan zorunludur.');
@@ -437,7 +477,7 @@
         const name = document.getElementById('fin-bank-name').value;
         if (!name) return alert('Banka adı zorunludur.');
         const newId = 'BANK_' + Date.now();
-        const { error } = await db.from('finans_hesaplar').insert([{ id: newId, name: name, type: 'bank', color: 'indigo', kullanici: aktifKullaniciAdi }]);
+        const { error } = await db.from('finans_hesaplar').insert([{ id: newId, name: name, type: 'bank', color: 'blue', kullanici: aktifKullaniciAdi }]);
         if(error) return alert("Hata: " + error.message);
         fin_closeModal('fin-bankModal'); await fin_loadData();
     }
@@ -470,7 +510,6 @@
         fin_closeModal('fin-transactionModal'); 
         await fin_loadData();
         
-        // Açık olan sayfaya göre tabloyu hemen güncelle
         if(document.getElementById('fin-contact-detail-view').style.display === 'block') fin_renderContactDetailView();
         if(document.getElementById('fin-account-detail-view').style.display === 'block') fin_renderAccountDetailView();
     }
@@ -481,18 +520,8 @@
         if(error) return alert("Hata: " + error.message);
         await fin_loadData();
         
-        // Açık olan sayfaya göre tabloyu hemen güncelle
         if(document.getElementById('fin-contact-detail-view').style.display === 'block') fin_renderContactDetailView();
         if(document.getElementById('fin-account-detail-view').style.display === 'block') fin_renderAccountDetailView();
-    }
-
-    // GİZLİ SİLME FONKSİYONU (Arayüzde buton yok ama kod içinde saklıyoruz, ileride lazım olursa butonu ekleriz)
-    async function fin_deleteAccount(id) {
-        if(id === 'KASA') return alert("Merkez Kasa silinemez.");
-        if(!confirm("Bu banka hesabını tamamen silmek istediğinize emin misiniz?")) return;
-        const {error} = await db.from('finans_hesaplar').delete().eq('id', id);
-        if(error) return alert("Hata: " + error.message);
-        await fin_loadData();
     }
 
     function fin_editTransaction(id) {
@@ -502,7 +531,7 @@
         if(t.type === 'TRANSFER') document.getElementById('fin-form-target-account').value = t.targetAccount;
         if(t.type !== 'TRANSFER') document.getElementById('fin-form-contact').value = t.contactId || "";
         document.getElementById('fin-form-currency').value = t.currency; document.getElementById('fin-form-amount').value = t.amount; document.getElementById('fin-form-date').value = t.date; document.getElementById('fin-form-desc').value = t.desc;
-        document.getElementById('fin-transactionModalTitle').innerText = "İşlemi Düzenle"; document.getElementById('fin-transactionModal').classList.add('active');
+        document.getElementById('fin-transactionModalTitle').innerHTML = '<i class="fa-solid fa-pen text-indigo-500 mr-2"></i>İşlemi Düzenle'; document.getElementById('fin-transactionModal').classList.add('active');
     }
     
     window.onload = function() {
