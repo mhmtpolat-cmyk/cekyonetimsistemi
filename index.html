@@ -126,7 +126,6 @@
     <div class="cek-sidebar">
         <div class="user-badge" id="aktifKullaniciGosterge">👤 Oturum Açılmadı</div>
         <button class="btn-menu" id="btnKullaniciYonetim" style="display: none;" onclick="openModal('modalKullaniciYonetim'); renderKullanicilarListesi();">⚙️ Kullanıcı Yönetimi</button>
-        <!-- DİKKAT: BURAYA varlik.html YÖNLENDİRMESİ EKLENDİ -->
         <button class="btn-menu btn-finans" id="btnMenuFinans" onclick="window.location.href='varlik.html'">💳 Varlık & Harcama</button>
         <button class="btn-menu" onclick="openModal('modalCariSecim')">📥/📤 Çek Giriş / Çıkış</button>
         <button class="btn-menu" onclick="openModal('modalCariYonetim')">👥 Cari / Tedarikçi</button>
@@ -183,6 +182,23 @@
                 <tfoot><tr><th colspan="4" style="text-align:right;">Toplam:</th><th id="totalDuzenlenen" style="text-align: right; color:var(--danger);">₺0.00</th><th colspan="2"></th></tr></tfoot>
             </table>
         </div>
+
+        <!-- YENİ AYLIK RAPOR VE TAMAMLANAN ÇEKLER ALANI -->
+        <div class="list-box">
+            <div class="list-header"><h2 style="color: var(--primary);"><i class="fa-solid fa-chart-bar"></i> Aylık Gerçekleşen Çek Raporu (Ödenen/Tahsil Edilenler)</h2></div>
+            <div id="aylikRaporGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                <!-- Rapor Kartları JS İle Buraya Gelecek -->
+            </div>
+            
+            <h3 style="margin-top: 30px; font-size:16px; color:var(--primary); border-bottom: 1px solid var(--border); padding-bottom:10px;">Tamamlanan (Ödenmiş/Tahsil Edilmiş) Çekler Geçmişi</h3>
+            <div style="overflow-x: auto;">
+                <table class="cek-table" id="tableOdendi">
+                    <thead><tr><th>Çek No</th><th>Cari / İlgili Kişi</th><th>İşlem Türü</th><th>Vade Tarihi</th><th style="text-align: right;">Tutar</th><th style="text-align: right;">Durum</th></tr></thead>
+                    <tbody id="tbodyOdendi"></tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -316,6 +332,14 @@
         openModal('modalMetricDetay');
     }
 
+    // YENİ: ÇEK ÖDENDİ / TAHSİL EDİLDİ İŞARETLEME
+    async function cekOdendiIsaretle(id) {
+        if(!confirm("Bu çeki 'Ödendi / Tahsil Edildi' olarak işaretlemek istiyor musunuz? \n\nÇek aktif tablolardan düşüp, geçmiş (aylık) raporlara yansıyacaktır.")) return;
+        const { error } = await db.from('cekler').update({ durum: 'Ödendi', son_duzenleyen_kullanici: aktifKullanici, guncelleme_tarihi: new Date() }).eq('id', id);
+        if(error) return alert("Hata: " + error.message);
+        loadData();
+    }
+
     function renderIstatistikler() {
         let groups = {}; let genelAlinanTop = 0, genelAlinanAdet = 0, genelTedarikciTop = 0, genelTedarikciAdet = 0, genelBankaTop = 0, genelBankaAdet = 0;
         g_cekler.forEach(c => {
@@ -409,9 +433,46 @@
         alert("Çek bilgileri güncellendi!"); closeModal('modalCekDuzenle'); loadData();
     }
 
+    // YENİ: AYLIK GERÇEKLEŞEN ÇEK RAPORU FONKSİYONU
+    function renderAylikRapor() {
+        let aylar = {};
+        g_cekler.filter(c => c.durum === 'Ödendi').forEach(c => {
+            let d = new Date(c.vade_tarihi);
+            let ayYil = `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+            if(!aylar[ayYil]) aylar[ayYil] = { tahsilat: 0, odeme: 0, sortKey: d.getTime() };
+            
+            if(c.islem_turu === 'Alınan Çek') aylar[ayYil].tahsilat += Number(c.tutar);
+            if(c.islem_turu === 'Kendi Çekimiz' || c.islem_turu === 'Verilen Çek') aylar[ayYil].odeme += Number(c.tutar);
+        });
+        
+        let html = '';
+        let sortedAylar = Object.keys(aylar).sort((a,b) => aylar[b].sortKey - aylar[a].sortKey);
+        
+        if(sortedAylar.length === 0) {
+            document.getElementById('aylikRaporGrid').innerHTML = '<div style="color:#999; grid-column: 1 / -1; text-align:center;">Tamamlanan çek bulunmamaktadır.</div>';
+            return;
+        }
+        
+        sortedAylar.forEach(ay => {
+            let data = aylar[ay];
+            html += `<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                <h3 style="margin-top:0; color:var(--primary); font-size:15px; border-bottom:1px solid #eee; padding-bottom:8px;">${ay}</h3>
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <span style="font-size:12px; color:#666;">Tahsil Edilen:</span>
+                    <span style="font-size:14px; font-weight:bold; color:var(--success);">${formatMoney(data.tahsilat)}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="font-size:12px; color:#666;">Ödenen:</span>
+                    <span style="font-size:14px; font-weight:bold; color:var(--danger);">${formatMoney(data.odeme)}</span>
+                </div>
+            </div>`;
+        });
+        document.getElementById('aylikRaporGrid').innerHTML = html;
+    }
+
     function renderTablolarVeMetrikler() {
         let topKasa = 0, topTahsil = 0, topOdenecek = 0;
-        let htmlVarlik = '', htmlOdenecek = '', htmlCikis = ''; let htmlGundemTahsil = '', htmlGundemOdenecek = '';
+        let htmlVarlik = '', htmlOdenecek = '', htmlCikis = '', htmlOdendi = ''; let htmlGundemTahsil = '', htmlGundemOdenecek = '';
         const currentMonth = new Date().getMonth(); const currentYear = new Date().getFullYear();
 
         if(g_cekler.length === 0) { htmlVarlik = '<tr><td colspan="8" style="text-align:center; color:#999;">Kayıt bulunamadı.</td></tr>'; htmlOdenecek = '<tr><td colspan="7" style="text-align:center; color:#999;">Kayıt bulunamadı.</td></tr>'; htmlCikis = '<tr><td colspan="6" style="text-align:center; color:#999;">Kayıt bulunamadı.</td></tr>'; }
@@ -423,7 +484,20 @@
             
             let kimBilgisi = `<div style="font-size:11px; color:#666; margin-top:3px;">Ekleyen: <strong>${c.ekleyen_kullanici || 'Bilinmiyor'}</strong></div>`;
             if(c.son_duzenleyen_kullanici) kimBilgisi += `<div style="font-size:10px; color:#888;">Düz: ${c.son_duzenleyen_kullanici}</div>`;
-            let islemHucre = `<div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;"><button class="btn btn-warning" onclick="cekDuzenleAc('${c.id}')">Düzenle</button>${kimBilgisi}</div>`;
+            
+            // YENİ: Ödendi Butonu
+            let btnOdendi = `<button class="btn btn-success" style="padding:4px 8px; font-size:11px; width:100%; text-align:center; margin-bottom: 4px;" onclick="cekOdendiIsaretle('${c.id}')"><i class="fa-solid fa-check"></i> Ödendi Yap</button>`;
+            
+            let islemHucre = `<div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+                ${btnOdendi}
+                <button class="btn btn-warning" style="padding:4px 8px; font-size:11px; width:100%; text-align:center;" onclick="cekDuzenleAc('${c.id}')"><i class="fa-solid fa-pen"></i> Düzenle</button>
+                ${kimBilgisi}
+            </div>`;
+
+            if(c.durum === 'Ödendi') {
+                let typeColor = c.islem_turu === 'Alınan Çek' ? 'color: var(--success);' : 'color: var(--danger);';
+                htmlOdendi += `<tr><td>${c.cek_no}</td><td>${c.cari_unvan}</td><td style="${typeColor} font-weight:bold;">${c.islem_turu}</td><td>${formatDate(c.vade_tarihi)}</td><td style="text-align:right; font-weight:bold;">${formatMoney(c.tutar)}</td><td style="text-align:right;"><span class="badge" style="background:#e0e6ed; color:#555;">Tamamlandı</span></td></tr>`;
+            }
 
             if(c.durum === 'Kasada' || c.durum === 'Tahsilde') {
                 if(c.durum === 'Kasada') topKasa += Number(c.tutar); else topTahsil += Number(c.tutar);
@@ -441,13 +515,20 @@
             }
         });
 
-        document.getElementById('tbodyVarliklar').innerHTML = htmlVarlik; document.getElementById('tbodyDuzenlenen').innerHTML = htmlOdenecek; document.getElementById('tbodyCikis').innerHTML = htmlCikis;
-        document.getElementById('gundemTahsil').innerHTML = htmlGundemTahsil || '<div class="empty-message">Bu ay tahsildecek aktif çek bulunmuyor.</div>'; document.getElementById('gundemOdenecek').innerHTML = htmlGundemOdenecek || '<div class="empty-message">Bu ay ödenecek çek bulunmuyor.</div>';
+        document.getElementById('tbodyVarliklar').innerHTML = htmlVarlik; 
+        document.getElementById('tbodyDuzenlenen').innerHTML = htmlOdenecek; 
+        document.getElementById('tbodyCikis').innerHTML = htmlCikis;
+        document.getElementById('tbodyOdendi').innerHTML = htmlOdendi || '<tr><td colspan="6" style="text-align:center; color:#999;">Tamamlanan çek bulunmamaktadır.</td></tr>';
+
+        document.getElementById('gundemTahsil').innerHTML = htmlGundemTahsil || '<div class="empty-message">Bu ay tahsil edilecek aktif çek bulunmuyor.</div>'; document.getElementById('gundemOdenecek').innerHTML = htmlGundemOdenecek || '<div class="empty-message">Bu ay ödenecek çek bulunmuyor.</div>';
         
         const toplamVarlik = topTahsil + topKasa;
         document.getElementById('metrikTahsilde').innerText = formatMoney(topTahsil); document.getElementById('metrikKasada').innerText = formatMoney(topKasa); document.getElementById('metrikToplamVarlik').innerText = formatMoney(toplamVarlik); document.getElementById('metrikOdenecek').innerText = "- " + formatMoney(topOdenecek);
         document.getElementById('totalVarliklar').innerText = formatMoney(toplamVarlik); document.getElementById('totalDuzenlenen').innerText = formatMoney(topOdenecek);
         updateCharts(toplamVarlik, topOdenecek);
+
+        // Aylık raporu her tablo yenilenmesinde oluştur
+        renderAylikRapor();
     }
 
     function updateCharts(varlik, yukumluluk) {
