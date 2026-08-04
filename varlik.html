@@ -2,860 +2,1171 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Modern Varlık ve Harcama Yönetimi</title>
-    <!-- Gerekli Kütüphaneler -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Varlık & Harcama Yönetimi</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    
-    <script>
-        tailwind.config = { corePlugins: { preflight: false } }
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        /* Modern, Ferah ve Aydınlık Finans Tasarımı */
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #F8FAFC; color: #334155; margin: 0; }
-        .fin-modal { display: none; opacity: 0; transition: opacity 0.2s ease-in-out; }
-        .fin-modal.active { display: flex; opacity: 1; }
-        
-        /* Zarif Scrollbar */
-        .varlik-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
-        .varlik-scroll::-webkit-scrollbar-track { background: transparent; }
-        .varlik-scroll::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
-        
-        /* Modern Soft Gölgeler */
-        .glass-card { background: #ffffff; border: 1px solid #E2E8F0; border-radius: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02), 0 1px 2px rgba(0,0,0,0.01); }
-        .hover-card { transition: all 0.2s ease; }
-        .hover-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.02); border-color: #CBD5E1; }
-        
-        .tailwind-wrapper input, .tailwind-wrapper select, .tailwind-wrapper button { border-style: solid; }
-        .tailwind-wrapper table { border-collapse: collapse; }
+        :root {
+            --primary: #2c3e50; --secondary: #34495e; --accent: #3498db;
+            --success: #27ae60; --success-bg: #eafaf1;
+            --danger: #e74c3c; --danger-bg: #fdedec;
+            --warning: #f1c40f; --warning-bg: #fcf3cf;
+            --purple: #8e44ad; --purple-bg: #f5eef8;
+            --bg: #f4f7f6; --card-bg: #ffffff; --border: #e0e6ed;
+            --muted: #7f8c8d;
+        }
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: #333; margin: 0; padding: 20px; }
+
+        .layout { display: flex; gap: 25px; max-width: 1350px; margin: 0 auto; align-items: flex-start; }
+        .sidebar { width: 240px; flex-shrink: 0; background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; position: sticky; top: 20px; }
+        .main { flex-grow: 1; min-width: 0; }
+
+        .btn-menu { width: 100%; text-align: left; padding: 12px 15px; background: #f8f9fa; color: var(--primary); border: 1px solid #eee; font-size: 14px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        .btn-menu:hover { background: var(--primary); color: white; }
+        .btn-cek { background: #eaf2f8; color: var(--accent); border-color: #d4e6f1; }
+        .btn-cek:hover { background: var(--accent); color: white; }
+        .btn-yeni { background: var(--success); color: white; border-color: var(--success); }
+        .btn-yeni:hover { background: #1e8449; }
+        .btn-logout { background: #fdedec; color: #c0392b; border-color: #fadbd8; margin-top: 15px; }
+        .btn-logout:hover { background: #c0392b; color: white; }
+
+        .user-badge { background: #e2e8f0; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--primary); margin-bottom: 10px; border: 1px solid #cbd5e1; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
+        .header h1 { margin: 0; color: var(--primary); font-size: 24px; font-weight: bold; }
+
+        .btn { padding: 9px 14px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
+        .btn-outline:hover { background: var(--primary); color: white; }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover { background: #2980b9; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-warning { background: var(--warning); color: #333; font-size: 11px; padding: 5px 9px; }
+        .btn-sm { padding: 5px 9px; font-size: 11px; }
+
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 25px; }
+        .card h2 { margin: 0 0 15px 0; font-size: 17px; font-weight: bold; color: var(--primary); border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .card h2 .sub { font-size: 12px; font-weight: normal; color: var(--muted); }
+
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+        .metric-box { background: #f8f9fa; border: 1px solid var(--border); border-radius: 8px; padding: 15px; text-align: center; }
+        .metric-box .lbl { font-size: 11px; color: var(--muted); font-weight: bold; text-transform: uppercase; margin-bottom: 6px; }
+        .metric-box .val { font-size: 20px; font-weight: bold; color: var(--primary); }
+        .metric-green { background: var(--success-bg); border-color: #a9dfbf; } .metric-green .val { color: var(--success); }
+        .metric-red { background: var(--danger-bg); border-color: #f5b7b1; } .metric-red .val { color: var(--danger); }
+        .metric-blue { background: #eaf2f8; border-color: #aed6f1; } .metric-blue .val { color: var(--accent); }
+
+        .hesap-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 18px; cursor: pointer; transition: 0.2s; }
+        .hesap-card:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.08); border-color: var(--accent); }
+        .hesap-card .isim { font-size: 15px; font-weight: bold; color: var(--primary); display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .hesap-card .ikon { width: 34px; height: 34px; border-radius: 8px; background: #eaf2f8; color: var(--accent); display: flex; align-items: center; justify-content: center; }
+        .bakiye-satir { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed #eee; font-size: 13px; }
+        .bakiye-satir:last-child { border-bottom: none; }
+        .bakiye-satir .cur { color: var(--muted); font-weight: 600; }
+        .bakiye-satir .amt { font-weight: bold; }
+        .neg { color: var(--danger); }
+
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; padding: 11px 12px; border-bottom: 1px solid #eee; font-size: 13.5px; }
+        th { color: var(--muted); background-color: #f8f9fa; font-weight: bold; font-size: 12px; text-transform: uppercase; }
+        tbody tr:hover { background: #fafbfc; }
+
+        .badge { padding: 4px 9px; border-radius: 4px; font-size: 11px; font-weight: bold; white-space: nowrap; }
+        .badge-in { background: #d1fae5; color: #065f46; }
+        .badge-out { background: #fee2e2; color: #991b1b; }
+        .badge-tr { background: #dbeafe; color: #1e40af; }
+        .badge-cat { background: #f4f6f7; color: #566573; border: 1px solid #e5e8e8; }
+
+        .filtre-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 15px; background: #f8f9fa; padding: 12px; border-radius: 8px; border: 1px solid var(--border); }
+        .filtre-bar select, .filtre-bar input { padding: 8px 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 13px; background: white; }
+        .filtre-bar label { font-size: 11px; font-weight: bold; color: var(--muted); text-transform: uppercase; }
+
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 15px; }
+        .modal { background: #fff; width: 480px; max-width: 100%; border-radius: 10px; padding: 25px; max-height: 90vh; overflow-y: auto; }
+        .modal h2 { margin-top: 0; font-size: 18px; font-weight: bold; color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 13px; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
+        .form-row { display: flex; gap: 12px; }
+        .form-row > div { flex: 1; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+        .hidden { display: none !important; }
+
+        .empty { text-align: center; color: #999; font-size: 13px; padding: 25px 0; }
+        .loading-box { text-align: center; padding: 40px; color: var(--muted); }
+        .yetki-uyari { max-width: 500px; margin: 60px auto; background: white; border: 1px solid var(--border); border-radius: 12px; padding: 40px; text-align: center; }
+
+        .chart-wrap { position: relative; height: 260px; }
+
+        /* MOBİL */
+        .mobil-liste { display: none; }
+        @media (max-width: 900px) {
+            body { padding: 12px; }
+            .layout { flex-direction: column; }
+            .sidebar { width: 100%; position: relative; top: 0; flex-direction: row; flex-wrap: wrap; }
+            .sidebar .btn-menu { width: auto; flex: 1 1 45%; text-align: center; font-size: 13px; padding: 10px; }
+            .user-badge { flex: 1 1 100%; }
+            .grid-4 { grid-template-columns: repeat(2, 1fr); }
+            .grid-2 { grid-template-columns: 1fr; }
+            .header h1 { font-size: 20px; }
+            .masa-tablo { display: none; }
+            .mobil-liste { display: block; }
+            .chart-wrap { height: 220px; }
+        }
+
+        .mobil-kart { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 10px; }
+        .mobil-kart .ust { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .mobil-kart .tutar { font-size: 16px; font-weight: bold; }
+        .mobil-kart .detay { font-size: 12px; color: var(--muted); line-height: 1.6; }
+        .mobil-kart .alt { display: flex; gap: 8px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-<div id="app-varlik" class="tailwind-wrapper varlik-scroll text-slate-700" style="display: block;">
-    <div class="max-w-[1400px] mx-auto space-y-6 pt-6 pb-12 px-4 md:px-8">
-        
-        <!-- ÜST MENÜ (Modern ve Temiz) -->
-        <div class="glass-card p-4 flex flex-col lg:flex-row justify-between items-center gap-4">
-            <h1 class="text-xl md:text-2xl font-bold flex items-center cursor-pointer text-slate-800" onclick="fin_switchView('dashboard')">
-                <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mr-3"><i class="fa-solid fa-chart-pie"></i></div>
-                Varlık Yönetimi
-            </h1>
-            <div class="flex flex-wrap gap-3 w-full lg:w-auto justify-end">
-                <button onclick="window.location.href='index.html'" class="bg-white hover:bg-slate-50 text-slate-600 px-4 py-2.5 rounded-xl font-medium transition text-sm border border-slate-200 shadow-sm"><i class="fa-solid fa-money-check mr-2 text-slate-400"></i> Çek Paneli</button>
-                <button onclick="fin_openBankModal()" class="bg-white hover:bg-slate-50 text-slate-600 px-4 py-2.5 rounded-xl font-medium transition text-sm border border-slate-200 shadow-sm"><i class="fa-solid fa-building-columns mr-2 text-slate-400"></i> Banka Ekle</button>
-                <button onclick="fin_switchView('contacts')" class="bg-white hover:bg-slate-50 text-slate-600 px-4 py-2.5 rounded-xl font-medium transition text-sm border border-slate-200 shadow-sm"><i class="fa-solid fa-users mr-2 text-slate-400"></i> Cariler</button>
-                <button onclick="fin_openTransactionModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-semibold transition shadow-sm text-sm"><i class="fa-solid fa-plus mr-2"></i> Yeni İşlem</button>
-            </div>
-        </div>
+<!-- AÇILIŞ -->
+<div id="acilisEkrani" class="modal-overlay" style="display:flex; background: var(--bg);">
+    <div class="loading-box">
+        <i class="fa-solid fa-circle-notch fa-spin" style="font-size:32px; color:var(--accent);"></i>
+        <p>Yükleniyor...</p>
+    </div>
+</div>
 
-        <!-- ANA DASHBOARD GÖRÜNÜMÜ -->
-        <div id="fin-main-dashboard-view" class="space-y-6 block fin-view-section">
-            
-            <!-- ÖZET KARTLARI -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Toplam Varlık -->
-                <div class="glass-card p-6">
-                    <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-5 flex items-center"><i class="fa-solid fa-globe mr-2 text-blue-400"></i> Genel Varlık Özeti</h2>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100"><p class="text-[11px] font-semibold text-slate-500 mb-1">TL Karşılığı</p><p class="text-xl md:text-2xl font-bold text-slate-800" id="fin-total-try">0.00 ₺</p></div>
-                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100"><p class="text-[11px] font-semibold text-slate-500 mb-1">Dolar Karşılığı</p><p class="text-xl md:text-2xl font-bold text-slate-800" id="fin-total-usd">0.00 $</p></div>
-                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100"><p class="text-[11px] font-semibold text-slate-500 mb-1">Euro Karşılığı</p><p class="text-xl md:text-2xl font-bold text-slate-800" id="fin-total-eur">0.00 €</p></div>
-                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100"><p class="text-[11px] font-semibold text-slate-500 mb-1">Frank Karşılığı</p><p class="text-xl md:text-2xl font-bold text-slate-800" id="fin-total-chf">0.00 CHF</p></div>
-                    </div>
-                </div>
-                <!-- Likit Nakit -->
-                <div class="glass-card p-6">
-                    <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-5 flex items-center"><i class="fa-solid fa-vault mr-2 text-emerald-400"></i> Likit Nakit Durumu</h2>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100/50"><p class="text-[11px] font-semibold text-slate-500 mb-1">TL Bakiyesi</p><p class="text-xl md:text-2xl font-bold text-emerald-700" id="fin-liquid-try">0.00 ₺</p></div>
-                        <div class="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100/50"><p class="text-[11px] font-semibold text-slate-500 mb-1">Dolar Bakiyesi</p><p class="text-xl md:text-2xl font-bold text-emerald-700" id="fin-liquid-usd">0.00 $</p></div>
-                        <div class="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100/50"><p class="text-[11px] font-semibold text-slate-500 mb-1">Euro Bakiyesi</p><p class="text-xl md:text-2xl font-bold text-emerald-700" id="fin-liquid-eur">0.00 €</p></div>
-                        <div class="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100/50"><p class="text-[11px] font-semibold text-slate-500 mb-1">Frank Bakiyesi</p><p class="text-xl md:text-2xl font-bold text-emerald-700" id="fin-liquid-chf">0.00 CHF</p></div>
-                    </div>
-                </div>
-            </div>
+<!-- YETKİ YOK -->
+<div id="yetkiYok" class="hidden">
+    <div class="yetki-uyari">
+        <i class="fa-solid fa-lock" style="font-size:40px; color:var(--danger); margin-bottom:15px;"></i>
+        <h2 style="color:var(--primary);">Bu sayfaya erişim yetkiniz yok</h2>
+        <p style="color:var(--muted); font-size:14px;">Varlık ve harcama sayfasını görüntüleme yetkiniz bulunmuyor.</p>
+        <button class="btn btn-primary" onclick="window.location.href='index.html'">Çek Paneline Dön</button>
+    </div>
+</div>
 
-            <!-- DÖNEM GİREN/ÇIKAN ÖZETLERİ -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-2">
-                <div class="glass-card p-6">
-                    <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center"><i class="fa-solid fa-arrow-turn-down mr-2 text-sky-500"></i> Toplam Nakit Girişi</h2>
-                    <div class="grid grid-cols-4 gap-3">
-                        <div class="text-center"><p class="text-[10px] text-slate-400 font-bold mb-1">TL</p><p class="text-sm font-bold text-sky-600" id="fin-in-try">0.00</p></div>
-                        <div class="text-center"><p class="text-[10px] text-slate-400 font-bold mb-1">USD</p><p class="text-sm font-bold text-sky-600" id="fin-in-usd">0.00</p></div>
-                        <div class="text-center"><p class="text-[10px] text-slate-400 font-bold mb-1">EUR</p><p class="text-sm font-bold text-sky-600" id="fin-in-eur">0.00</p></div>
-                        <div class="text-center"><p class="text-[10px] text-slate-400 font-bold mb-1">CHF</p><p class="text-sm font-bold text-sky-600" id="fin-in-chf">0.00</p></div>
-                    </div>
-                </div>
-                <div class="glass-card p-6">
-                    <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center"><i class="fa-solid fa-arrow-turn-up mr-2 text-rose-500"></i> Toplam Nakit Çıkışı</h2>
-                    <div class="grid grid-cols-4 gap-3">
-                        <div class="text-center"><p class="text-[10px] text-slate-400 font-bold mb-1">TL</p><p class="text-sm font-bold text-rose-600" id="fin-out-try">0.00</p></div>
-                        <div class="text-center"><p class="text-[10px] text-slate-400 font-bold mb-1">USD</p><p class="text-sm font-bold text-rose-600" id="fin-out-usd">0.00</p></div>
-                        <div class="text-center"><p class="text-[10px] text-slate-400 font-bold mb-1">EUR</p><p class="text-sm font-bold text-rose-600" id="fin-out-eur">0.00</p></div>
-                        <div class="text-center"><p class="text-[10px] text-slate-400 font-bold mb-1">CHF</p><p class="text-sm font-bold text-rose-600" id="fin-out-chf">0.00</p></div>
-                    </div>
+<!-- UYGULAMA -->
+<div id="app" class="layout hidden">
+    <div class="sidebar">
+        <div class="user-badge" id="kullaniciGosterge">👤 —</div>
+        <button class="btn-menu btn-yeni" onclick="islemModalAc()">➕ Yeni İşlem</button>
+        <button class="btn-menu" onclick="gorunumDegistir('dashboard')">📊 Ana Panel</button>
+        <button class="btn-menu" onclick="gorunumDegistir('cariler')">👥 Cariler</button>
+        <button class="btn-menu" onclick="bankaModalAc()">🏦 Banka / Kasa Ekle</button>
+        <button class="btn-menu btn-cek" onclick="window.location.href='index.html'">💳 Çek Paneli</button>
+        <button class="btn-menu btn-logout" onclick="cikisYap()">Çıkış Yap</button>
+    </div>
+
+    <div class="main">
+
+        <!-- ================= ANA PANEL ================= -->
+        <div id="v-dashboard">
+            <div class="header"><h1>Varlık & Harcama Yönetimi</h1></div>
+
+            <!-- TOPLAM VARLIK -->
+            <div class="card">
+                <h2>🌍 Toplam Varlık <span class="sub">— tüm hesapların döviz karşılığı</span></h2>
+                <div class="grid-4">
+                    <div class="metric-box metric-blue"><div class="lbl">TL Karşılığı</div><div class="val" id="topTRY">0,00 ₺</div></div>
+                    <div class="metric-box"><div class="lbl">Dolar</div><div class="val" id="topUSD">0,00 $</div></div>
+                    <div class="metric-box"><div class="lbl">Euro</div><div class="val" id="topEUR">0,00 €</div></div>
+                    <div class="metric-box"><div class="lbl">Frank</div><div class="val" id="topCHF">0,00</div></div>
                 </div>
             </div>
 
-            <!-- BANKALAR LİSTESİ -->
-            <h3 class="text-xs font-bold text-slate-400 mt-8 mb-4 flex items-center uppercase tracking-wider pl-1"><i class="fa-solid fa-building-columns mr-2"></i> Aktif Hesaplar</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5" id="fin-accounts-dashboard"></div>
-
-            <!-- KATEGORİ ÖZETİ TABLOSU -->
-            <div class="glass-card p-6 mt-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center"><i class="fa-solid fa-chart-pie mr-2 text-amber-500"></i> Kategori Dağılımı</h2>
-                    <span class="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded-md">EUR Karşılığı</span>
+            <!-- NAKİT BAKİYE -->
+            <div class="card">
+                <h2>💵 Nakit Bakiyeler <span class="sub">— her para biriminin toplam bakiyesi</span></h2>
+                <div class="grid-4">
+                    <div class="metric-box metric-green"><div class="lbl">TL</div><div class="val" id="nakitTRY">0,00 ₺</div></div>
+                    <div class="metric-box metric-green"><div class="lbl">Dolar</div><div class="val" id="nakitUSD">0,00 $</div></div>
+                    <div class="metric-box metric-green"><div class="lbl">Euro</div><div class="val" id="nakitEUR">0,00 €</div></div>
+                    <div class="metric-box metric-green"><div class="lbl">Frank</div><div class="val" id="nakitCHF">0,00</div></div>
                 </div>
-                <div class="rounded-xl overflow-hidden border border-slate-100">
-                    <table class="w-full text-left">
-                        <thead class="bg-slate-50 border-b border-slate-100">
-                            <tr class="text-slate-400 text-[11px] uppercase tracking-wider font-semibold">
-                                <th class="p-3">Kategori</th><th class="p-3 text-right">Giriş (EUR)</th><th class="p-3 text-right">Çıkış (EUR)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="fin-category-summary-tbody" class="text-sm divide-y divide-slate-50"></tbody>
+            </div>
+
+            <!-- GRAFİKLER -->
+            <div class="grid-2">
+                <div class="card">
+                    <h2>📈 Son 6 Ay Giriş / Çıkış <span class="sub">— TL karşılığı</span></h2>
+                    <div class="chart-wrap"><canvas id="aylikChart"></canvas></div>
+                </div>
+                <div class="card">
+                    <h2>🥧 Harcama Dağılımı <span class="sub">— kategoriye göre, TL</span></h2>
+                    <div class="chart-wrap"><canvas id="kategoriChart"></canvas></div>
+                </div>
+            </div>
+
+            <!-- BU AY ÖZET -->
+            <div class="card">
+                <h2>📅 Bu Ay <span class="sub" id="buAyEtiket"></span></h2>
+                <div class="grid-4">
+                    <div class="metric-box metric-green"><div class="lbl">Bu Ay Giren</div><div class="val" id="ayGiren">0,00 ₺</div></div>
+                    <div class="metric-box metric-red"><div class="lbl">Bu Ay Çıkan</div><div class="val" id="ayCikan">0,00 ₺</div></div>
+                    <div class="metric-box"><div class="lbl">Fark</div><div class="val" id="ayFark">0,00 ₺</div></div>
+                    <div class="metric-box"><div class="lbl">İşlem Sayısı</div><div class="val" id="ayAdet">0</div></div>
+                </div>
+            </div>
+
+            <!-- HESAPLAR -->
+            <div class="card">
+                <h2>🏦 Hesaplarım</h2>
+                <div class="grid-4" id="hesapListesi"></div>
+            </div>
+
+            <!-- KATEGORİ ÖZETİ -->
+            <div class="card">
+                <h2>🏷️ Kategori Özeti <span class="sub">— TL karşılığı, tüm zamanlar</span></h2>
+                <div style="overflow-x:auto;">
+                    <table>
+                        <thead><tr><th>Kategori</th><th style="text-align:right;">Giren</th><th style="text-align:right;">Çıkan</th><th style="text-align:right;">Net</th></tr></thead>
+                        <tbody id="kategoriOzetTablo"></tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- ANA İŞLEM HAREKETLERİ TABLOSU -->
-            <div id="fin-transaction-section" class="glass-card overflow-hidden mt-6">
-                <div class="p-5 flex flex-wrap gap-4 justify-between items-center border-b border-slate-100 bg-white">
-                    <h2 class="text-sm font-bold text-slate-700 flex items-center"><i class="fa-solid fa-list-ul text-slate-400 mr-2"></i> Tüm Hareketler</h2>
-                    <div class="flex flex-wrap gap-2">
-                        <select id="fin-filter-category" class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 outline-none hover:border-blue-400 transition shadow-sm" onchange="fin_renderTable()"></select>
-                        <select id="fin-filter-contact" class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 outline-none hover:border-blue-400 transition shadow-sm" onchange="fin_renderTable()"></select>
-                        <select id="fin-filter-account" class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 outline-none hover:border-blue-400 transition shadow-sm" onchange="fin_renderTable()"><option value="ALL">Tüm Hesaplar</option></select>
-                        <select id="fin-filter-currency" class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 outline-none hover:border-blue-400 transition shadow-sm" onchange="fin_renderTable()"><option value="ALL">Tüm Dövizler</option><option value="TRY">TL</option><option value="USD">Dolar</option><option value="EUR">Euro</option><option value="CHF">Frank</option></select>
-                    </div>
+            <!-- TÜM HAREKETLER -->
+            <div class="card">
+                <h2>📋 Tüm Hareketler</h2>
+                <div class="filtre-bar">
+                    <input type="text" id="fArama" class="form-control" style="width:180px;" placeholder="🔍 Ara..." oninput="tabloYaz()">
+                    <select id="fTur" onchange="tabloYaz()"><option value="ALL">Tüm Türler</option><option value="IN">Girişler</option><option value="OUT">Çıkışlar</option><option value="TRANSFER">Transferler</option></select>
+                    <select id="fKategori" onchange="tabloYaz()"></select>
+                    <select id="fCari" onchange="tabloYaz()"></select>
+                    <select id="fHesap" onchange="tabloYaz()"></select>
+                    <select id="fDoviz" onchange="tabloYaz()"><option value="ALL">Tüm Dövizler</option><option value="TRY">TL</option><option value="USD">Dolar</option><option value="EUR">Euro</option><option value="CHF">Frank</option></select>
+                    <button class="btn btn-outline btn-sm" onclick="filtreTemizle()">Temizle</button>
                 </div>
-                <div class="overflow-x-auto max-h-[600px]">
-                    <table class="w-full text-left border-collapse min-w-[900px]">
-                        <thead class="sticky top-0 z-10 bg-slate-50 shadow-sm">
-                            <tr class="text-slate-400 text-[11px] font-semibold uppercase tracking-wider border-b border-slate-100">
-                                <th class="p-4">Tarih</th><th class="p-4">Hesap</th><th class="p-4">İşlem</th><th class="p-4">Kategori</th><th class="p-4">Karşı Taraf / Açıklama</th><th class="p-4 text-right">Tutar</th><th class="p-4 text-center"></th>
-                            </tr>
-                        </thead>
-                        <tbody id="fin-transaction-tbody" class="text-sm divide-y divide-slate-50"></tbody>
+                <div id="filtreOzet" style="font-size:13px; color:var(--muted); margin-bottom:12px;"></div>
+                <div class="masa-tablo" style="overflow-x:auto;">
+                    <table>
+                        <thead><tr><th>Tarih</th><th>Hesap</th><th>Tür</th><th>Kategori</th><th>Karşı Taraf / Açıklama</th><th style="text-align:right;">Tutar</th><th style="text-align:right;">İşlem</th></tr></thead>
+                        <tbody id="hareketTablo"></tbody>
                     </table>
                 </div>
+                <div class="mobil-liste" id="hareketMobil"></div>
             </div>
         </div>
 
-        <!-- BANKA / HESAP DETAY SAYFASI (DİNAMİK ÖZETLİ) -->
-        <div id="fin-account-detail-view" class="space-y-6 hidden fin-view-section">
-            <div class="glass-card p-5 flex flex-wrap justify-between items-center gap-4 bg-slate-50/50">
-                <div>
-                    <button onclick="fin_switchView('dashboard')" class="text-xs font-bold text-slate-500 bg-white hover:bg-slate-100 border border-slate-200 px-4 py-2 rounded-lg mb-3 inline-flex items-center transition shadow-sm"><i class="fa-solid fa-arrow-left mr-2"></i> Geri Dön</button>
-                    <h2 class="text-xl md:text-2xl font-bold text-slate-800 flex items-center"><i class="fa-solid fa-building-columns text-blue-500 mr-3"></i> <span id="fin-ad-name">Hesap Detayı</span></h2>
-                </div>
+        <!-- ================= HESAP DETAY ================= -->
+        <div id="v-hesapDetay" class="hidden">
+            <div class="header">
+                <h1 id="hdBaslik">Hesap Detayı</h1>
+                <button class="btn btn-outline" onclick="gorunumDegistir('dashboard')">← Geri Dön</button>
             </div>
-
-            <!-- FİLTRELEME ALANI -->
-            <div class="glass-card p-4 flex flex-wrap gap-3 items-center bg-white">
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider mr-2"><i class="fa-solid fa-filter mr-1"></i> Filtrele:</span>
-                <select id="fin-ad-filter-type" class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 outline-none hover:border-blue-400 transition" onchange="fin_renderAccountDetailView()"><option value="ALL">Tüm İşlemler</option><option value="IN">Girişler</option><option value="OUT">Çıkışlar</option></select>
-                <select id="fin-ad-filter-category" class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 outline-none hover:border-blue-400 transition" onchange="fin_renderAccountDetailView()"></select>
-                <select id="fin-ad-filter-currency" class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 outline-none hover:border-blue-400 transition" onchange="fin_renderAccountDetailView()"><option value="ALL">Tüm Dövizler</option><option value="TRY">TL</option><option value="USD">Dolar</option><option value="EUR">Euro</option><option value="CHF">Frank</option></select>
-                <select id="fin-ad-filter-contact" class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 outline-none hover:border-blue-400 transition" onchange="fin_renderAccountDetailView()"></select>
-            </div>
-
-            <!-- DİNAMİK FİLTRE ÖZETLERİ -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="glass-card p-5 border-l-4 border-l-emerald-400">
-                    <h3 class="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-3">Filtrelenen Toplam Girişler</h3>
-                    <div class="grid grid-cols-4 gap-2 text-center" id="ad-sum-in"></div>
+            <div class="card">
+                <div class="filtre-bar">
+                    <select id="hdTur" onchange="hesapDetayYaz()"><option value="ALL">Tüm İşlemler</option><option value="IN">Girişler</option><option value="OUT">Çıkışlar</option></select>
+                    <select id="hdKategori" onchange="hesapDetayYaz()"></select>
+                    <select id="hdDoviz" onchange="hesapDetayYaz()"><option value="ALL">Tüm Dövizler</option><option value="TRY">TL</option><option value="USD">Dolar</option><option value="EUR">Euro</option><option value="CHF">Frank</option></select>
                 </div>
-                <div class="glass-card p-5 border-l-4 border-l-rose-400">
-                    <h3 class="text-xs font-bold text-rose-600 uppercase tracking-wider mb-3">Filtrelenen Toplam Çıkışlar</h3>
-                    <div class="grid grid-cols-4 gap-2 text-center" id="ad-sum-out"></div>
+                <div class="grid-2" style="margin-bottom:20px;">
+                    <div><div class="lbl" style="font-size:11px; font-weight:bold; color:var(--success); margin-bottom:8px;">TOPLAM GİRİŞ</div><div class="grid-4" id="hdGirisOzet"></div></div>
+                    <div><div class="lbl" style="font-size:11px; font-weight:bold; color:var(--danger); margin-bottom:8px;">TOPLAM ÇIKIŞ</div><div class="grid-4" id="hdCikisOzet"></div></div>
                 </div>
-            </div>
-
-            <div class="glass-card overflow-hidden">
-                <div class="p-4 border-b border-slate-100 bg-slate-50 font-bold text-slate-600 text-sm">İşlem Listesi</div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse min-w-[800px]">
-                        <thead class="bg-white border-b border-slate-100"><tr class="text-slate-400 text-[11px] font-semibold uppercase tracking-wider"><th class="p-4">Tarih</th><th class="p-4">Tür</th><th class="p-4">Kategori</th><th class="p-4">Karşı Taraf / Açıklama</th><th class="p-4 text-right">Giriş</th><th class="p-4 text-right">Çıkış</th><th class="p-4 text-center">İşlem</th></tr></thead>
-                        <tbody id="fin-ad-transaction-tbody" class="text-sm divide-y divide-slate-50"></tbody>
+                <div class="masa-tablo" style="overflow-x:auto;">
+                    <table>
+                        <thead><tr><th>Tarih</th><th>Tür</th><th>Kategori</th><th>Karşı Taraf / Açıklama</th><th style="text-align:right;">Giriş</th><th style="text-align:right;">Çıkış</th><th style="text-align:right;">İşlem</th></tr></thead>
+                        <tbody id="hdTablo"></tbody>
                     </table>
                 </div>
+                <div class="mobil-liste" id="hdMobil"></div>
             </div>
         </div>
 
-        <!-- CARİ LİSTESİ -->
-        <div id="fin-contacts-list-view" class="space-y-6 hidden fin-view-section">
-            <div class="glass-card p-5 flex justify-between items-center">
-                <h2 class="text-sm font-bold text-slate-500 flex items-center uppercase tracking-wider"><i class="fa-solid fa-users text-blue-400 mr-2"></i> Cari Kartlar</h2>
-                <button onclick="fin_openContactModal()" class="bg-white text-slate-700 border border-slate-200 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-slate-50 transition shadow-sm"><i class="fa-solid fa-user-plus mr-2 text-slate-400"></i> Yeni Cari</button>
+        <!-- ================= CARİLER ================= -->
+        <div id="v-cariler" class="hidden">
+            <div class="header">
+                <h1>Cariler</h1>
+                <button class="btn btn-success" onclick="cariModalAc()">+ Yeni Cari</button>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5" id="fin-contacts-grid-container"></div>
+            <div class="card">
+                <div class="grid-4" id="cariListesi"></div>
+            </div>
         </div>
 
-        <!-- SEÇİLEN CARİNİN İŞLEM HAREKETLERİ (DİNAMİK ÖZETLİ) -->
-        <div id="fin-contact-detail-view" class="space-y-6 hidden fin-view-section">
-            <div class="glass-card p-5 flex flex-wrap justify-between items-center gap-4 bg-slate-50/50">
-                <div>
-                    <button onclick="fin_switchView('contacts')" class="text-xs font-bold text-slate-500 bg-white hover:bg-slate-100 border border-slate-200 px-4 py-2 rounded-lg mb-3 inline-flex items-center transition shadow-sm"><i class="fa-solid fa-arrow-left mr-2"></i> Carilere Dön</button>
-                    <h2 class="text-xl md:text-2xl font-bold text-slate-800 flex items-center"><i class="fa-solid fa-user-tie text-indigo-500 mr-3"></i> <span id="fin-cd-name">Cari Detayı</span></h2>
-                </div>
+        <!-- ================= CARİ DETAY ================= -->
+        <div id="v-cariDetay" class="hidden">
+            <div class="header">
+                <h1 id="cdBaslik">Cari Detayı</h1>
+                <button class="btn btn-outline" onclick="gorunumDegistir('cariler')">← Carilere Dön</button>
             </div>
-
-            <!-- FİLTRELEME ALANI -->
-            <div class="glass-card p-4 flex flex-wrap gap-3 items-center bg-white">
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider mr-2"><i class="fa-solid fa-filter mr-1"></i> Filtrele:</span>
-                <select id="fin-cd-filter-type" class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 outline-none hover:border-blue-400 transition" onchange="fin_renderContactDetailView()"><option value="ALL">Tüm İşlemler</option><option value="IN">Girişler (Tahsilat)</option><option value="OUT">Çıkışlar (Ödeme)</option></select>
-                <select id="fin-cd-filter-category" class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 outline-none hover:border-blue-400 transition" onchange="fin_renderContactDetailView()"></select>
-                <select id="fin-cd-filter-currency" class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 outline-none hover:border-blue-400 transition" onchange="fin_renderContactDetailView()"><option value="ALL">Tüm Dövizler</option><option value="TRY">TL</option><option value="USD">Dolar</option><option value="EUR">Euro</option><option value="CHF">Frank</option></select>
-            </div>
-
-            <!-- DİNAMİK FİLTRE ÖZETLERİ VE KATEGORİ -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <div class="glass-card p-5 border-l-4 border-l-emerald-400">
-                    <h3 class="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-3">Toplam Giriş (Filtreli)</h3>
-                    <div class="space-y-1 text-sm font-bold text-slate-700" id="cd-sum-in"></div>
+            <div class="card">
+                <div class="filtre-bar">
+                    <select id="cdTur" onchange="cariDetayYaz()"><option value="ALL">Tüm İşlemler</option><option value="IN">Girişler (Tahsilat)</option><option value="OUT">Çıkışlar (Ödeme)</option></select>
+                    <select id="cdKategori" onchange="cariDetayYaz()"></select>
+                    <select id="cdDoviz" onchange="cariDetayYaz()"><option value="ALL">Tüm Dövizler</option><option value="TRY">TL</option><option value="USD">Dolar</option><option value="EUR">Euro</option><option value="CHF">Frank</option></select>
                 </div>
-                <div class="glass-card p-5 border-l-4 border-l-rose-400">
-                    <h3 class="text-xs font-bold text-rose-600 uppercase tracking-wider mb-3">Toplam Çıkış (Filtreli)</h3>
-                    <div class="space-y-1 text-sm font-bold text-slate-700" id="cd-sum-out"></div>
+                <div class="grid-4" style="margin-bottom:20px;">
+                    <div class="metric-box metric-green"><div class="lbl">Toplam Giriş (TL)</div><div class="val" id="cdGiris">0,00 ₺</div></div>
+                    <div class="metric-box metric-red"><div class="lbl">Toplam Çıkış (TL)</div><div class="val" id="cdCikis">0,00 ₺</div></div>
+                    <div class="metric-box"><div class="lbl">Net Durum (TL)</div><div class="val" id="cdNet">0,00 ₺</div></div>
+                    <div class="metric-box"><div class="lbl">İşlem Sayısı</div><div class="val" id="cdAdet">0</div></div>
                 </div>
-                <div class="glass-card p-5 border-l-4 border-l-amber-400">
-                    <h3 class="text-xs font-bold text-amber-600 uppercase tracking-wider mb-3 flex items-center justify-between">Kategori Dağılımı <span class="text-[9px] bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded">Yaklaşık TL</span></h3>
-                    <div class="space-y-1 text-sm font-medium text-slate-600" id="cd-sum-cat"></div>
-                </div>
-            </div>
-
-            <div class="glass-card overflow-hidden">
-                <div class="p-4 border-b border-slate-100 bg-slate-50 font-bold text-slate-600 text-sm">İşlem Listesi</div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse min-w-[800px]">
-                        <thead class="bg-white border-b border-slate-100"><tr class="text-slate-400 text-[11px] font-semibold uppercase tracking-wider"><th class="p-4">Tarih</th><th class="p-4">Tür</th><th class="p-4">Hesap / Kategori</th><th class="p-4">Açıklama</th><th class="p-4 text-right">Giriş</th><th class="p-4 text-right">Çıkış</th><th class="p-4 text-center">İşlem</th></tr></thead>
-                        <tbody id="fin-cd-transaction-tbody" class="text-sm divide-y divide-slate-50"></tbody>
+                <div class="masa-tablo" style="overflow-x:auto;">
+                    <table>
+                        <thead><tr><th>Tarih</th><th>Tür</th><th>Hesap</th><th>Kategori</th><th>Açıklama</th><th style="text-align:right;">Tutar</th><th style="text-align:right;">İşlem</th></tr></thead>
+                        <tbody id="cdTablo"></tbody>
                     </table>
                 </div>
+                <div class="mobil-liste" id="cdMobil"></div>
             </div>
         </div>
 
     </div>
 </div>
 
-<!-- YENİ İŞLEM MODALI -->
-<div id="fin-transactionModal" class="fin-modal tailwind-wrapper fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-50 items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh] border border-slate-100">
-        <div class="flex justify-between items-center p-5 border-b border-slate-100 bg-slate-50"><h3 id="fin-transactionModalTitle" class="text-base font-bold text-slate-800">Yeni İşlem</h3><button onclick="fin_closeModal('fin-transactionModal')" class="text-slate-400 hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center transition"><i class="fa-solid fa-xmark"></i></button></div>
-        
-        <div class="p-6 space-y-5 overflow-y-auto bg-white">
-            <div>
-                <label class="block font-bold mb-1.5 text-slate-400 text-[11px] uppercase tracking-wider">İşlem Türü</label>
-                <select id="fin-form-type" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none text-slate-700 transition focus:border-blue-400 focus:bg-white" onchange="fin_toggleFormFields()">
-                    <option value="IN">Nakit Girişi (Tahsilat vb.)</option>
-                    <option value="OUT">Nakit Çıkışı (Ödeme vb.)</option>
-                    <option value="TRANSFER">Hesaplar Arası Transfer</option>
-                </select>
-            </div>
-            
-            <div class="flex flex-col sm:flex-row gap-4">
-                <div class="w-full" id="fin-source-acc-container">
-                    <label class="block font-bold mb-1.5 text-slate-400 text-[11px] uppercase tracking-wider">Hesap / Banka</label>
-                    <select id="fin-form-source-account" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none text-slate-700 transition focus:border-blue-400 focus:bg-white"></select>
-                </div>
-                <div class="w-full" id="fin-account-target-div" style="display:none;">
-                    <label class="block font-bold mb-1.5 text-slate-400 text-[11px] uppercase tracking-wider">Hedef Hesap</label>
-                    <select id="fin-form-target-account" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none text-slate-700 transition focus:border-blue-400 focus:bg-white"></select>
-                </div>
-            </div>
+<!-- ================= İŞLEM MODALI ================= -->
+<div id="modalIslem" class="modal-overlay">
+    <div class="modal">
+        <h2 id="islemModalBaslik">Yeni İşlem</h2>
 
-            <div class="flex flex-col gap-4">
-                <div class="flex gap-4">
-                    <div class="w-1/3">
-                        <label class="block font-bold mb-1.5 text-slate-400 text-[11px] uppercase tracking-wider">Para Birimi</label>
-                        <select id="fin-form-currency" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none text-slate-700 transition focus:border-blue-400 focus:bg-white"><option value="TRY">TL</option><option value="USD">Dolar</option><option value="EUR">Euro</option><option value="CHF">Frank</option></select>
-                    </div>
-                    <div class="w-2/3">
-                        <label id="fin-source-amount-label" class="block font-bold mb-1.5 text-slate-400 text-[11px] uppercase tracking-wider">Tutar</label>
-                        <input type="text" id="fin-form-amount" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none text-slate-700 transition focus:border-blue-400 focus:bg-white" placeholder="0.00" oninput="formatAmountInput(this)">
-                    </div>
-                </div>
+        <div class="form-group">
+            <label>İşlem Türü</label>
+            <select id="fmTur" class="form-control" onchange="formAlanlariGuncelle()">
+                <option value="IN">📥 Nakit Girişi (Tahsilat, Gelir)</option>
+                <option value="OUT">📤 Nakit Çıkışı (Ödeme, Harcama)</option>
+                <option value="TRANSFER">🔄 Hesaplar Arası Transfer</option>
+            </select>
+        </div>
 
-                <div class="flex gap-4 p-4 bg-indigo-50/50 border border-indigo-100 rounded-xl" id="fin-target-amount-div" style="display:none;">
-                    <div class="w-1/3">
-                        <label class="block font-bold mb-1.5 text-indigo-500 text-[11px] uppercase tracking-wider">Hedef Döviz</label>
-                        <select id="fin-form-target-currency" class="w-full p-3 bg-white border border-indigo-200 rounded-xl text-sm font-semibold outline-none text-slate-700"><option value="TRY">TL</option><option value="USD">Dolar</option><option value="EUR">Euro</option><option value="CHF">Frank</option></select>
-                    </div>
-                    <div class="w-2/3">
-                        <label class="block font-bold mb-1.5 text-indigo-500 text-[11px] uppercase tracking-wider">Hedef Tutar</label>
-                        <input type="text" id="fin-form-target-amount" class="w-full p-3 bg-white border border-indigo-200 rounded-xl text-sm font-semibold outline-none text-slate-700" placeholder="0.00" oninput="formatAmountInput(this)">
-                    </div>
-                </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Hesap / Banka</label>
+                <select id="fmHesap" class="form-control"></select>
             </div>
-            
-            <div id="fin-category-div">
-                <label class="block font-bold mb-1.5 text-slate-400 text-[11px] uppercase tracking-wider">Kategori</label>
-                <select id="fin-form-category" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none text-slate-700 transition focus:border-blue-400 focus:bg-white"></select>
-            </div>
-
-            <div id="fin-contact-div">
-                <label class="block font-bold mb-1.5 text-slate-400 text-[11px] uppercase tracking-wider">Cari Seçimi</label>
-                <select id="fin-form-contact" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none text-slate-700 transition focus:border-blue-400 focus:bg-white"></select>
-            </div>
-            
-            <div class="flex flex-col sm:flex-row gap-4">
-                <div class="w-full sm:w-1/3">
-                    <label class="block font-bold mb-1.5 text-slate-400 text-[11px] uppercase tracking-wider">Tarih</label>
-                    <input type="date" id="fin-form-date" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none text-slate-700 transition focus:border-blue-400 focus:bg-white">
-                </div>
-                <div class="w-full sm:w-2/3">
-                    <label class="block font-bold mb-1.5 text-slate-400 text-[11px] uppercase tracking-wider">Açıklama</label>
-                    <input type="text" id="fin-form-desc" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none text-slate-700 transition focus:border-blue-400 focus:bg-white" placeholder="İşlem açıklaması girin...">
-                </div>
+            <div class="form-group hidden" id="fmHedefHesapDiv">
+                <label>Hedef Hesap</label>
+                <select id="fmHedefHesap" class="form-control"></select>
             </div>
         </div>
-        <div class="p-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-3"><button onclick="fin_closeModal('fin-transactionModal')" class="px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-600 font-bold transition hover:bg-slate-100 shadow-sm">İptal</button><button onclick="fin_saveTransaction()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm transition">Kaydet</button></div>
+
+        <div class="form-row">
+            <div class="form-group" style="flex:0 0 120px;">
+                <label>Para Birimi</label>
+                <select id="fmDoviz" class="form-control"><option value="TRY">TL</option><option value="USD">Dolar</option><option value="EUR">Euro</option><option value="CHF">Frank</option></select>
+            </div>
+            <div class="form-group">
+                <label id="fmTutarLabel">Tutar</label>
+                <input type="text" id="fmTutar" class="form-control" placeholder="0,00" inputmode="decimal">
+            </div>
+        </div>
+
+        <div class="form-row hidden" id="fmHedefTutarDiv" style="background:#f5eef8; padding:12px; border-radius:8px; border:1px solid #ebdef0; margin-bottom:15px;">
+            <div class="form-group" style="flex:0 0 120px; margin-bottom:0;">
+                <label style="color:var(--purple);">Hedef Döviz</label>
+                <select id="fmHedefDoviz" class="form-control"><option value="TRY">TL</option><option value="USD">Dolar</option><option value="EUR">Euro</option><option value="CHF">Frank</option></select>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+                <label style="color:var(--purple);">Hedef Tutar</label>
+                <input type="text" id="fmHedefTutar" class="form-control" placeholder="Aynıysa boş bırakın" inputmode="decimal">
+            </div>
+        </div>
+
+        <div class="form-group" id="fmKategoriDiv">
+            <label>Kategori</label>
+            <select id="fmKategori" class="form-control"></select>
+        </div>
+
+        <div class="form-group" id="fmCariDiv">
+            <label>Cari (isteğe bağlı)</label>
+            <select id="fmCari" class="form-control"></select>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group" style="flex:0 0 160px;">
+                <label>Tarih</label>
+                <input type="date" id="fmTarih" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Açıklama</label>
+                <input type="text" id="fmAciklama" class="form-control" placeholder="Kısa açıklama">
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn btn-outline" onclick="modalKapat('modalIslem')">İptal</button>
+            <button class="btn btn-success" id="btnIslemKaydet" onclick="islemKaydet()">Kaydet</button>
+        </div>
     </div>
 </div>
 
-<div id="fin-contactModal" class="fin-modal tailwind-wrapper fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-50 items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col border border-slate-100">
-        <div class="flex justify-between items-center p-5 border-b border-slate-100 bg-slate-50"><h3 class="text-base font-bold text-slate-800">Yeni Cari Ekle</h3><button onclick="fin_closeModal('fin-contactModal')" class="text-slate-400 hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center transition"><i class="fa-solid fa-xmark"></i></button></div>
-        <div class="p-6 bg-white"><div><label class="block font-bold mb-1.5 text-slate-400 text-[11px] uppercase tracking-wider">Ünvan / Ad Soyad</label><input type="text" id="fin-contact-name" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none text-slate-700 focus:border-blue-400 focus:bg-white transition" placeholder="Firma veya Kişi Adı"></div></div>
-        <div class="p-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-3"><button onclick="fin_closeModal('fin-contactModal')" class="px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-600 font-bold transition hover:bg-slate-100 shadow-sm">İptal</button><button onclick="fin_saveContact()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm transition">Kaydet</button></div>
+<!-- CARİ MODAL -->
+<div id="modalCari" class="modal-overlay">
+    <div class="modal" style="width:400px;">
+        <h2>Yeni Cari Ekle</h2>
+        <div class="form-group"><label>Ünvan / Ad Soyad</label><input type="text" id="cariAd" class="form-control" placeholder="Firma veya kişi adı"></div>
+        <div class="modal-actions"><button class="btn btn-outline" onclick="modalKapat('modalCari')">İptal</button><button class="btn btn-success" onclick="cariKaydet()">Kaydet</button></div>
     </div>
 </div>
 
-<div id="fin-bankModal" class="fin-modal tailwind-wrapper fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-50 items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col border border-slate-100">
-        <div class="flex justify-between items-center p-5 border-b border-slate-100 bg-slate-50"><h3 class="text-base font-bold text-slate-800">Banka Hesabı Ekle</h3><button onclick="fin_closeModal('fin-bankModal')" class="text-slate-400 hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center transition"><i class="fa-solid fa-xmark"></i></button></div>
-        <div class="p-6 bg-white"><div><label class="block font-bold mb-1.5 text-slate-400 text-[11px] uppercase tracking-wider">Banka Adı</label><input type="text" id="fin-bank-name" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none text-slate-700 focus:border-blue-400 focus:bg-white transition" placeholder="Örn: Akbank veya Ziraat"></div></div>
-        <div class="p-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-3"><button onclick="fin_closeModal('fin-bankModal')" class="px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-600 font-bold transition hover:bg-slate-100 shadow-sm">İptal</button><button onclick="fin_saveBank()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm transition">Ekle</button></div>
+<!-- BANKA MODAL -->
+<div id="modalBanka" class="modal-overlay">
+    <div class="modal" style="width:400px;">
+        <h2>Banka / Kasa Ekle</h2>
+        <div class="form-group"><label>Hesap Adı</label><input type="text" id="bankaAd" class="form-control" placeholder="Örn: Akbank, Merkez Kasa"></div>
+        <div class="form-group"><label>Tür</label><select id="bankaTur" class="form-control"><option value="bank">🏦 Banka Hesabı</option><option value="cash">💰 Nakit Kasa</option></select></div>
+        <div class="modal-actions"><button class="btn btn-outline" onclick="modalKapat('modalBanka')">İptal</button><button class="btn btn-success" onclick="bankaKaydet()">Kaydet</button></div>
     </div>
 </div>
 
 <script>
-    if (!localStorage.getItem('aktif_kullanici')) { window.location.href = 'index.html'; }
-    const aktifKullaniciAdi = localStorage.getItem('aktif_kullanici');
+// ================= SUPABASE =================
+const { createClient } = supabase;
+const SUPABASE_URL = 'https://wtyahlinswjyuelfzhds.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0eWFobGluc3dqeXVlbGZ6aGRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1MjMyMTgsImV4cCI6MjEwMDA5OTIxOH0.t26FeU6JU6Ip5LTZpk5MflT8rxIgfXldTvks5GmaKpA';
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // ================= SUPABASE BAĞLANTISI =================
-    const { createClient } = supabase;
-    const SUPABASE_URL = 'https://wtyahlinswjyuelfzhds.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0eWFobGluc3dqeXVlbGZ6aGRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1MjMyMTgsImV4cCI6MjEwMDA5OTIxOH0.t26FeU6JU6Ip5LTZpk5MflT8rxIgfXldTvks5GmaKpA'; 
-    const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+// ================= SABİTLER =================
+const DOVIZLER = ['TRY', 'USD', 'EUR', 'CHF'];
+const SEMBOL = { TRY: '₺', USD: '$', EUR: '€', CHF: 'CHF' };
+const KURLAR = { TRY: 1, USD: 33.20, EUR: 36.15, CHF: 37.40 };
+const KATEGORILER = ['Borç', 'Destek', 'Bağış', 'Yatırım', 'Kişisel Harcama', 'Borç Geri Ödeme', 'Diğer'];
+const AYLAR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 
-    function formatAmountInput(input) {
-        let val = input.value.replace(/\./g, '').replace(',', '.');
-        if(!isNaN(val) && val !== '') {
-            let parts = val.split('.'); parts[0] = Number(parts[0]).toLocaleString('tr-TR'); input.value = parts.join(',');
+// ================= DURUM =================
+let hesaplar = [], cariler = [], islemler = [];
+let aktifKullanici = null, aktifKullaniciAdi = null;
+let duzenlenenIslemId = null;
+let seciliHesapId = null, seciliCariId = null;
+let aylikChart = null, kategoriChart = null;
+
+// ================= YARDIMCILAR =================
+const paraYaz = (tutar, doviz) => {
+    const v = parseFloat(tutar) || 0;
+    return new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v) + ' ' + (SEMBOL[doviz] || doviz);
+};
+const tarihYaz = (t) => { if (!t) return '-'; const p = t.split('-'); return p.length === 3 ? `${p[2]}.${p[1]}.${p[0]}` : t; };
+const tlKarsilik = (tutar, doviz) => (parseFloat(tutar) || 0) * (KURLAR[doviz] || 1);
+const hesapAdi = (id) => { const h = hesaplar.find(x => x.id === id); return h ? h.name : (id || '-'); };
+const cariAdi = (id) => { const c = cariler.find(x => x.id == id); return c ? c.name : ''; };
+const sayiOku = (metin) => { if (!metin) return NaN; return parseFloat(String(metin).replace(/\./g, '').replace(',', '.')); };
+
+function modalAc(id) { document.getElementById(id).style.display = 'flex'; }
+function modalKapat(id) { document.getElementById(id).style.display = 'none'; }
+
+// ================= GİRİŞ KONTROLÜ =================
+window.onload = async function () {
+    try {
+        const { data: { session } } = await db.auth.getSession();
+        if (!session || !session.user) { window.location.href = 'index.html'; return; }
+
+        const girisAdi = session.user.email.split('@')[0];
+        const { data } = await db.from('kullanicilar').select('*').ilike('kullanici_adi', girisAdi);
+        const k = (data && data.length > 0) ? data[0] : null;
+
+        aktifKullaniciAdi = k ? k.kullanici_adi : girisAdi;
+        aktifKullanici = k ? (k.ad_soyad || k.kullanici_adi) : girisAdi;
+
+        // Finans yetkisi kontrolü
+        if (k && k.yetki_finans === false) {
+            document.getElementById('acilisEkrani').style.display = 'none';
+            document.getElementById('yetkiYok').classList.remove('hidden');
+            return;
         }
+
+        document.getElementById('kullaniciGosterge').innerText = '👤 ' + aktifKullanici;
+        document.getElementById('acilisEkrani').style.display = 'none';
+        document.getElementById('app').classList.remove('hidden');
+
+        secenekleriDoldur();
+        await verileriYukle();
+    } catch (e) {
+        window.location.href = 'index.html';
     }
-    function formatDate(dateStr) { if(!dateStr) return '-'; const p = dateStr.split('-'); return p.length===3 ? `${p[2]}.${p[1]}.${p[0]}` : dateStr; }
+};
 
-    // ================= VARLIK YÖNETİMİ MANTIĞI =================
-    let fin_accounts = []; let fin_contacts = []; let fin_transactions = [];
-    let fin_editingTransactionId = null;
-    const fin_currencies = ['TRY', 'USD', 'EUR', 'CHF'];
-    const fin_currencySymbols = { 'TRY': '₺', 'USD': '$', 'EUR': '€', 'CHF': 'CHF' };
-    const fin_exchangeRates = { 'TRY': 1, 'USD': 33.20, 'EUR': 36.15, 'CHF': 37.40 };
-    const catOptionsHTML = `<option value="ALL">Tüm Kategoriler</option><option value="Borç">Borç</option><option value="Destek">Destek</option><option value="Bağış">Bağış</option><option value="Yatırım">Yatırım</option><option value="Kişisel Harcama">Kişisel Harcama</option><option value="Borç Geri Ödeme">Borç Geri Ödeme</option><option value="Diğer">Diğer</option><option value="Transfer">Transfer</option>`;
+async function cikisYap() {
+    await db.auth.signOut();
+    localStorage.clear();
+    window.location.href = 'index.html';
+}
 
-    const fin_formatMoney = (amount, currency, showSymbol = true) => {
-        let val = parseFloat(amount) || 0;
-        const formatted = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
-        return showSymbol ? formatted + ' ' + (fin_currencySymbols[currency] || currency) : formatted;
-    };
+// ================= SEÇENEK KUTULARINI DOLDUR =================
+function secenekleriDoldur() {
+    // Kategori kutuları — DÜZELTME: form kategorisi de dolduruluyor
+    const filtreKat = '<option value="ALL">Tüm Kategoriler</option>' +
+        KATEGORILER.map(k => `<option value="${k}">${k}</option>`).join('') +
+        '<option value="Transfer">Transfer</option>';
 
-    const fin_getAccountName = (id) => { const acc = fin_accounts.find(a => a.id === id); return acc ? acc.name : id; };
-    const fin_getContactName = (id) => { const contact = fin_contacts.find(c => c.id == id); return contact ? contact.name : ''; };
+    ['fKategori', 'hdKategori', 'cdKategori'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = filtreKat;
+    });
 
-    let fin_currentDetailContactId = null;
-    let fin_currentDetailAccountId = null;
+    const formKat = KATEGORILER.map(k => `<option value="${k}">${k}</option>`).join('');
+    document.getElementById('fmKategori').innerHTML = formKat;
+}
 
-    async function fin_loadData() {
-        try {
-            const [accRes, conRes, traRes] = await Promise.all([
-                db.from('finans_hesaplar').select('*').order('name'),
-                db.from('finans_cariler').select('*').order('name'),
-                db.from('finans_islemler').select('*').order('date', {ascending: false})
-            ]);
-            
-            fin_accounts = (accRes.data || []).map(a => ({ id: a.id, name: a.name, type: a.type, color: a.color || 'blue' }));
-            if(fin_accounts.length === 0) fin_accounts = [{ id: 'KASA', name: 'Merkez Kasa', type: 'cash', color: 'emerald' }];
+function listeleriDoldur() {
+    const hesapOps = hesaplar.map(h => `<option value="${h.id}">${h.name}</option>`).join('');
+    document.getElementById('fmHesap').innerHTML = hesapOps;
+    document.getElementById('fmHedefHesap').innerHTML = hesapOps;
+    document.getElementById('fHesap').innerHTML = '<option value="ALL">Tüm Hesaplar</option>' + hesapOps;
 
-            fin_contacts = (conRes.data || []).map(c => ({ id: parseInt(c.id), name: c.name }));
-            fin_transactions = (traRes.data || []).map(t => ({
-                id: parseInt(t.id), date: t.date, type: t.type, account: t.account, targetAccount: t.targetaccount,
-                currency: t.currency, amount: parseFloat(t.amount) || 0, desc: t.desc_text,
-                contactId: t.contactid ? parseInt(t.contactid) : null,
-                category: t.category 
-            }));
-        } catch (e) { console.error(e); }
-        fin_initializeSelects(); fin_updateDashboard();
+    const cariOps = cariler.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    document.getElementById('fmCari').innerHTML = '<option value="">— Cari seçilmedi —</option>' + cariOps;
+    document.getElementById('fCari').innerHTML = '<option value="ALL">Tüm Cariler</option>' + cariOps;
+}
+
+// ================= VERİ YÜKLE =================
+async function verileriYukle() {
+    try {
+        const [hRes, cRes, iRes] = await Promise.all([
+            db.from('finans_hesaplar').select('*').order('name'),
+            db.from('finans_cariler').select('*').order('name'),
+            db.from('finans_islemler').select('*').order('date', { ascending: false })
+        ]);
+
+        hesaplar = (hRes.data || []).map(h => ({ id: h.id, name: h.name, type: h.type || 'bank' }));
+        if (hesaplar.length === 0) hesaplar = [{ id: 'KASA', name: 'Merkez Kasa', type: 'cash' }];
+
+        cariler = (cRes.data || []).map(c => ({ id: parseInt(c.id), name: c.name }));
+
+        islemler = (iRes.data || []).map(t => ({
+            id: parseInt(t.id),
+            date: t.date,
+            type: t.type,
+            account: t.account,
+            targetAccount: t.targetaccount,
+            currency: t.currency || 'TRY',
+            amount: parseFloat(t.amount) || 0,
+            desc: t.desc_text || '',
+            contactId: t.contactid ? parseInt(t.contactid) : null,
+            category: t.category || ''
+        }));
+
+        listeleriDoldur();
+        panelGuncelle();
+    } catch (e) {
+        alert('Veri yüklenemedi: ' + e.message);
     }
+}
 
-    function fin_switchView(viewName) {
-        document.querySelectorAll('.fin-view-section').forEach(el => el.style.display = 'none'); window.scrollTo({ top: 0, behavior: 'smooth' });
-        if(viewName === 'dashboard') { document.getElementById('fin-main-dashboard-view').style.display = 'block'; fin_updateDashboard(); } 
-        else if(viewName === 'contacts') { document.getElementById('fin-contacts-list-view').style.display = 'block'; fin_renderContactsList(); } 
-        else if(viewName === 'contactDetail') { 
-            document.getElementById('fin-cd-filter-type').value = 'ALL';
-            document.getElementById('fin-cd-filter-currency').value = 'ALL';
-            document.getElementById('fin-cd-filter-category').value = 'ALL';
-            document.getElementById('fin-contact-detail-view').style.display = 'block'; 
-            fin_renderContactDetailView(); 
-        } 
-        else if(viewName === 'accountDetail') { 
-            document.getElementById('fin-ad-filter-type').value = 'ALL';
-            document.getElementById('fin-ad-filter-currency').value = 'ALL';
-            document.getElementById('fin-ad-filter-contact').value = 'ALL';
-            document.getElementById('fin-ad-filter-category').value = 'ALL';
-            document.getElementById('fin-account-detail-view').style.display = 'block'; 
-            fin_renderAccountDetailView(); 
-        } 
-    }
+// ================= GÖRÜNÜM =================
+function gorunumDegistir(ad) {
+    ['v-dashboard', 'v-hesapDetay', 'v-cariler', 'v-cariDetay'].forEach(id => document.getElementById(id).classList.add('hidden'));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    function fin_filterByCategory(cat) {
-        document.getElementById('fin-filter-category').value = cat;
-        fin_renderTable();
-        document.getElementById('fin-transaction-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    if (ad === 'dashboard') { document.getElementById('v-dashboard').classList.remove('hidden'); panelGuncelle(); }
+    else if (ad === 'cariler') { document.getElementById('v-cariler').classList.remove('hidden'); carileriYaz(); }
+    else if (ad === 'hesapDetay') { document.getElementById('v-hesapDetay').classList.remove('hidden'); hesapDetayYaz(); }
+    else if (ad === 'cariDetay') { document.getElementById('v-cariDetay').classList.remove('hidden'); cariDetayYaz(); }
+}
 
-    function fin_updateDashboard() {
-        const dashboard = document.getElementById('fin-accounts-dashboard'); dashboard.innerHTML = '';
-        const balances = {}; fin_accounts.forEach(acc => { balances[acc.id] = { 'TRY': 0, 'USD': 0, 'EUR': 0, 'CHF': 0 }; });
+// ================= ANA PANEL =================
+function bakiyeleriHesapla() {
+    const bak = {};
+    hesaplar.forEach(h => bak[h.id] = { TRY: 0, USD: 0, EUR: 0, CHF: 0 });
 
-        let totalIn = { 'TRY': 0, 'USD': 0, 'EUR': 0, 'CHF': 0 };
-        let totalOut = { 'TRY': 0, 'USD': 0, 'EUR': 0, 'CHF': 0 };
-        
-        const catTotals = {};
-        const predefinedCats = ["Borç", "Destek", "Bağış", "Yatırım", "Kişisel Harcama", "Borç Geri Ödeme", "Diğer"];
-        predefinedCats.forEach(c => catTotals[c] = { IN: 0, OUT: 0 });
+    islemler.forEach(t => {
+        if (!t.account) return;
+        if (!bak[t.account]) bak[t.account] = { TRY: 0, USD: 0, EUR: 0, CHF: 0 };
+        const c = t.currency;
+        if (bak[t.account][c] === undefined) return;
 
-        fin_transactions.forEach(t => {
-            if (!t.account) return; if (!balances[t.account]) balances[t.account] = { 'TRY': 0, 'USD': 0, 'EUR': 0, 'CHF': 0 };
-            let amt = parseFloat(t.amount) || 0; let cur = t.currency || 'TRY';
-            
-            if (t.type === 'IN') { if(balances[t.account][cur] !== undefined) balances[t.account][cur] += amt; }
-            else if (t.type === 'OUT') { if(balances[t.account][cur] !== undefined) balances[t.account][cur] -= amt; }
-            else if (t.type === 'TRANSFER') { if(balances[t.account][cur] !== undefined) balances[t.account][cur] -= amt; if (t.targetAccount) { if (!balances[t.targetAccount]) balances[t.targetAccount] = { 'TRY': 0, 'USD': 0, 'EUR': 0, 'CHF': 0 }; if(balances[t.targetAccount][cur] !== undefined) balances[t.targetAccount][cur] += amt; } }
-            
-            if (t.type !== 'TRANSFER') {
-                if (t.type === 'IN') totalIn[cur] += amt;
-                if (t.type === 'OUT') totalOut[cur] += amt;
+        if (t.type === 'IN') bak[t.account][c] += t.amount;
+        else if (t.type === 'OUT') bak[t.account][c] -= t.amount;
+        else if (t.type === 'TRANSFER') {
+            bak[t.account][c] -= t.amount;
+            if (t.targetAccount) {
+                if (!bak[t.targetAccount]) bak[t.targetAccount] = { TRY: 0, USD: 0, EUR: 0, CHF: 0 };
+                if (bak[t.targetAccount][c] !== undefined) bak[t.targetAccount][c] += t.amount;
+            }
+        }
+    });
+    return bak;
+}
 
-                let cat = t.category || "Diğer";
-                if (!catTotals[cat]) catTotals[cat] = { IN: 0, OUT: 0 };
-                
-                const rateEUR = fin_exchangeRates['EUR'] || 36.15;
-                let amtEUR = (amt * (fin_exchangeRates[cur] || 1)) / rateEUR; 
-                
-                if (t.type === 'IN') catTotals[cat].IN += amtEUR;
-                if (t.type === 'OUT') catTotals[cat].OUT += amtEUR;
+function panelGuncelle() {
+    const bak = bakiyeleriHesapla();
+
+    // Toplamlar
+    let toplamTL = 0;
+    const nakit = { TRY: 0, USD: 0, EUR: 0, CHF: 0 };
+    hesaplar.forEach(h => DOVIZLER.forEach(c => {
+        const v = bak[h.id] ? (bak[h.id][c] || 0) : 0;
+        nakit[c] += v;
+        toplamTL += tlKarsilik(v, c);
+    }));
+
+    document.getElementById('topTRY').innerText = paraYaz(toplamTL, 'TRY');
+    document.getElementById('topUSD').innerText = paraYaz(toplamTL / KURLAR.USD, 'USD');
+    document.getElementById('topEUR').innerText = paraYaz(toplamTL / KURLAR.EUR, 'EUR');
+    document.getElementById('topCHF').innerText = paraYaz(toplamTL / KURLAR.CHF, 'CHF');
+
+    DOVIZLER.forEach(c => {
+        const el = document.getElementById('nakit' + c);
+        el.innerText = paraYaz(nakit[c], c);
+        el.className = 'val' + (nakit[c] < 0 ? ' neg' : '');
+    });
+
+    // Bu ay
+    const bugun = new Date();
+    document.getElementById('buAyEtiket').innerText = `— ${AYLAR[bugun.getMonth()]} ${bugun.getFullYear()}`;
+    let ayGiren = 0, ayCikan = 0, ayAdet = 0;
+    islemler.forEach(t => {
+        if (t.type === 'TRANSFER' || !t.date) return;
+        const d = new Date(t.date);
+        if (d.getMonth() === bugun.getMonth() && d.getFullYear() === bugun.getFullYear()) {
+            ayAdet++;
+            if (t.type === 'IN') ayGiren += tlKarsilik(t.amount, t.currency);
+            else ayCikan += tlKarsilik(t.amount, t.currency);
+        }
+    });
+    document.getElementById('ayGiren').innerText = paraYaz(ayGiren, 'TRY');
+    document.getElementById('ayCikan').innerText = paraYaz(ayCikan, 'TRY');
+    const fark = ayGiren - ayCikan;
+    const farkEl = document.getElementById('ayFark');
+    farkEl.innerText = paraYaz(fark, 'TRY');
+    farkEl.className = 'val' + (fark < 0 ? ' neg' : '');
+    document.getElementById('ayAdet').innerText = ayAdet;
+
+    // Hesap kartları
+    const hl = document.getElementById('hesapListesi');
+    hl.innerHTML = hesaplar.map(h => {
+        const satirlar = DOVIZLER.map(c => {
+            const v = bak[h.id] ? (bak[h.id][c] || 0) : 0;
+            if (v === 0) return '';
+            return `<div class="bakiye-satir"><span class="cur">${c}</span><span class="amt ${v < 0 ? 'neg' : ''}">${paraYaz(v, c)}</span></div>`;
+        }).join('');
+        return `<div class="hesap-card" onclick="hesapDetayAc('${h.id}')">
+            <div class="isim"><div class="ikon"><i class="fa-solid ${h.type === 'cash' ? 'fa-wallet' : 'fa-building-columns'}"></i></div>${h.name}</div>
+            ${satirlar || '<div style="font-size:12px; color:#999;">Bakiye yok</div>'}
+        </div>`;
+    }).join('');
+
+    kategoriOzetiYaz();
+    grafikleriCiz();
+    tabloYaz();
+}
+
+function kategoriOzetiYaz() {
+    const ozet = {};
+    islemler.forEach(t => {
+        if (t.type === 'TRANSFER') return;
+        const k = t.category || 'Kategorisiz';
+        if (!ozet[k]) ozet[k] = { giren: 0, cikan: 0 };
+        const tl = tlKarsilik(t.amount, t.currency);
+        if (t.type === 'IN') ozet[k].giren += tl; else ozet[k].cikan += tl;
+    });
+
+    const satirlar = Object.keys(ozet).sort().map(k => {
+        const o = ozet[k];
+        const net = o.giren - o.cikan;
+        return `<tr style="cursor:pointer;" onclick="kategoriFiltrele('${k}')">
+            <td><span class="badge badge-cat">${k}</span></td>
+            <td style="text-align:right; color:var(--success); font-weight:bold;">${paraYaz(o.giren, 'TRY')}</td>
+            <td style="text-align:right; color:var(--danger); font-weight:bold;">${paraYaz(o.cikan, 'TRY')}</td>
+            <td style="text-align:right; font-weight:bold;" class="${net < 0 ? 'neg' : ''}">${paraYaz(net, 'TRY')}</td>
+        </tr>`;
+    }).join('');
+
+    document.getElementById('kategoriOzetTablo').innerHTML = satirlar || '<tr><td colspan="4" class="empty">Henüz işlem yok.</td></tr>';
+}
+
+function kategoriFiltrele(k) {
+    document.getElementById('fKategori').value = (k === 'Kategorisiz') ? 'ALL' : k;
+    tabloYaz();
+    document.getElementById('hareketTablo').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// ================= GRAFİKLER =================
+function grafikleriCiz() {
+    // Son 6 ay
+    const bugun = new Date();
+    const etiketler = [], girenler = [], cikanlar = [];
+    for (let i = 5; i >= 0; i--) {
+        const d = new Date(bugun.getFullYear(), bugun.getMonth() - i, 1);
+        etiketler.push(AYLAR[d.getMonth()].substring(0, 3) + ' ' + String(d.getFullYear()).substr(-2));
+        let g = 0, c = 0;
+        islemler.forEach(t => {
+            if (t.type === 'TRANSFER' || !t.date) return;
+            const td = new Date(t.date);
+            if (td.getMonth() === d.getMonth() && td.getFullYear() === d.getFullYear()) {
+                if (t.type === 'IN') g += tlKarsilik(t.amount, t.currency);
+                else c += tlKarsilik(t.amount, t.currency);
             }
         });
+        girenler.push(Math.round(g));
+        cikanlar.push(Math.round(c));
+    }
 
-        let totalWealthTRY = 0; let liquidTotals = { 'TRY': 0, 'USD': 0, 'EUR': 0, 'CHF': 0 };
+    if (aylikChart) aylikChart.destroy();
+    aylikChart = new Chart(document.getElementById('aylikChart'), {
+        type: 'bar',
+        data: {
+            labels: etiketler,
+            datasets: [
+                { label: 'Giren', data: girenler, backgroundColor: '#27ae60', borderRadius: 4 },
+                { label: 'Çıkan', data: cikanlar, backgroundColor: '#e74c3c', borderRadius: 4 }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: { callbacks: { label: (ctx) => ctx.dataset.label + ': ' + paraYaz(ctx.raw, 'TRY') } }
+            },
+            scales: { y: { beginAtZero: true, ticks: { callback: (v) => (v / 1000) + 'B' } } }
+        }
+    });
 
-        fin_accounts.forEach(acc => {
-            let icon = acc.type === 'cash' ? 'fa-wallet' : 'fa-building-columns'; let balancesHTML = '';
-            fin_currencies.forEach(cur => {
-                let val = parseFloat(balances[acc.id][cur]) || 0; liquidTotals[cur] += val; totalWealthTRY += val * (fin_exchangeRates[cur] || 1);
-                balancesHTML += `<div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><p class="text-[10px] text-slate-400 font-semibold mb-0.5">${cur}</p><p class="text-sm font-bold ${val < 0 ? 'text-rose-500' : 'text-slate-700'}">${fin_formatMoney(val, cur)}</p></div>`;
-            });
-            dashboard.innerHTML += `<div onclick="fin_openAccountDetail('${acc.id}')" class="bg-white p-5 rounded-xl card-shadow border border-slate-200 cursor-pointer hover-card group"><div class="flex items-center gap-3 mb-4"><div class="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-500 text-base border border-indigo-100"><i class="fa-solid ${icon}"></i></div><h2 class="text-sm font-bold text-slate-700">${acc.name}</h2></div><div class="grid grid-cols-2 gap-2">${balancesHTML}</div><p class="text-[10px] text-slate-400 font-semibold mt-4 text-right group-hover:text-indigo-600 transition">İşlem Geçmişini Gör &rarr;</p></div>`;
-        });
+    // Kategori dağılımı (sadece çıkışlar)
+    const katToplam = {};
+    islemler.forEach(t => {
+        if (t.type !== 'OUT') return;
+        const k = t.category || 'Kategorisiz';
+        katToplam[k] = (katToplam[k] || 0) + tlKarsilik(t.amount, t.currency);
+    });
 
-        document.getElementById('fin-total-try').innerText = fin_formatMoney(totalWealthTRY, 'TRY', false) + ' ₺'; document.getElementById('fin-total-usd').innerText = fin_formatMoney(totalWealthTRY / fin_exchangeRates['USD'], 'USD', false) + ' $'; document.getElementById('fin-total-eur').innerText = fin_formatMoney(totalWealthTRY / fin_exchangeRates['EUR'], 'EUR', false) + ' €'; document.getElementById('fin-total-chf').innerText = fin_formatMoney(totalWealthTRY / fin_exchangeRates['CHF'], 'CHF', false) + ' CHF';
-        document.getElementById('fin-liquid-try').innerText = fin_formatMoney(liquidTotals['TRY'], 'TRY', false) + ' ₺'; document.getElementById('fin-liquid-usd').innerText = fin_formatMoney(liquidTotals['USD'], 'USD', false) + ' $'; document.getElementById('fin-liquid-eur').innerText = fin_formatMoney(liquidTotals['EUR'], 'EUR', false) + ' €'; document.getElementById('fin-liquid-chf').innerText = fin_formatMoney(liquidTotals['CHF'], 'CHF', false) + ' CHF';
+    const katAdlar = Object.keys(katToplam).filter(k => katToplam[k] > 0);
+    const renkler = ['#e74c3c', '#e67e22', '#f1c40f', '#8e44ad', '#3498db', '#16a085', '#7f8c8d', '#2c3e50'];
 
-        fin_currencies.forEach(cur => {
-            document.getElementById(`fin-in-${cur.toLowerCase()}`).innerText = fin_formatMoney(totalIn[cur], cur);
-            document.getElementById(`fin-out-${cur.toLowerCase()}`).innerText = fin_formatMoney(totalOut[cur], cur);
-        });
+    if (kategoriChart) kategoriChart.destroy();
 
-        const catSummaryBody = document.getElementById('fin-category-summary-tbody');
-        if (catSummaryBody) {
-            catSummaryBody.innerHTML = '';
-            for(let cat in catTotals) {
-                if(catTotals[cat].IN > 0 || catTotals[cat].OUT > 0) {
-                    catSummaryBody.innerHTML += `<tr class="bg-white hover:bg-slate-50 transition cursor-pointer border-b border-slate-100 last:border-0" onclick="fin_filterByCategory('${cat}')"><td class="p-3.5 font-medium text-[13px] text-slate-600"><i class="fa-solid fa-tag mr-2 text-slate-300"></i> ${cat}</td><td class="p-3.5 text-emerald-600 font-bold text-right text-[13px]">${fin_formatMoney(catTotals[cat].IN, 'EUR')}</td><td class="p-3.5 text-rose-600 font-bold text-right text-[13px]">${fin_formatMoney(catTotals[cat].OUT, 'EUR')}</td></tr>`;
+    if (katAdlar.length === 0) {
+        const ctx = document.getElementById('kategoriChart').getContext('2d');
+        ctx.clearRect(0, 0, 400, 300);
+        ctx.font = '13px sans-serif'; ctx.fillStyle = '#999'; ctx.textAlign = 'center';
+        ctx.fillText('Henüz harcama kaydı yok', 150, 100);
+        return;
+    }
+
+    kategoriChart = new Chart(document.getElementById('kategoriChart'), {
+        type: 'doughnut',
+        data: {
+            labels: katAdlar,
+            datasets: [{ data: katAdlar.map(k => Math.round(katToplam[k])), backgroundColor: renkler, borderWidth: 2, borderColor: '#fff' }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => {
+                            const top = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                            const yuzde = top ? ((ctx.raw * 100) / top).toFixed(1) : 0;
+                            return ctx.label + ': ' + paraYaz(ctx.raw, 'TRY') + ' (%' + yuzde + ')';
+                        }
+                    }
                 }
             }
-            if(catSummaryBody.innerHTML === '') {
-                catSummaryBody.innerHTML = '<tr><td colspan="3" class="p-6 text-center text-slate-400 font-medium">Henüz kategori verisi bulunmuyor.</td></tr>';
-            }
         }
+    });
+}
 
-        fin_renderTable();
-    }
+// ================= HAREKET TABLOSU =================
+function filtreTemizle() {
+    document.getElementById('fArama').value = '';
+    ['fTur', 'fKategori', 'fCari', 'fHesap', 'fDoviz'].forEach(id => document.getElementById(id).value = 'ALL');
+    tabloYaz();
+}
 
-    function fin_renderTable() {
-        const accFilter = document.getElementById('fin-filter-account').value; 
-        const curFilter = document.getElementById('fin-filter-currency').value; 
-        const contactFilter = document.getElementById('fin-filter-contact').value;
-        const categoryFilter = document.getElementById('fin-filter-category').value; 
+function tabloYaz() {
+    const arama = document.getElementById('fArama').value.toLowerCase();
+    const fTur = document.getElementById('fTur').value;
+    const fKat = document.getElementById('fKategori').value;
+    const fCari = document.getElementById('fCari').value;
+    const fHes = document.getElementById('fHesap').value;
+    const fDov = document.getElementById('fDoviz').value;
 
-        const tbody = document.getElementById('fin-transaction-tbody'); tbody.innerHTML = '';
-
-        let filtered = fin_transactions.filter(t => {
-            const matchAcc = accFilter === 'ALL' || t.account === accFilter || (t.type === 'TRANSFER' && t.targetAccount === accFilter);
-            const matchCur = curFilter === 'ALL' || t.currency === curFilter;
-            const matchContact = contactFilter === 'ALL' || t.contactId == contactFilter;
-            const matchCategory = categoryFilter === 'ALL' || (t.type !== 'TRANSFER' ? t.category === categoryFilter : (categoryFilter === 'Transfer'));
-            return matchAcc && matchCur && matchContact && matchCategory;
-        });
-
-        filtered.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
-        if(filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400 font-medium">Bu kriterlere uygun hareket bulunamadı.</td></tr>'; return; }
-
-        filtered.forEach((t) => {
-            let typeLabel = t.type === 'IN' ? 'GİRİŞ' : (t.type === 'OUT' ? 'ÇIKIŞ' : 'TRANSFER');
-            let typeColor = t.type === 'IN' ? 'text-emerald-600 bg-emerald-50' : (t.type === 'OUT' ? 'text-rose-600 bg-rose-50' : 'text-indigo-600 bg-indigo-50');
-            let contactText = fin_getContactName(t.contactId);
-            
-            tbody.innerHTML += `<tr class="bg-white border-b border-slate-100 hover:bg-slate-50 transition"><td class="p-4 text-[13px] font-medium text-slate-500">${formatDate(t.date)}</td><td class="p-4 text-[13px] font-bold text-slate-700">${fin_getAccountName(t.account)}</td><td class="p-4"><span class="px-2.5 py-1 rounded text-[10px] font-bold tracking-wide ${typeColor}">${typeLabel}</span></td><td class="p-4 text-[13px] font-medium text-slate-500">${t.type !== 'TRANSFER' ? (t.category || '-') : 'Transfer'}</td><td class="p-4 text-[13px] font-medium text-slate-600">${contactText ? contactText + ' - ' : ''}${t.desc}</td><td class="p-4 text-right text-[13px] font-bold ${t.type === 'IN' ? 'text-emerald-600' : (t.type === 'OUT' ? 'text-rose-600' : 'text-slate-700')}">${fin_formatMoney(t.amount, t.currency)}</td><td class="p-4 text-center whitespace-nowrap"><button onclick="fin_editTransaction(${t.id})" class="text-slate-400 hover:text-blue-600 bg-transparent px-2 py-1 rounded text-xs font-bold mr-2 transition"><i class="fa-solid fa-pen"></i></button><button onclick="fin_deleteTransaction(${t.id})" class="text-slate-400 hover:text-rose-600 bg-transparent px-2 py-1 rounded text-xs font-bold transition"><i class="fa-solid fa-trash"></i></button></td></tr>`;
-        });
-    }
-
-    function fin_openAccountDetail(id) {
-        fin_currentDetailAccountId = id;
-        fin_switchView('accountDetail');
-    }
-
-    // BANKA DETAYI SAYFASI (DİNAMİK ÖZET + FİLTRELEME)
-    function fin_renderAccountDetailView() {
-        const acc = fin_accounts.find(x => x.id === fin_currentDetailAccountId); if(!acc) return;
-        document.getElementById('fin-ad-name').innerText = acc.name + " Detayı";
-        const tbody = document.getElementById('fin-ad-transaction-tbody'); tbody.innerHTML = '';
-
-        let fType = document.getElementById('fin-ad-filter-type').value;
-        let fCur = document.getElementById('fin-ad-filter-currency').value;
-        let fContact = document.getElementById('fin-ad-filter-contact').value;
-        let fCat = document.getElementById('fin-ad-filter-category').value;
-
-        let accTransactions = fin_transactions.filter(t => t.account === acc.id || t.targetAccount === acc.id);
-
-        let filteredTxs = accTransactions.filter(t => {
-            let isIncoming = (t.type === 'IN') || (t.type === 'TRANSFER' && t.targetAccount === acc.id);
-            let typeLabel = isIncoming ? 'IN' : 'OUT';
-            
-            if(fType !== 'ALL' && typeLabel !== fType) return false;
-            if(fCur !== 'ALL' && t.currency !== fCur) return false;
-            if(fContact !== 'ALL' && t.contactId != fContact) return false;
-            if(fCat !== 'ALL') {
-                if (t.type === 'TRANSFER' && fCat !== 'Transfer') return false;
-                if (t.type !== 'TRANSFER' && t.category !== fCat) return false;
-            }
-            return true;
-        });
-
-        // DİNAMİK TOPLAM HESAPLAMA
-        let sumIn = { TRY:0, USD:0, EUR:0, CHF:0 };
-        let sumOut = { TRY:0, USD:0, EUR:0, CHF:0 };
-
-        filteredTxs.forEach((t) => {
-            let isIncoming = (t.type === 'IN') || (t.type === 'TRANSFER' && t.targetAccount === acc.id);
-            let isOutgoing = (t.type === 'OUT') || (t.type === 'TRANSFER' && t.account === acc.id);
-            let amt = parseFloat(t.amount) || 0;
-            let c = t.currency || 'TRY';
-            if (isIncoming) sumIn[c] += amt;
-            if (isOutgoing) sumOut[c] += amt;
-            
-            let typeLabel = t.type === 'IN' ? 'GİRİŞ' : (t.type === 'OUT' ? 'ÇIKIŞ' : 'TRANSFER');
-            let typeColor = isIncoming ? 'text-emerald-600 bg-emerald-50' : 'text-rose-600 bg-rose-50';
-            let contactName = '-';
-            if (t.type === 'TRANSFER') {
-                let otherAccId = t.account === acc.id ? t.targetAccount : t.account;
-                contactName = fin_getAccountName(otherAccId) + ' (Transfer)';
-            } else { contactName = fin_getContactName(t.contactId) || '-'; }
-
-            let inText = isIncoming ? `<span class="font-bold text-emerald-600">${fin_formatMoney(amt, t.currency)}</span>` : '-';
-            let outText = isOutgoing ? `<span class="font-bold text-rose-600">${fin_formatMoney(amt, t.currency)}</span>` : '-';
-
-            tbody.innerHTML += `<tr class="bg-white border-b border-slate-100 hover:bg-slate-50 transition"><td class="p-4 text-[13px] font-medium text-slate-500">${formatDate(t.date)}</td><td class="p-4"><span class="px-2 py-1 rounded text-[10px] font-bold tracking-wide ${typeColor}">${typeLabel}</span></td><td class="p-4 text-[13px] font-medium text-slate-500">${t.type !== 'TRANSFER' ? (t.category || '-') : 'Transfer'}</td><td class="p-4 text-[13px] font-medium text-slate-700">${contactName} <span class="text-slate-400 font-normal">(${t.desc})</span></td><td class="p-4 text-right">${inText}</td><td class="p-4 text-right">${outText}</td><td class="p-4 text-center whitespace-nowrap"><button onclick="fin_editTransaction(${t.id})" class="text-slate-400 hover:text-blue-600 bg-transparent px-2 py-1 rounded text-xs font-bold mr-2 transition"><i class="fa-solid fa-pen"></i></button><button onclick="fin_deleteTransaction(${t.id})" class="text-slate-400 hover:text-rose-600 bg-transparent px-2 py-1 rounded text-xs font-bold transition"><i class="fa-solid fa-trash"></i></button></td></tr>`;
-        });
-
-        if(filteredTxs.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400 font-medium">Bu hesaba ve seçili filtrelere uygun hareket yok.</td></tr>';
+    const liste = islemler.filter(t => {
+        if (fTur !== 'ALL' && t.type !== fTur) return false;
+        if (fHes !== 'ALL' && t.account !== fHes && t.targetAccount !== fHes) return false;
+        if (fDov !== 'ALL' && t.currency !== fDov) return false;
+        if (fCari !== 'ALL' && String(t.contactId) !== String(fCari)) return false;
+        if (fKat !== 'ALL') {
+            if (fKat === 'Transfer') { if (t.type !== 'TRANSFER') return false; }
+            else if (t.category !== fKat) return false;
         }
-
-        // DİNAMİK TOPLAMLARI EKRANA BAS
-        document.getElementById('ad-sum-in').innerHTML = `
-            <div><p class="text-[10px] text-emerald-600/70 mb-0.5">TL</p>${fin_formatMoney(sumIn.TRY, 'TRY')}</div>
-            <div><p class="text-[10px] text-emerald-600/70 mb-0.5">USD</p>${fin_formatMoney(sumIn.USD, 'USD')}</div>
-            <div><p class="text-[10px] text-emerald-600/70 mb-0.5">EUR</p>${fin_formatMoney(sumIn.EUR, 'EUR')}</div>
-            <div><p class="text-[10px] text-emerald-600/70 mb-0.5">CHF</p>${fin_formatMoney(sumIn.CHF, 'CHF')}</div>
-        `;
-        document.getElementById('ad-sum-out').innerHTML = `
-            <div><p class="text-[10px] text-rose-600/70 mb-0.5">TL</p>${fin_formatMoney(sumOut.TRY, 'TRY')}</div>
-            <div><p class="text-[10px] text-rose-600/70 mb-0.5">USD</p>${fin_formatMoney(sumOut.USD, 'USD')}</div>
-            <div><p class="text-[10px] text-rose-600/70 mb-0.5">EUR</p>${fin_formatMoney(sumOut.EUR, 'EUR')}</div>
-            <div><p class="text-[10px] text-rose-600/70 mb-0.5">CHF</p>${fin_formatMoney(sumOut.CHF, 'CHF')}</div>
-        `;
-    }
-
-    function fin_renderContactsList() {
-        const grid = document.getElementById('fin-contacts-grid-container'); grid.innerHTML = '';
-        if(fin_contacts.length === 0) { grid.innerHTML = '<p class="text-slate-400 text-sm col-span-3 text-center p-6 font-medium">Kayıtlı cari yok.</p>'; return; }
-        fin_contacts.forEach(c => {
-            grid.innerHTML += `<div onclick="fin_openContactDetail(${c.id})" class="bg-white p-5 rounded-xl card-shadow border border-slate-200 cursor-pointer hover-card group"><div class="flex justify-between items-start"><div class="flex items-center gap-4"><div class="w-10 h-10 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 text-base"><i class="fa-solid fa-user"></i></div><h3 class="font-bold text-sm text-slate-700">${c.name}</h3></div></div><p class="text-[10px] text-indigo-500 font-semibold mt-4 text-right transition">İşlem Geçmişini Gör &rarr;</p></div>`;
-        });
-    }
-
-    function fin_openContactDetail(id) { 
-        fin_currentDetailContactId = id; 
-        fin_switchView('contactDetail'); 
-    }
-
-    // CARİ DETAYI SAYFASI (DİNAMİK ÖZET + KATEGORİ ÖZETİ + FİLTRELEME)
-    function fin_renderContactDetailView() {
-        const c = fin_contacts.find(x => x.id === fin_currentDetailContactId); if(!c) return;
-        document.getElementById('fin-cd-name').innerText = c.name + " Detayı";
-        const tbody = document.getElementById('fin-cd-transaction-tbody'); tbody.innerHTML = '';
-
-        let fType = document.getElementById('fin-cd-filter-type').value;
-        let fCur = document.getElementById('fin-cd-filter-currency').value;
-        let fCat = document.getElementById('fin-cd-filter-category').value;
-
-        let contactTransactions = fin_transactions.filter(t => t.contactId == c.id);
-
-        let filteredTxs = contactTransactions.filter(t => {
-            if(fType !== 'ALL' && t.type !== fType) return false;
-            if(fCur !== 'ALL' && t.currency !== fCur) return false;
-            if(fCat !== 'ALL' && t.category !== fCat) return false;
-            return true;
-        });
-
-        // DİNAMİK TOPLAM HESAPLAMA
-        let sumIn = { TRY:0, USD:0, EUR:0, CHF:0 };
-        let sumOut = { TRY:0, USD:0, EUR:0, CHF:0 };
-        let sumCat = {};
-
-        filteredTxs.forEach((t) => {
-            let amt = parseFloat(t.amount) || 0;
-            let cur = t.currency || 'TRY';
-            if (t.type === 'IN') sumIn[cur] += amt;
-            if (t.type === 'OUT') sumOut[cur] += amt;
-
-            // TL Cinsinden Kategori Özeti (Kur çarpımı)
-            let cat = t.category || 'Diğer';
-            if(!sumCat[cat]) sumCat[cat] = 0;
-            let amtTRY = amt * (fin_exchangeRates[cur] || 1);
-            sumCat[cat] += amtTRY;
-            
-            let typeLabel = t.type === 'IN' ? 'GİRİŞ' : (t.type === 'OUT' ? 'ÇIKIŞ' : 'TRANSFER'); 
-            let typeColor = t.type === 'IN' ? 'text-emerald-600 bg-emerald-50' : (t.type === 'OUT' ? 'text-rose-600 bg-rose-50' : 'text-slate-600 bg-slate-100');
-            
-            let inText = t.type === 'IN' ? `<span class="font-bold text-emerald-600">${fin_formatMoney(amt, t.currency)}</span>` : '-'; 
-            let outText = t.type === 'OUT' ? `<span class="font-bold text-rose-600">${fin_formatMoney(amt, t.currency)}</span>` : '-';
-
-            tbody.innerHTML += `<tr class="bg-white border-b border-slate-100 hover:bg-slate-50 transition"><td class="p-4 text-[13px] font-medium text-slate-500">${formatDate(t.date)}</td><td class="p-4"><span class="px-2 py-1 rounded text-[10px] font-bold tracking-wide ${typeColor}">${typeLabel}</span></td><td class="p-4 text-[13px] font-bold text-slate-700">${fin_getAccountName(t.account)} <span class="text-slate-400 font-normal">(${t.category || '-'})</span></td><td class="p-4 text-[13px] font-medium text-slate-600">${t.desc}</td><td class="p-4 text-right">${inText}</td><td class="p-4 text-right">${outText}</td><td class="p-4 text-center whitespace-nowrap"><button onclick="fin_editTransaction(${t.id})" class="text-slate-400 hover:text-blue-600 bg-transparent px-2 py-1 rounded text-xs font-bold mr-2 transition"><i class="fa-solid fa-pen"></i></button><button onclick="fin_deleteTransaction(${t.id})" class="text-slate-400 hover:text-rose-600 bg-transparent px-2 py-1 rounded text-xs font-bold transition"><i class="fa-solid fa-trash"></i></button></td></tr>`;
-        });
-
-        if(filteredTxs.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400 font-medium">Bu cariye ait uygun hareket bulunamadı.</td></tr>';
+        if (arama) {
+            const metin = (t.desc + ' ' + cariAdi(t.contactId) + ' ' + hesapAdi(t.account) + ' ' + (t.category || '')).toLowerCase();
+            if (!metin.includes(arama)) return false;
         }
+        return true;
+    });
 
-        // DİNAMİK TOPLAMLARI EKRANA BAS
-        document.getElementById('cd-sum-in').innerHTML = `
-            <div class="flex justify-between border-b border-emerald-100/50 pb-1 mb-1"><span class="text-slate-500 text-xs">TL:</span><span class="text-emerald-700">${fin_formatMoney(sumIn.TRY, 'TRY')}</span></div>
-            <div class="flex justify-between border-b border-emerald-100/50 pb-1 mb-1"><span class="text-slate-500 text-xs">USD:</span><span class="text-emerald-700">${fin_formatMoney(sumIn.USD, 'USD')}</span></div>
-            <div class="flex justify-between border-b border-emerald-100/50 pb-1 mb-1"><span class="text-slate-500 text-xs">EUR:</span><span class="text-emerald-700">${fin_formatMoney(sumIn.EUR, 'EUR')}</span></div>
-            <div class="flex justify-between"><span class="text-slate-500 text-xs">CHF:</span><span class="text-emerald-700">${fin_formatMoney(sumIn.CHF, 'CHF')}</span></div>
-        `;
-        document.getElementById('cd-sum-out').innerHTML = `
-            <div class="flex justify-between border-b border-rose-100/50 pb-1 mb-1"><span class="text-slate-500 text-xs">TL:</span><span class="text-rose-700">${fin_formatMoney(sumOut.TRY, 'TRY')}</span></div>
-            <div class="flex justify-between border-b border-rose-100/50 pb-1 mb-1"><span class="text-slate-500 text-xs">USD:</span><span class="text-rose-700">${fin_formatMoney(sumOut.USD, 'USD')}</span></div>
-            <div class="flex justify-between border-b border-rose-100/50 pb-1 mb-1"><span class="text-slate-500 text-xs">EUR:</span><span class="text-rose-700">${fin_formatMoney(sumOut.EUR, 'EUR')}</span></div>
-            <div class="flex justify-between"><span class="text-slate-500 text-xs">CHF:</span><span class="text-rose-700">${fin_formatMoney(sumOut.CHF, 'CHF')}</span></div>
-        `;
-        
-        let catHtml = '';
-        for(let cat in sumCat) {
-            if(sumCat[cat] > 0) catHtml += `<div class="flex justify-between border-b border-amber-100/50 pb-1 mb-1"><span class="text-slate-600 text-xs font-semibold">${cat}:</span><span class="text-amber-700 font-bold">${fin_formatMoney(sumCat[cat], 'TRY')}</span></div>`;
+    // Özet
+    let g = 0, c = 0;
+    liste.forEach(t => {
+        if (t.type === 'IN') g += tlKarsilik(t.amount, t.currency);
+        else if (t.type === 'OUT') c += tlKarsilik(t.amount, t.currency);
+    });
+    document.getElementById('filtreOzet').innerHTML =
+        `<strong>${liste.length}</strong> işlem &nbsp;|&nbsp; Giren: <strong style="color:var(--success)">${paraYaz(g, 'TRY')}</strong> &nbsp;|&nbsp; Çıkan: <strong style="color:var(--danger)">${paraYaz(c, 'TRY')}</strong>`;
+
+    // Masaüstü tablo
+    const tbody = document.getElementById('hareketTablo');
+    if (liste.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty">Bu kriterlere uygun hareket bulunamadı.</td></tr>';
+        document.getElementById('hareketMobil').innerHTML = '<div class="empty">Hareket bulunamadı.</div>';
+        return;
+    }
+
+    tbody.innerHTML = liste.map(t => {
+        const etiket = t.type === 'IN' ? 'GİRİŞ' : (t.type === 'OUT' ? 'ÇIKIŞ' : 'TRANSFER');
+        const sinif = t.type === 'IN' ? 'badge-in' : (t.type === 'OUT' ? 'badge-out' : 'badge-tr');
+        const renk = t.type === 'IN' ? 'var(--success)' : (t.type === 'OUT' ? 'var(--danger)' : 'var(--primary)');
+        const karsi = t.type === 'TRANSFER' ? `→ ${hesapAdi(t.targetAccount)}` : cariAdi(t.contactId);
+        const kat = t.type === 'TRANSFER' ? 'Transfer' : (t.category || '<span style="color:#bbb;">—</span>');
+        return `<tr>
+            <td>${tarihYaz(t.date)}</td>
+            <td><strong>${hesapAdi(t.account)}</strong></td>
+            <td><span class="badge ${sinif}">${etiket}</span></td>
+            <td><span class="badge badge-cat">${kat}</span></td>
+            <td>${karsi ? '<strong>' + karsi + '</strong> — ' : ''}${t.desc}</td>
+            <td style="text-align:right; font-weight:bold; color:${renk};">${paraYaz(t.amount, t.currency)}</td>
+            <td style="text-align:right; white-space:nowrap;">
+                <button class="btn btn-warning btn-sm" onclick="islemDuzenle(${t.id})"><i class="fa-solid fa-pen"></i></button>
+                <button class="btn btn-danger btn-sm" onclick="islemSil(${t.id})"><i class="fa-solid fa-trash"></i></button>
+            </td>
+        </tr>`;
+    }).join('');
+
+    // Mobil kartlar
+    document.getElementById('hareketMobil').innerHTML = liste.map(t => mobilKart(t)).join('');
+}
+
+function mobilKart(t) {
+    const etiket = t.type === 'IN' ? 'GİRİŞ' : (t.type === 'OUT' ? 'ÇIKIŞ' : 'TRANSFER');
+    const sinif = t.type === 'IN' ? 'badge-in' : (t.type === 'OUT' ? 'badge-out' : 'badge-tr');
+    const renk = t.type === 'IN' ? 'var(--success)' : (t.type === 'OUT' ? 'var(--danger)' : 'var(--primary)');
+    const karsi = t.type === 'TRANSFER' ? `→ ${hesapAdi(t.targetAccount)}` : cariAdi(t.contactId);
+    const kat = t.type === 'TRANSFER' ? 'Transfer' : (t.category || 'Kategorisiz');
+    return `<div class="mobil-kart">
+        <div class="ust">
+            <span class="badge ${sinif}">${etiket}</span>
+            <span class="tutar" style="color:${renk};">${paraYaz(t.amount, t.currency)}</span>
+        </div>
+        <div class="detay">
+            📅 ${tarihYaz(t.date)} &nbsp;·&nbsp; 🏦 ${hesapAdi(t.account)}<br>
+            🏷️ ${kat}${karsi ? ' &nbsp;·&nbsp; 👤 ' + karsi : ''}<br>
+            ${t.desc ? '📝 ' + t.desc : ''}
+        </div>
+        <div class="alt">
+            <button class="btn btn-warning btn-sm" style="flex:1;" onclick="islemDuzenle(${t.id})"><i class="fa-solid fa-pen"></i> Düzenle</button>
+            <button class="btn btn-danger btn-sm" style="flex:1;" onclick="islemSil(${t.id})"><i class="fa-solid fa-trash"></i> Sil</button>
+        </div>
+    </div>`;
+}
+
+// ================= HESAP DETAY =================
+function hesapDetayAc(id) { seciliHesapId = id; ['hdTur', 'hdKategori', 'hdDoviz'].forEach(x => document.getElementById(x).value = 'ALL'); gorunumDegistir('hesapDetay'); }
+
+function hesapDetayYaz() {
+    const h = hesaplar.find(x => x.id === seciliHesapId);
+    if (!h) return;
+    document.getElementById('hdBaslik').innerText = h.name;
+
+    const fTur = document.getElementById('hdTur').value;
+    const fKat = document.getElementById('hdKategori').value;
+    const fDov = document.getElementById('hdDoviz').value;
+
+    const liste = islemler.filter(t => {
+        if (t.account !== h.id && t.targetAccount !== h.id) return false;
+        const giren = (t.type === 'IN') || (t.type === 'TRANSFER' && t.targetAccount === h.id);
+        if (fTur !== 'ALL' && (fTur === 'IN' ? !giren : giren)) return false;
+        if (fDov !== 'ALL' && t.currency !== fDov) return false;
+        if (fKat !== 'ALL') {
+            if (fKat === 'Transfer') { if (t.type !== 'TRANSFER') return false; }
+            else if (t.category !== fKat) return false;
         }
-        if(catHtml === '') catHtml = '<div class="text-xs text-slate-400">Veri yok.</div>';
-        document.getElementById('cd-sum-cat').innerHTML = catHtml;
+        return true;
+    });
+
+    const gToplam = { TRY: 0, USD: 0, EUR: 0, CHF: 0 };
+    const cToplam = { TRY: 0, USD: 0, EUR: 0, CHF: 0 };
+
+    const satirlar = liste.map(t => {
+        const giren = (t.type === 'IN') || (t.type === 'TRANSFER' && t.targetAccount === h.id);
+        const cikan = (t.type === 'OUT') || (t.type === 'TRANSFER' && t.account === h.id);
+        if (giren) gToplam[t.currency] += t.amount;
+        if (cikan) cToplam[t.currency] += t.amount;
+
+        const etiket = t.type === 'IN' ? 'GİRİŞ' : (t.type === 'OUT' ? 'ÇIKIŞ' : 'TRANSFER');
+        const sinif = giren ? 'badge-in' : 'badge-out';
+        const karsi = t.type === 'TRANSFER'
+            ? (t.account === h.id ? '→ ' + hesapAdi(t.targetAccount) : '← ' + hesapAdi(t.account))
+            : cariAdi(t.contactId);
+
+        return `<tr>
+            <td>${tarihYaz(t.date)}</td>
+            <td><span class="badge ${sinif}">${etiket}</span></td>
+            <td><span class="badge badge-cat">${t.type === 'TRANSFER' ? 'Transfer' : (t.category || '—')}</span></td>
+            <td>${karsi ? '<strong>' + karsi + '</strong> — ' : ''}${t.desc}</td>
+            <td style="text-align:right; color:var(--success); font-weight:bold;">${giren ? paraYaz(t.amount, t.currency) : '—'}</td>
+            <td style="text-align:right; color:var(--danger); font-weight:bold;">${cikan ? paraYaz(t.amount, t.currency) : '—'}</td>
+            <td style="text-align:right; white-space:nowrap;">
+                <button class="btn btn-warning btn-sm" onclick="islemDuzenle(${t.id})"><i class="fa-solid fa-pen"></i></button>
+                <button class="btn btn-danger btn-sm" onclick="islemSil(${t.id})"><i class="fa-solid fa-trash"></i></button>
+            </td>
+        </tr>`;
+    }).join('');
+
+    document.getElementById('hdTablo').innerHTML = satirlar || '<tr><td colspan="7" class="empty">Bu hesapta uygun hareket yok.</td></tr>';
+    document.getElementById('hdMobil').innerHTML = liste.length ? liste.map(t => mobilKart(t)).join('') : '<div class="empty">Hareket yok.</div>';
+
+    const kutu = (t, renk) => DOVIZLER.map(c => `<div class="metric-box" style="padding:10px;"><div class="lbl">${c}</div><div class="val" style="font-size:14px; color:${renk};">${paraYaz(t[c], c)}</div></div>`).join('');
+    document.getElementById('hdGirisOzet').innerHTML = kutu(gToplam, 'var(--success)');
+    document.getElementById('hdCikisOzet').innerHTML = kutu(cToplam, 'var(--danger)');
+}
+
+// ================= CARİLER =================
+function carileriYaz() {
+    const el = document.getElementById('cariListesi');
+    if (cariler.length === 0) {
+        el.innerHTML = '<div class="empty" style="grid-column:1/-1;">Kayıtlı cari yok. Yukarıdan yeni cari ekleyebilirsiniz.</div>';
+        return;
     }
+    el.innerHTML = cariler.map(c => {
+        const adet = islemler.filter(t => t.contactId == c.id).length;
+        return `<div class="hesap-card" onclick="cariDetayAc(${c.id})">
+            <div class="isim"><div class="ikon"><i class="fa-solid fa-user"></i></div>${c.name}</div>
+            <div style="font-size:12px; color:var(--muted);">${adet} işlem</div>
+        </div>`;
+    }).join('');
+}
 
-    function fin_initializeSelects() {
-        const formSource = document.getElementById('fin-form-source-account'); 
-        const formTarget = document.getElementById('fin-form-target-account'); 
-        const formContact = document.getElementById('fin-form-contact');
-        const filterAccount = document.getElementById('fin-filter-account');
-        const adFilterContact = document.getElementById('fin-ad-filter-contact');
+function cariDetayAc(id) { seciliCariId = id; ['cdTur', 'cdKategori', 'cdDoviz'].forEach(x => document.getElementById(x).value = 'ALL'); gorunumDegistir('cariDetay'); }
 
-        formSource.innerHTML = formTarget.innerHTML = '';
-        filterAccount.innerHTML = '<option value="ALL">Tüm Hesaplar / Bankalar</option>';
+function cariDetayYaz() {
+    const c = cariler.find(x => x.id === seciliCariId);
+    if (!c) return;
+    document.getElementById('cdBaslik').innerText = c.name;
 
-        fin_accounts.forEach(a => { 
-            formSource.innerHTML += `<option value="${a.id}">${a.name}</option>`; 
-            formTarget.innerHTML += `<option value="${a.id}">${a.name}</option>`; 
-            filterAccount.innerHTML += `<option value="${a.id}">${a.name}</option>`; 
-        });
-        
-        const filterContact = document.getElementById('fin-filter-contact');
-        if(filterContact) { 
-            filterContact.innerHTML = '<option value="ALL">Tüm Cariler</option>'; 
-            if(adFilterContact) adFilterContact.innerHTML = '<option value="ALL">Tüm Cariler / Karşı Taraf</option>';
-            fin_contacts.forEach(c => {
-                filterContact.innerHTML += `<option value="${c.id}">${c.name}</option>`;
-                if(adFilterContact) adFilterContact.innerHTML += `<option value="${c.id}">${c.name}</option>`;
-            }); 
-        }
+    const fTur = document.getElementById('cdTur').value;
+    const fKat = document.getElementById('cdKategori').value;
+    const fDov = document.getElementById('cdDoviz').value;
 
-        formContact.innerHTML = '<option value="">-- Cari Seçiniz --</option>'; 
-        fin_contacts.forEach(c => formContact.innerHTML += `<option value="${c.id}">${c.name}</option>`);
+    const liste = islemler.filter(t => {
+        if (t.contactId != c.id) return false;
+        if (fTur !== 'ALL' && t.type !== fTur) return false;
+        if (fDov !== 'ALL' && t.currency !== fDov) return false;
+        if (fKat !== 'ALL' && t.category !== fKat) return false;
+        return true;
+    });
 
-        // Kategorileri Filtrelere de ekleyelim
-        const catOptions = `<option value="ALL">Tüm Kategoriler</option><option value="Borç">Borç</option><option value="Destek">Destek</option><option value="Bağış">Bağış</option><option value="Yatırım">Yatırım</option><option value="Kişisel Harcama">Kişisel Harcama</option><option value="Borç Geri Ödeme">Borç Geri Ödeme</option><option value="Diğer">Diğer</option><option value="Transfer">Transfer</option>`;
-        document.getElementById('fin-filter-category').innerHTML = catOptions;
-        document.getElementById('fin-ad-filter-category').innerHTML = catOptions;
-        document.getElementById('fin-cd-filter-category').innerHTML = catOptions;
-    }
+    let giren = 0, cikan = 0;
+    const satirlar = liste.map(t => {
+        const tl = tlKarsilik(t.amount, t.currency);
+        if (t.type === 'IN') giren += tl; else if (t.type === 'OUT') cikan += tl;
+        const etiket = t.type === 'IN' ? 'GİRİŞ' : 'ÇIKIŞ';
+        const sinif = t.type === 'IN' ? 'badge-in' : 'badge-out';
+        const renk = t.type === 'IN' ? 'var(--success)' : 'var(--danger)';
+        return `<tr>
+            <td>${tarihYaz(t.date)}</td>
+            <td><span class="badge ${sinif}">${etiket}</span></td>
+            <td>${hesapAdi(t.account)}</td>
+            <td><span class="badge badge-cat">${t.category || '—'}</span></td>
+            <td>${t.desc}</td>
+            <td style="text-align:right; font-weight:bold; color:${renk};">${paraYaz(t.amount, t.currency)}</td>
+            <td style="text-align:right; white-space:nowrap;">
+                <button class="btn btn-warning btn-sm" onclick="islemDuzenle(${t.id})"><i class="fa-solid fa-pen"></i></button>
+                <button class="btn btn-danger btn-sm" onclick="islemSil(${t.id})"><i class="fa-solid fa-trash"></i></button>
+            </td>
+        </tr>`;
+    }).join('');
 
-    function fin_openTransactionModal() { 
-        fin_editingTransactionId = null; 
-        document.getElementById('fin-transactionModalTitle').innerHTML = 'Yeni İşlem Ekle'; 
-        document.getElementById('fin-form-amount').value = ''; 
-        document.getElementById('fin-form-target-amount').value = '';
-        document.getElementById('fin-form-desc').value = ''; 
-        document.getElementById('fin-form-date').valueAsDate = new Date(); 
-        document.getElementById('fin-transactionModal').classList.add('active'); 
-        fin_toggleFormFields(); 
-    }
+    document.getElementById('cdTablo').innerHTML = satirlar || '<tr><td colspan="7" class="empty">Bu cariye ait hareket yok.</td></tr>';
+    document.getElementById('cdMobil').innerHTML = liste.length ? liste.map(t => mobilKart(t)).join('') : '<div class="empty">Hareket yok.</div>';
 
-    function fin_toggleFormFields() {
-        const type = document.getElementById('fin-form-type').value;
-        const targetDiv = document.getElementById('fin-account-target-div');
-        const contactDiv = document.getElementById('fin-contact-div');
-        const categoryDiv = document.getElementById('fin-category-div');
-        const targetAmountDiv = document.getElementById('fin-target-amount-div');
+    document.getElementById('cdGiris').innerText = paraYaz(giren, 'TRY');
+    document.getElementById('cdCikis').innerText = paraYaz(cikan, 'TRY');
+    const net = giren - cikan;
+    const netEl = document.getElementById('cdNet');
+    netEl.innerText = paraYaz(net, 'TRY');
+    netEl.className = 'val' + (net < 0 ? ' neg' : '');
+    document.getElementById('cdAdet').innerText = liste.length;
+}
 
-        if (type === 'TRANSFER') {
-            targetDiv.style.display = 'block'; 
-            contactDiv.style.display = 'none';
-            categoryDiv.style.display = 'none';
-            targetAmountDiv.style.display = 'flex'; 
-            document.getElementById('fin-source-amount-label').innerText = 'Kaynak Tutar';
-        } else {
-            targetDiv.style.display = 'none'; 
-            contactDiv.style.display = 'block';
-            categoryDiv.style.display = 'block';
-            targetAmountDiv.style.display = 'none';
-            document.getElementById('fin-source-amount-label').innerText = 'Tutar';
-        }
-    }
+// ================= İŞLEM FORMU =================
+function islemModalAc() {
+    duzenlenenIslemId = null;
+    document.getElementById('islemModalBaslik').innerText = 'Yeni İşlem';
+    document.getElementById('btnIslemKaydet').innerText = 'Kaydet';
+    document.getElementById('fmTur').value = 'IN';
+    document.getElementById('fmTutar').value = '';
+    document.getElementById('fmHedefTutar').value = '';
+    document.getElementById('fmAciklama').value = '';
+    document.getElementById('fmCari').value = '';
+    document.getElementById('fmKategori').value = KATEGORILER[0];
+    document.getElementById('fmTarih').valueAsDate = new Date();
+    formAlanlariGuncelle();
+    modalAc('modalIslem');
+}
 
-    function fin_openContactModal() { document.getElementById('fin-contact-name').value = ''; document.getElementById('fin-contactModal').classList.add('active'); }
-    function fin_openBankModal() { document.getElementById('fin-bank-name').value = ''; document.getElementById('fin-bankModal').classList.add('active'); }
-    function fin_closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function formAlanlariGuncelle() {
+    const tur = document.getElementById('fmTur').value;
+    const transfer = (tur === 'TRANSFER');
+    document.getElementById('fmHedefHesapDiv').classList.toggle('hidden', !transfer);
+    document.getElementById('fmHedefTutarDiv').classList.toggle('hidden', !transfer);
+    document.getElementById('fmKategoriDiv').classList.toggle('hidden', transfer);
+    document.getElementById('fmCariDiv').classList.toggle('hidden', transfer);
+    document.getElementById('fmTutarLabel').innerText = transfer ? 'Gönderilen Tutar' : 'Tutar';
+}
 
-    // ================= BULUTA KAYDETME İŞLEMLERİ =================
-    async function fin_saveContact() {
-        const name = document.getElementById('fin-contact-name').value;
-        if (!name) return alert('Ad Soyad / Ünvan zorunludur.');
-        const newId = Date.now();
-        const { error } = await db.from('finans_cariler').insert([{ id: newId, name: name, kullanici: aktifKullaniciAdi }]);
-        if(error) return alert("Hata: " + error.message);
-        
-        fin_closeModal('fin-contactModal'); await fin_loadData();
-        if (document.getElementById('fin-contacts-list-view').style.display === 'block') { fin_renderContactsList(); }
-    }
+async function islemKaydet() {
+    const tur = document.getElementById('fmTur').value;
+    const hesap = document.getElementById('fmHesap').value;
+    const doviz = document.getElementById('fmDoviz').value;
+    const tutar = sayiOku(document.getElementById('fmTutar').value);
+    const tarih = document.getElementById('fmTarih').value;
+    const aciklama = document.getElementById('fmAciklama').value.trim();
 
-    async function fin_saveBank() {
-        const name = document.getElementById('fin-bank-name').value;
-        if (!name) return alert('Banka adı zorunludur.');
-        const newId = 'BANK_' + Date.now();
-        const { error } = await db.from('finans_hesaplar').insert([{ id: newId, name: name, type: 'bank', color: 'blue', kullanici: aktifKullaniciAdi }]);
-        if(error) return alert("Hata: " + error.message);
-        fin_closeModal('fin-bankModal'); await fin_loadData();
-    }
+    if (!tutar || tutar <= 0) return alert('Geçerli bir tutar giriniz.');
+    if (!tarih) return alert('Tarih seçiniz.');
+    if (!aciklama) return alert('Açıklama giriniz.');
 
-    async function fin_saveTransaction() {
-        const type = document.getElementById('fin-form-type').value; 
-        const account = document.getElementById('fin-form-source-account').value; 
-        const targetAccount = type === 'TRANSFER' ? document.getElementById('fin-form-target-account').value : null; 
-        
-        const currency = document.getElementById('fin-form-currency').value; 
-        const rawAmount = document.getElementById('fin-form-amount').value.replace(/\./g, '').replace(',', '.');
-        const amount = parseFloat(rawAmount);
+    const btn = document.getElementById('btnIslemKaydet');
+    btn.disabled = true; btn.innerText = 'Kaydediliyor...';
 
-        // HEDEF DÖVİZ VE TUTAR (DÖVİZ DÖNÜŞÜMÜ İÇİN)
-        const targetCurrency = document.getElementById('fin-form-target-currency').value; 
-        const rawTargetAmount = document.getElementById('fin-form-target-amount').value.replace(/\./g, '').replace(',', '.');
-        const targetAmount = parseFloat(rawTargetAmount) || amount; 
+    try {
+        if (tur === 'TRANSFER') {
+            const hedefHesap = document.getElementById('fmHedefHesap').value;
+            if (hesap === hedefHesap) throw new Error('Kaynak ve hedef hesap aynı olamaz.');
+            const hedefDoviz = document.getElementById('fmHedefDoviz').value;
+            const hedefTutarGirdi = sayiOku(document.getElementById('fmHedefTutar').value);
+            const hedefTutar = (!isNaN(hedefTutarGirdi) && hedefTutarGirdi > 0) ? hedefTutarGirdi : tutar;
 
-        const date = document.getElementById('fin-form-date').value; 
-        const desc = document.getElementById('fin-form-desc').value; 
-        
-        const rawContactId = type !== 'TRANSFER' ? document.getElementById('fin-form-contact').value : null; 
-        const contactId = rawContactId ? parseInt(rawContactId) : null; 
-        
-        const category = type !== 'TRANSFER' ? document.getElementById('fin-form-category').value : null;
-
-        if (!amount || !date || !desc) return alert('Tutar, tarih ve açıklama alanlarını doldurun.');
-
-        if (fin_editingTransactionId) {
-            const txData = { date: date, type: type, account: account, targetaccount: targetAccount, currency: currency, amount: amount, desc_text: desc, contactid: contactId, category: category, kullanici: aktifKullaniciAdi };
-            const {error} = await db.from('finans_islemler').update(txData).eq('id', fin_editingTransactionId);
-            if(error) return alert("Hata: " + error.message);
-        } else {
-            if (type === 'TRANSFER' && (currency !== targetCurrency || amount !== targetAmount)) {
-                // Döviz/Kur Transferi
-                const txOut = { id: Date.now(), date: date, type: 'OUT', account: account, currency: currency, amount: amount, desc_text: `[Döviz Çıkış] ${fin_getAccountName(targetAccount)} hesabına. ${desc}`, category: 'Transfer', kullanici: aktifKullaniciAdi };
-                const txIn = { id: Date.now() + 1, date: date, type: 'IN', account: targetAccount, currency: targetCurrency, amount: targetAmount, desc_text: `[Döviz Giriş] ${fin_getAccountName(account)} hesabından. ${desc}`, category: 'Transfer', kullanici: aktifKullaniciAdi };
-                
-                const {error} = await db.from('finans_islemler').insert([txOut, txIn]);
-                if(error) return alert("Hata: " + error.message);
+            if (duzenlenenIslemId) {
+                const { error } = await db.from('finans_islemler').update({
+                    date: tarih, type: 'TRANSFER', account: hesap, targetaccount: hedefHesap,
+                    currency: doviz, amount: tutar, desc_text: aciklama, category: 'Transfer',
+                    contactid: null, kullanici: aktifKullaniciAdi
+                }).eq('id', duzenlenenIslemId);
+                if (error) throw error;
+            } else if (doviz !== hedefDoviz) {
+                // Döviz değişimli transfer: iki ayrı kayıt
+                const kayitlar = [
+                    { id: Date.now(), date: tarih, type: 'OUT', account: hesap, currency: doviz, amount: tutar, desc_text: `[Transfer → ${hesapAdi(hedefHesap)}] ${aciklama}`, category: 'Transfer', kullanici: aktifKullaniciAdi },
+                    { id: Date.now() + 1, date: tarih, type: 'IN', account: hedefHesap, currency: hedefDoviz, amount: hedefTutar, desc_text: `[Transfer ← ${hesapAdi(hesap)}] ${aciklama}`, category: 'Transfer', kullanici: aktifKullaniciAdi }
+                ];
+                const { error } = await db.from('finans_islemler').insert(kayitlar);
+                if (error) throw error;
             } else {
-                // Normal İşlem
-                const txData = { id: Date.now(), date: date, type: type, account: account, targetaccount: targetAccount, currency: currency, amount: amount, desc_text: desc, contactid: contactId, category: category, kullanici: aktifKullaniciAdi };
-                const {error} = await db.from('finans_islemler').insert([txData]);
-                if(error) return alert("Hata: " + error.message);
+                const { error } = await db.from('finans_islemler').insert([{
+                    id: Date.now(), date: tarih, type: 'TRANSFER', account: hesap, targetaccount: hedefHesap,
+                    currency: doviz, amount: tutar, desc_text: aciklama, category: 'Transfer', kullanici: aktifKullaniciAdi
+                }]);
+                if (error) throw error;
+            }
+        } else {
+            const kategori = document.getElementById('fmKategori').value;
+            const cariDeger = document.getElementById('fmCari').value;
+            const cariId = cariDeger ? parseInt(cariDeger) : null;
+
+            const kayit = {
+                date: tarih, type: tur, account: hesap, targetaccount: null,
+                currency: doviz, amount: tutar, desc_text: aciklama,
+                contactid: cariId, category: kategori, kullanici: aktifKullaniciAdi
+            };
+
+            if (duzenlenenIslemId) {
+                const { error } = await db.from('finans_islemler').update(kayit).eq('id', duzenlenenIslemId);
+                if (error) throw error;
+            } else {
+                const { error } = await db.from('finans_islemler').insert([{ id: Date.now(), ...kayit }]);
+                if (error) throw error;
             }
         }
 
-        fin_closeModal('fin-transactionModal'); 
-        await fin_loadData();
-        
-        if(document.getElementById('fin-contact-detail-view').style.display === 'block') fin_renderContactDetailView();
-        if(document.getElementById('fin-account-detail-view').style.display === 'block') fin_renderAccountDetailView();
+        modalKapat('modalIslem');
+        await verileriYukle();
+        aktifGorunumuYenile();
+    } catch (e) {
+        alert('Kaydedilemedi: ' + e.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerText = duzenlenenIslemId ? 'Güncelle' : 'Kaydet';
+    }
+}
+
+function islemDuzenle(id) {
+    const t = islemler.find(x => x.id === id);
+    if (!t) return;
+
+    duzenlenenIslemId = id;
+    document.getElementById('islemModalBaslik').innerText = 'İşlemi Düzenle';
+    document.getElementById('btnIslemKaydet').innerText = 'Güncelle';
+    document.getElementById('fmTur').value = t.type;
+    formAlanlariGuncelle();
+
+    document.getElementById('fmHesap').value = t.account;
+    document.getElementById('fmDoviz').value = t.currency;
+    document.getElementById('fmTutar').value = String(t.amount).replace('.', ',');
+    document.getElementById('fmTarih').value = t.date;
+    document.getElementById('fmAciklama').value = t.desc;
+
+    if (t.type === 'TRANSFER') {
+        if (t.targetAccount) document.getElementById('fmHedefHesap').value = t.targetAccount;
+        document.getElementById('fmHedefDoviz').value = t.currency;
+        document.getElementById('fmHedefTutar').value = '';
+    } else {
+        document.getElementById('fmCari').value = t.contactId || '';
+        document.getElementById('fmKategori').value = t.category || KATEGORILER[0];
     }
 
-    async function fin_deleteTransaction(id) {
-        if(!confirm("Bu işlemi tamamen silmek istediğinize emin misiniz?")) return;
-        const {error} = await db.from('finans_islemler').delete().eq('id', id);
-        if(error) return alert("Hata: " + error.message);
-        await fin_loadData();
-        
-        if(document.getElementById('fin-contact-detail-view').style.display === 'block') fin_renderContactDetailView();
-        if(document.getElementById('fin-account-detail-view').style.display === 'block') fin_renderAccountDetailView();
-    }
+    modalAc('modalIslem');
+}
 
-    function fin_editTransaction(id) {
-        fin_editingTransactionId = id; const t = fin_transactions.find(x => x.id === id); if(!t) return;
-        document.getElementById('fin-form-type').value = t.type; fin_toggleFormFields();
-        document.getElementById('fin-form-source-account').value = t.account;
-        if(t.type === 'TRANSFER') {
-            document.getElementById('fin-form-target-account').value = t.targetAccount;
-            document.getElementById('fin-form-target-currency').value = t.currency;
-            document.getElementById('fin-form-target-amount').value = t.amount;
-        }
-        if(t.type !== 'TRANSFER') {
-            document.getElementById('fin-form-contact').value = t.contactId || "";
-            document.getElementById('fin-form-category').value = t.category || "Diğer";
-        }
-        document.getElementById('fin-form-currency').value = t.currency; document.getElementById('fin-form-amount').value = t.amount; document.getElementById('fin-form-date').value = t.date; document.getElementById('fin-form-desc').value = t.desc;
-        document.getElementById('fin-transactionModalTitle').innerHTML = 'İşlemi Düzenle'; document.getElementById('fin-transactionModal').classList.add('active');
+async function islemSil(id) {
+    if (!confirm('Bu işlemi silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz.')) return;
+    try {
+        const { error } = await db.from('finans_islemler').delete().eq('id', id);
+        if (error) throw error;
+        await verileriYukle();
+        aktifGorunumuYenile();
+    } catch (e) {
+        alert('Silinemedi: ' + e.message);
     }
-    
-    window.onload = function() {
-        if(localStorage.getItem('aktif_kullanici')) { fin_loadData(); }
-    };
+}
+
+function aktifGorunumuYenile() {
+    if (!document.getElementById('v-hesapDetay').classList.contains('hidden')) hesapDetayYaz();
+    else if (!document.getElementById('v-cariDetay').classList.contains('hidden')) cariDetayYaz();
+    else if (!document.getElementById('v-cariler').classList.contains('hidden')) carileriYaz();
+}
+
+// ================= CARİ / BANKA =================
+function cariModalAc() { document.getElementById('cariAd').value = ''; modalAc('modalCari'); }
+
+async function cariKaydet() {
+    const ad = document.getElementById('cariAd').value.trim();
+    if (!ad) return alert('Ünvan / ad giriniz.');
+    try {
+        const { error } = await db.from('finans_cariler').insert([{ id: Date.now(), name: ad, kullanici: aktifKullaniciAdi }]);
+        if (error) throw error;
+        modalKapat('modalCari');
+        await verileriYukle();
+        carileriYaz();
+    } catch (e) { alert('Kaydedilemedi: ' + e.message); }
+}
+
+function bankaModalAc() { document.getElementById('bankaAd').value = ''; modalAc('modalBanka'); }
+
+async function bankaKaydet() {
+    const ad = document.getElementById('bankaAd').value.trim();
+    const tur = document.getElementById('bankaTur').value;
+    if (!ad) return alert('Hesap adı giriniz.');
+    try {
+        const onEk = tur === 'cash' ? 'KASA_' : 'BANK_';
+        const { error } = await db.from('finans_hesaplar').insert([{ id: onEk + Date.now(), name: ad, type: tur, color: 'blue', kullanici: aktifKullaniciAdi }]);
+        if (error) throw error;
+        modalKapat('modalBanka');
+        await verileriYukle();
+    } catch (e) { alert('Kaydedilemedi: ' + e.message); }
+}
+
+// Modal dışına tıklayınca kapat
+document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.addEventListener('click', function (e) { if (e.target === this) this.style.display = 'none'; });
+});
 </script>
 </body>
 </html>
