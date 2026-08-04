@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Varlık & Harcama Yönetimi</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
     <style>
         :root {
@@ -541,9 +540,16 @@ async function verileriYukle() {
         }));
 
         listeleriDoldur();
-        panelGuncelle();
     } catch (e) {
         alert('Veri yüklenemedi: ' + e.message);
+        return;
+    }
+
+    // Ekranı çizerken oluşan bir hata, verilerin yüklenmesini etkilemesin
+    try {
+        panelGuncelle();
+    } catch (e) {
+        console.error('Ekran çizim hatası:', e);
     }
 }
 
@@ -677,6 +683,14 @@ function kategoriFiltrele(k) {
 
 // ================= GRAFİKLER =================
 function grafikleriCiz() {
+    // Grafik kütüphanesi yüklenemediyse sayfanın geri kalanı çalışmaya devam etsin
+    if (typeof Chart === 'undefined') {
+        document.querySelectorAll('.chart-wrap').forEach(el => {
+            el.innerHTML = '<div class="empty">Grafik yüklenemedi. İnternet bağlantınızı kontrol edip sayfayı yenileyin.</div>';
+        });
+        return;
+    }
+
     // Son 6 ay
     const bugun = new Date();
     const etiketler = [], girenler = [], cikanlar = [];
