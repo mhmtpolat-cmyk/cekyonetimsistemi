@@ -223,19 +223,41 @@
                     <div class="chart-wrap"><canvas id="aylikChart"></canvas></div>
                 </div>
                 <div class="card">
-                    <h2>🥧 Harcama Dağılımı <span class="sub">— kategoriye göre, TL</span></h2>
+                    <h2>📊 Harcama Dağılımı <span class="sub">— kategoriye göre, TL karşılığı</span></h2>
                     <div class="chart-wrap"><canvas id="kategoriChart"></canvas></div>
                 </div>
             </div>
 
-            <!-- BU AY ÖZET -->
+            <!-- GİRİŞ / ÇIKIŞ ÖZETİ -->
             <div class="card">
-                <h2>📅 Bu Ay <span class="sub" id="buAyEtiket"></span></h2>
-                <div class="grid-4">
-                    <div class="metric-box metric-green"><div class="lbl">Bu Ay Giren</div><div class="val" id="ayGiren">0,00 ₺</div></div>
-                    <div class="metric-box metric-red"><div class="lbl">Bu Ay Çıkan</div><div class="val" id="ayCikan">0,00 ₺</div></div>
-                    <div class="metric-box"><div class="lbl">Fark</div><div class="val" id="ayFark">0,00 ₺</div></div>
-                    <div class="metric-box"><div class="lbl">İşlem Sayısı</div><div class="val" id="ayAdet">0</div></div>
+                <h2 style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                    <span>💹 Giriş / Çıkış Özeti <span class="sub" id="donemEtiket"></span></span>
+                    <select id="donemSecim" onchange="panelGuncelle()" style="padding:7px 10px; border:1px solid #ccc; border-radius:6px; font-size:13px; font-weight:normal; background:white;">
+                        <option value="ay">Bu Ay</option>
+                        <option value="yil">Bu Yıl</option>
+                        <option value="tum">Tüm Zamanlar</option>
+                    </select>
+                </h2>
+
+                <div class="grid-2">
+                    <div>
+                        <div style="font-size:11px; font-weight:bold; color:var(--success); text-transform:uppercase; margin-bottom:10px;">
+                            <i class="fa-solid fa-arrow-down"></i> Toplam Girişler
+                        </div>
+                        <div class="grid-4" id="girisOzetKutular"></div>
+                    </div>
+                    <div>
+                        <div style="font-size:11px; font-weight:bold; color:var(--danger); text-transform:uppercase; margin-bottom:10px;">
+                            <i class="fa-solid fa-arrow-up"></i> Toplam Çıkışlar
+                        </div>
+                        <div class="grid-4" id="cikisOzetKutular"></div>
+                    </div>
+                </div>
+
+                <div class="grid-3" style="margin-top:18px; padding-top:16px; border-top:1px dashed #e0e6ed;">
+                    <div class="metric-box metric-green"><div class="lbl">Giren (TL Karşılığı)</div><div class="val" id="ayGiren">0,00 ₺</div></div>
+                    <div class="metric-box metric-red"><div class="lbl">Çıkan (TL Karşılığı)</div><div class="val" id="ayCikan">0,00 ₺</div></div>
+                    <div class="metric-box metric-blue"><div class="lbl">Fark <span id="ayAdet" style="font-weight:normal;"></span></div><div class="val" id="ayFark">0,00 ₺</div></div>
                 </div>
             </div>
 
@@ -680,26 +702,56 @@ function panelGuncelle() {
         el.className = 'val' + (nakit[c] < 0 ? ' neg' : '');
     });
 
-    // Bu ay
+    // Dönem seçimine göre giriş / çıkış
+    const donem = document.getElementById('donemSecim').value;
     const bugun = new Date();
-    document.getElementById('buAyEtiket').innerText = `— ${AYLAR[bugun.getMonth()]} ${bugun.getFullYear()}`;
+
+    let donemAdi = '';
+    if (donem === 'ay') donemAdi = `— ${AYLAR[bugun.getMonth()]} ${bugun.getFullYear()}`;
+    else if (donem === 'yil') donemAdi = `— ${bugun.getFullYear()} yılı`;
+    else donemAdi = '— tüm kayıtlar';
+    document.getElementById('donemEtiket').innerText = donemAdi;
+
+    const girisDoviz = { TRY: 0, USD: 0, EUR: 0, CHF: 0 };
+    const cikisDoviz = { TRY: 0, USD: 0, EUR: 0, CHF: 0 };
     let ayGiren = 0, ayCikan = 0, ayAdet = 0;
+
     islemler.forEach(t => {
         if (t.type === 'TRANSFER' || !t.date) return;
-        const d = new Date(t.date);
-        if (d.getMonth() === bugun.getMonth() && d.getFullYear() === bugun.getFullYear()) {
-            ayAdet++;
-            if (t.type === 'IN') ayGiren += tlKarsilik(t.amount, t.currency);
-            else ayCikan += tlKarsilik(t.amount, t.currency);
+
+        if (donem !== 'tum') {
+            const d = new Date(t.date);
+            if (d.getFullYear() !== bugun.getFullYear()) return;
+            if (donem === 'ay' && d.getMonth() !== bugun.getMonth()) return;
+        }
+
+        ayAdet++;
+        const c = t.currency;
+        if (t.type === 'IN') {
+            if (girisDoviz[c] !== undefined) girisDoviz[c] += t.amount;
+            ayGiren += tlKarsilik(t.amount, c);
+        } else {
+            if (cikisDoviz[c] !== undefined) cikisDoviz[c] += t.amount;
+            ayCikan += tlKarsilik(t.amount, c);
         }
     });
+
+    const dovizKutu = (veri, renk, arka, kenar) => DOVIZLER.map(c => `
+        <div class="metric-box" style="padding:12px 8px; background:${veri[c] > 0 ? arka : '#f8f9fa'}; border-color:${veri[c] > 0 ? kenar : 'var(--border)'};">
+            <div class="lbl">${c === 'TRY' ? 'TL' : c}</div>
+            <div class="val" style="font-size:15px; color:${veri[c] > 0 ? renk : '#c5cdd3'};">${paraYaz(veri[c], c)}</div>
+        </div>`).join('');
+
+    document.getElementById('girisOzetKutular').innerHTML = dovizKutu(girisDoviz, 'var(--success)', 'var(--success-bg)', '#c8e6d4');
+    document.getElementById('cikisOzetKutular').innerHTML = dovizKutu(cikisDoviz, 'var(--danger)', 'var(--danger-bg)', '#f5c6c2');
+
     document.getElementById('ayGiren').innerText = paraYaz(ayGiren, 'TRY');
     document.getElementById('ayCikan').innerText = paraYaz(ayCikan, 'TRY');
     const fark = ayGiren - ayCikan;
     const farkEl = document.getElementById('ayFark');
     farkEl.innerText = paraYaz(fark, 'TRY');
     farkEl.className = 'val' + (fark < 0 ? ' neg' : '');
-    document.getElementById('ayAdet').innerText = ayAdet;
+    document.getElementById('ayAdet').innerText = `(${ayAdet} işlem)`;
 
     // Hesap kartları — kare, 4 para birimi de görünür
     const hl = document.getElementById('hesapListesi');
@@ -982,7 +1034,7 @@ function grafikleriCiz() {
         }
     });
 
-    // Kategori dağılımı (sadece çıkışlar)
+    // Kategori dağılımı (sadece çıkışlar) — yatay sütun
     const katToplam = {};
     islemler.forEach(t => {
         if (t.type !== 'OUT') return;
@@ -990,37 +1042,69 @@ function grafikleriCiz() {
         katToplam[k] = (katToplam[k] || 0) + tlKarsilik(t.amount, t.currency);
     });
 
-    const katAdlar = Object.keys(katToplam).filter(k => katToplam[k] > 0);
+    // Büyükten küçüğe sırala
+    const katAdlar = Object.keys(katToplam).filter(k => katToplam[k] > 0).sort((a, b) => katToplam[b] - katToplam[a]);
     const renkler = ['#e74c3c', '#e67e22', '#f1c40f', '#8e44ad', '#3498db', '#16a085', '#7f8c8d', '#2c3e50'];
 
     if (kategoriChart) kategoriChart.destroy();
 
+    const katCanvas = document.getElementById('kategoriChart');
+    const katSarmal = katCanvas.parentElement;
+    let katBosMesaj = katSarmal.querySelector('.bos-mesaj');
+
     if (katAdlar.length === 0) {
-        const ctx = document.getElementById('kategoriChart').getContext('2d');
-        ctx.clearRect(0, 0, 400, 300);
-        ctx.font = '13px sans-serif'; ctx.fillStyle = '#999'; ctx.textAlign = 'center';
-        ctx.fillText('Henüz harcama kaydı yok', 150, 100);
+        katCanvas.style.display = 'none';
+        if (!katBosMesaj) {
+            katBosMesaj = document.createElement('div');
+            katBosMesaj.className = 'empty bos-mesaj';
+            katSarmal.appendChild(katBosMesaj);
+        }
+        katBosMesaj.innerText = 'Henüz harcama kaydı yok.';
+        katBosMesaj.style.display = 'block';
         return;
     }
 
+    katCanvas.style.display = 'block';
+    if (katBosMesaj) katBosMesaj.style.display = 'none';
+
+    const katDegerler = katAdlar.map(k => Math.round(katToplam[k]));
+    const genelToplam = katDegerler.reduce((a, b) => a + b, 0);
+
     kategoriChart = new Chart(document.getElementById('kategoriChart'), {
-        type: 'doughnut',
+        type: 'bar',
         data: {
             labels: katAdlar,
-            datasets: [{ data: katAdlar.map(k => Math.round(katToplam[k])), backgroundColor: renkler, borderWidth: 2, borderColor: '#fff' }]
+            datasets: [{
+                data: katDegerler,
+                backgroundColor: katAdlar.map((_, i) => renkler[i % renkler.length]),
+                borderRadius: 5,
+                barPercentage: 0.75
+            }]
         },
         options: {
-            responsive: true, maintainAspectRatio: false,
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
             plugins: {
-                legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+                legend: { display: false },
                 tooltip: {
                     callbacks: {
                         label: (ctx) => {
-                            const top = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                            const yuzde = top ? ((ctx.raw * 100) / top).toFixed(1) : 0;
-                            return ctx.label + ': ' + paraYaz(ctx.raw, 'TRY') + ' (%' + yuzde + ')';
+                            const yuzde = genelToplam ? ((ctx.raw * 100) / genelToplam).toFixed(1) : 0;
+                            return paraYaz(ctx.raw, 'TRY') + '  (%' + yuzde + ')';
                         }
                     }
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: { callback: (v) => v >= 1000 ? (v / 1000) + 'B' : v },
+                    grid: { color: '#f0f3f5' }
+                },
+                y: {
+                    ticks: { font: { size: 12 } },
+                    grid: { display: false }
                 }
             }
         }
