@@ -9,6 +9,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>tailwind.config = { corePlugins: { preflight: false } }</script>
 
     <style>
@@ -196,12 +197,31 @@
         .action-card { border: 2px solid var(--border); border-radius: 11px; padding: 22px; text-align: center; cursor: pointer; transition: .18s; }
         .action-card:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateY(-2px); }
 
-        .cari-layout { display: flex; gap: 18px; margin-top: 14px; height: 430px; }
-        .cari-list { flex: 1; border: 1px solid var(--border); border-radius: 10px; overflow-y: auto; background: #f8fafc; }
+        .cari-layout { display: flex; gap: 18px; margin-top: 14px; height: 480px; }
+        .cari-list { flex: 0 0 210px; border: 1px solid var(--border); border-radius: 10px; overflow-y: auto; background: #f8fafc; }
         .cari-item { padding: 11px 14px; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 13px; transition: .14s; }
         .cari-item:hover { background: #fff; }
         .cari-item.active { background: var(--accent); color: #fff; font-weight: 600; }
-        .cari-details { flex: 2.6; border: 1px solid var(--border); border-radius: 10px; padding: 16px; overflow-y: auto; background: #fff; }
+        .cari-details { flex: 1; border: 1px solid var(--border); border-radius: 10px; padding: 16px; overflow-y: auto; background: #fff; min-width: 0; }
+
+        /* Yeniden boyutlandırılabilir cari penceresi */
+        .modal-resize { resize: both; overflow: auto; min-width: 640px; min-height: 460px; max-width: 98vw; max-height: 94vh; }
+        .resize-ipucu { font-size: 10.5px; color: var(--faint); text-align: right; margin-top: 6px; }
+
+        /* Ekstre özet kutuları */
+        .ekstre-ozet { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); gap: 11px; margin: 13px 0 16px 0; }
+        .ozet-kutu { border-radius: 10px; padding: 12px; border: 1px solid var(--border); background: #f8fafc; }
+        .ozet-kutu .baslik { font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
+        .ozet-kutu .deger { font-size: 17px; font-weight: 700; letter-spacing: -.02em; }
+        .ozet-kutu .alt { font-size: 11px; color: var(--faint); margin-top: 2px; }
+        .ozet-yesil { background: var(--success-bg); border-color: var(--success-line); } .ozet-yesil .deger { color: var(--success); }
+        .ozet-kirmizi { background: var(--danger-bg); border-color: var(--danger-line); } .ozet-kirmizi .deger { color: var(--danger); }
+        .ozet-mavi { background: var(--accent-soft); border-color: #bfdbfe; } .ozet-mavi .deger { color: var(--accent); }
+        .ozet-turuncu { background: var(--warning-bg); border-color: var(--warning-line); } .ozet-turuncu .deger { color: var(--warning); }
+
+        .vade-input { width: 100%; padding: 6px 9px; border: 1px solid var(--border); border-radius: 7px; font-size: 15px; font-weight: 700; font-family: inherit; text-align: center; background: #fff; }
+        .vade-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,.10); }
+        .vade-durum { font-size: 10.5px; font-weight: 600; margin-top: 5px; text-align: center; }
 
         /* Rapor sekmesi */
         .rapor-sekme { display: flex; gap: 6px; border-bottom: 2px solid var(--border); margin-bottom: 18px; }
@@ -399,7 +419,7 @@
 </div>
 
 <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalIstatistik')">Kapat</button></div></div></div>
-<div id="modalCariYonetim" class="modal-overlay"><div class="cek-modal modal-xl"><h2><i class="fa-solid fa-users" style="color:var(--accent);"></i> Cari Yönetimi</h2><div style="display:flex; gap:10px; margin-bottom:10px;"><input type="text" id="yeniCariInput" class="form-control" placeholder="Firma Ünvanı"><button class="btn btn-success" onclick="dbYeniCariEkle()">+ Kaydet</button></div><div class="cari-layout"><div class="cari-list" id="cariListContainer"></div><div class="cari-details"><h3 id="seciliCariBaslik">Seçiniz</h3><div id="cariOzetKutu"></div><table class="cek-table hidden" id="cariHareketTablosu"><thead><tr><th>Çek No</th><th>Tür</th><th>Giriş Tarihi</th><th>Vade Tarihi</th><th>Kalan Gün</th><th style="text-align:right;">Tutar</th><th>Durum</th><th style="text-align:right;">İşlem</th></tr></thead><tbody id="cariHareketGövde"></tbody></table></div></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalCariYonetim')">Kapat</button></div></div></div>
+<div id="modalCariYonetim" class="modal-overlay"><div class="cek-modal modal-xl modal-resize" style="width:1180px;"><h2><i class="fa-solid fa-users" style="color:var(--accent);"></i> Cari Yönetimi</h2><div style="display:flex; gap:10px; margin-bottom:10px;"><input type="text" id="yeniCariInput" class="form-control" placeholder="Firma Ünvanı"><button class="btn btn-success" onclick="dbYeniCariEkle()"><i class="fa-solid fa-plus"></i> Kaydet</button></div><div class="cari-layout"><div class="cari-list" id="cariListContainer"></div><div class="cari-details"><div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;"><h3 id="seciliCariBaslik" style="margin:0; font-size:16px; font-weight:700;">Soldan bir cari seçiniz</h3><button class="btn btn-outline hidden" id="btnEkstrePdf" onclick="cariEkstrePdf()"><i class="fa-solid fa-file-pdf"></i> Ekstre PDF İndir</button></div><div id="cariOzetKutu"></div><div class="tablo-sarmal hidden" id="cariTabloSarmal"><table class="cek-table" id="cariHareketTablosu" style="min-width:840px;"><thead><tr><th>Çek No</th><th>Tür</th><th>Giriş Tarihi</th><th style="text-align:center;">Vade Günü</th><th>Vade Tarihi</th><th style="text-align:center;">Kalan Gün</th><th style="text-align:right;">Tutar</th><th>Durum</th><th style="text-align:right;">İşlem</th></tr></thead><tbody id="cariHareketGövde"></tbody></table></div></div></div><div class="resize-ipucu">↘ Pencereyi büyütmek için sağ alt köşeden çekebilirsiniz</div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalCariYonetim')">Kapat</button></div></div></div>
 
 <div id="modalCekGiris" class="modal-overlay"><div class="cek-modal"><h2><i class="fa-solid fa-arrow-down-to-bracket" style="color:var(--success);"></i> Çek Girişi</h2><div class="form-group"><label>Cari</label><select class="form-control" id="girisCariSecim"></select></div><div class="form-group"><label>Banka</label><select class="form-control" id="girisBankaSecim"><optgroup label="Kamu Bankaları"><option value="T.C. Ziraat Bankası">T.C. Ziraat Bankası</option><option value="Türkiye Halk Bankası">Türkiye Halk Bankası</option><option value="Türkiye Vakıflar Bankası">Türkiye Vakıflar Bankası</option></optgroup><optgroup label="Özel Bankalar"><option value="Türkiye İş Bankası">Türkiye İş Bankası</option><option value="Garanti BBVA">Garanti BBVA</option><option value="Akbank">Akbank</option><option value="Yapı Kredi">Yapı Kredi</option><option value="QNB Finansbank">QNB Finansbank</option><option value="DenizBank">DenizBank</option><option value="Türk Ekonomi Bankası (TEB)">Türk Ekonomi Bankası (TEB)</option><option value="İNG Bank">İNG Bank</option><option value="Şekerbank">Şekerbank</option><option value="Anadolubank">Anadolubank</option><option value="Odea Bank">Odea Bank</option><option value="Fibabanka">Fibabanka</option><option value="Burgan Bank">Burgan Bank</option><option value="Alternatif Bank">Alternatif Bank</option><option value="ICBC Turkey Bank">ICBC Turkey Bank</option><option value="HSBC Bank">HSBC Bank</option></optgroup><optgroup label="Katılım Bankaları"><option value="Kuveyt Türk Katılım Bankası">Kuveyt Türk Katılım Bankası</option><option value="Albaraka Türk Katılım Bankası">Albaraka Türk Katılım Bankası</option><option value="Türkiye Finans Katılım Bankası">Türkiye Finans Katılım Bankası</option><option value="Vakıf Katılım Bankası">Vakıf Katılım Bankası</option><option value="Ziraat Katılım Bankası">Ziraat Katılım Bankası</option><option value="Emlak Katılım Bankası">Emlak Katılım Bankası</option><option value="T.O.M. Katılım Bankası">T.O.M. Katılım Bankası</option><option value="Hayat Finans Katılım Bankası">Hayat Finans Katılım Bankası</option></optgroup></select></div><div class="form-group"><label>Çek No</label><input type="text" class="form-control" id="girisCekNo"></div><div class="form-group"><label>Tutar</label><input type="number" class="form-control" id="girisTutar"></div><div class="form-group"><label>Vade</label><input type="date" class="form-control" id="girisVade"></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalCekGiris')">İptal</button><button class="btn btn-success" onclick="dbCekGirisKaydet()">Kaydet</button></div></div></div>
 <div id="modalCekCikis" class="modal-overlay"><div class="cek-modal"><h2><i class="fa-solid fa-arrow-up-from-bracket" style="color:var(--danger);"></i> Çek Çıkışı</h2><div class="form-group"><label>Tür</label><select class="form-control" id="cekTuruSelect" onchange="handleCekTuruChange()"><option value="kendi">Kendi Çekimiz</option><option value="kasa">Kasadan Seç</option></select></div><div class="form-group hidden" id="kasadanSecimDiv"><label>Portföy</label><select class="form-control" id="kasaCekListesi" onchange="autoFillCekNo()"></select></div><div class="form-group"><label>Çek No</label><input type="text" class="form-control" id="cikisCekNo"></div><div class="form-group"><label>Tutar</label><input type="number" class="form-control" id="cikisTutar"></div><div class="form-group"><label>Vade</label><input type="date" class="form-control" id="cikisVade"></div><div class="form-group"><label>Hedef</label><select class="form-control" id="cikisHedefi" onchange="handleCikisHedefi()"><option value="tedarikci">Cari</option><option value="banka_tahsil">Tahsil</option></select></div><div class="form-group hidden" id="cikisCariDiv"><label>Cari</label><select class="form-control" id="cikisCariSecim"></select></div><div class="form-group hidden" id="bankaListesiDiv"><label>İlgili Bankayı Seçiniz</label><select class="form-control" id="cikisBankaSecim"><optgroup label="Kamu Bankaları"><option value="T.C. Ziraat Bankası">T.C. Ziraat Bankası</option><option value="Türkiye Halk Bankası">Türkiye Halk Bankası</option><option value="Türkiye Vakıflar Bankası">Türkiye Vakıflar Bankası</option></optgroup><optgroup label="Özel Bankalar"><option value="Türkiye İş Bankası">Türkiye İş Bankası</option><option value="Garanti BBVA">Garanti BBVA</option><option value="Akbank">Akbank</option><option value="Yapı Kredi">Yapı Kredi</option><option value="QNB Finansbank">QNB Finansbank</option><option value="DenizBank">DenizBank</option><option value="Türk Ekonomi Bankası (TEB)">Türk Ekonomi Bankası (TEB)</option><option value="İNG Bank">İNG Bank</option><option value="Şekerbank">Şekerbank</option><option value="Anadolubank">Anadolubank</option><option value="Odea Bank">Odea Bank</option><option value="Fibabanka">Fibabanka</option><option value="Burgan Bank">Burgan Bank</option><option value="Alternatif Bank">Alternatif Bank</option><option value="ICBC Turkey Bank">ICBC Turkey Bank</option><option value="HSBC Bank">HSBC Bank</option></optgroup><optgroup label="Katılım Bankaları"><option value="Kuveyt Türk Katılım Bankası">Kuveyt Türk Katılım Bankası</option><option value="Albaraka Türk Katılım Bankası">Albaraka Türk Katılım Bankası</option><option value="Türkiye Finans Katılım Bankası">Türkiye Finans Katılım Bankası</option><option value="Vakıf Katılım Bankası">Vakıf Katılım Bankası</option><option value="Ziraat Katılım Bankası">Ziraat Katılım Bankası</option><option value="Emlak Katılım Bankası">Emlak Katılım Bankası</option><option value="T.O.M. Katılım Bankası">T.O.M. Katılım Bankası</option><option value="Hayat Finans Katılım Bankası">Hayat Finans Katılım Bankası</option></optgroup></select></div><div class="form-group" id="kendiBankaDiv"><label>Kendi Çekimizin Bankası</label><select class="form-control" id="kendiBankaSecim"><optgroup label="Kamu Bankaları"><option value="T.C. Ziraat Bankası">T.C. Ziraat Bankası</option><option value="Türkiye Halk Bankası">Türkiye Halk Bankası</option><option value="Türkiye Vakıflar Bankası">Türkiye Vakıflar Bankası</option></optgroup><optgroup label="Özel Bankalar"><option value="Türkiye İş Bankası">Türkiye İş Bankası</option><option value="Garanti BBVA">Garanti BBVA</option><option value="Akbank">Akbank</option><option value="Yapı Kredi">Yapı Kredi</option><option value="QNB Finansbank">QNB Finansbank</option><option value="DenizBank">DenizBank</option><option value="Türk Ekonomi Bankası (TEB)">Türk Ekonomi Bankası (TEB)</option><option value="İNG Bank">İNG Bank</option><option value="Şekerbank">Şekerbank</option><option value="Anadolubank">Anadolubank</option><option value="Odea Bank">Odea Bank</option><option value="Fibabanka">Fibabanka</option><option value="Burgan Bank">Burgan Bank</option><option value="Alternatif Bank">Alternatif Bank</option><option value="ICBC Turkey Bank">ICBC Turkey Bank</option><option value="HSBC Bank">HSBC Bank</option></optgroup><optgroup label="Katılım Bankaları"><option value="Kuveyt Türk Katılım Bankası">Kuveyt Türk Katılım Bankası</option><option value="Albaraka Türk Katılım Bankası">Albaraka Türk Katılım Bankası</option><option value="Türkiye Finans Katılım Bankası">Türkiye Finans Katılım Bankası</option><option value="Vakıf Katılım Bankası">Vakıf Katılım Bankası</option><option value="Ziraat Katılım Bankası">Ziraat Katılım Bankası</option><option value="Emlak Katılım Bankası">Emlak Katılım Bankası</option><option value="T.O.M. Katılım Bankası">T.O.M. Katılım Bankası</option><option value="Hayat Finans Katılım Bankası">Hayat Finans Katılım Bankası</option></optgroup></select></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalCekCikis')">İptal</button><button class="btn btn-danger" onclick="dbCekCikisKaydet()">Kaydet</button></div></div></div>
@@ -880,90 +900,332 @@
         document.getElementById('yeniCariInput').value = ''; alert("Firma Kaydedildi!"); loadData();
     }
 
+    // ================= CARİ EKSTRE =================
+    let seciliCari = null;
+
     function renderCariler() {
         const container = document.getElementById('cariListContainer');
-        if (g_cariler.length === 0) { container.innerHTML = '<div style="padding:15px; color:#999; font-size:13px;">Kayıtlı cari yok.</div>'; return; }
+        if (g_cariler.length === 0) { container.innerHTML = '<div style="padding:15px; color:#94a3b8; font-size:13px;">Kayıtlı cari yok.</div>'; return; }
         container.innerHTML = '';
         g_cariler.forEach(cari => {
-            let div = document.createElement('div'); div.className = 'cari-item'; div.innerText = cari.unvan;
+            let div = document.createElement('div');
+            div.className = 'cari-item';
+            div.innerText = cari.unvan;
             div.onclick = function() {
-                document.querySelectorAll('.cari-item').forEach(el => el.classList.remove('active')); this.classList.add('active');
-                document.getElementById('seciliCariBaslik').innerText = cari.unvan;
-                document.getElementById('cariHareketTablosu').classList.remove('hidden');
-
-                // Bu cariden alınan / bu cariye verilen tüm çekler — vadeye göre sıralı
-                const cariCekleri = g_cekler.filter(c => c.cari_unvan === cari.unvan)
-                    .slice().sort((a, b) => new Date(a.vade_tarihi) - new Date(b.vade_tarihi));
-
-                const tbody = document.getElementById('cariHareketGövde');
-                const ozetKutu = document.getElementById('cariOzetKutu');
-
-                if(cariCekleri.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:#94a3b8; padding:20px;">İşlem geçmişi yok.</td></tr>';
-                    ozetKutu.innerHTML = '';
-                    return;
-                }
-
-                // Özet hesapla
-                let alinanTop = 0, alinanAdet = 0, verilenTop = 0, verilenAdet = 0, aktifTop = 0;
-                cariCekleri.forEach(c => {
-                    const tutar = Number(c.tutar);
-                    if(c.islem_turu === 'Alınan Çek') { alinanTop += tutar; alinanAdet++; }
-                    else { verilenTop += tutar; verilenAdet++; }
-                    if(c.durum === 'Kasada' || c.durum === 'Tahsilde' || c.durum === 'Ödenecek') aktifTop += tutar;
-                });
-
-                ozetKutu.innerHTML = `<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:12px 0 18px 0;">
-                    <div style="background:var(--success-bg); border:1px solid #a9dfbf; border-radius:8px; padding:12px; text-align:center;">
-                        <div style="font-size:11px; color:#7f8c8d; font-weight:bold;">ALINAN ÇEK</div>
-                        <div style="font-size:17px; font-weight:bold; color:var(--success);">${formatMoney(alinanTop)}</div>
-                        <div style="font-size:11px; color:#7f8c8d;">${alinanAdet} adet</div>
-                    </div>
-                    <div style="background:var(--danger-bg); border:1px solid #f5b7b1; border-radius:8px; padding:12px; text-align:center;">
-                        <div style="font-size:11px; color:#7f8c8d; font-weight:bold;">VERİLEN ÇEK</div>
-                        <div style="font-size:17px; font-weight:bold; color:var(--danger);">${formatMoney(verilenTop)}</div>
-                        <div style="font-size:11px; color:#7f8c8d;">${verilenAdet} adet</div>
-                    </div>
-                    <div style="background:#eaf2f8; border:1px solid #aed6f1; border-radius:8px; padding:12px; text-align:center;">
-                        <div style="font-size:11px; color:#7f8c8d; font-weight:bold;">AKTİF (BEKLEYEN)</div>
-                        <div style="font-size:17px; font-weight:bold; color:var(--accent);">${formatMoney(aktifTop)}</div>
-                        <div style="font-size:11px; color:#7f8c8d;">${cariCekleri.length} kayıt</div>
-                    </div>
-                </div>
-                <div style="font-size:12px; font-weight:bold; color:var(--primary); margin-bottom:8px;">📅 VADE TAKVİMİ <span style="font-weight:normal; color:#7f8c8d;">(yakın vadeden uzağa)</span></div>`;
-
-                tbody.innerHTML = cariCekleri.map(c => {
-                    const renk = c.islem_turu === 'Alınan Çek' ? 'var(--success)' : 'var(--danger)';
-                    const gun = calcDays(c.vade_tarihi);
-                    const tamamlandi = (c.durum === 'Ödendi');
-
-                    let gunHtml;
-                    if(tamamlandi) gunHtml = '<span style="color:#95a5a6;">—</span>';
-                    else if(gun < 0) gunHtml = '<span style="color:var(--danger); font-weight:bold;">Gecikti</span>';
-                    else if(gun <= 7) gunHtml = `<span style="color:var(--danger); font-weight:bold;">${gun} gün</span>`;
-                    else gunHtml = `<span style="color:var(--success); font-weight:bold;">${gun} gün</span>`;
-
-                    let durumBadge;
-                    if(tamamlandi) durumBadge = '<span class="badge badge-gri">Tamamlandı</span>';
-                    else if(c.durum === 'Kasada') durumBadge = '<span class="badge badge-kasa">Kasada</span>';
-                    else if(c.durum === 'Tahsilde') durumBadge = '<span class="badge badge-tahsil">Tahsilde</span>';
-                    else if(c.durum === 'Ödenecek') durumBadge = '<span class="badge badge-kendi">Ödenecek</span>';
-                    else durumBadge = `<span class="badge" style="background:#f4f6f7; color:#566573;">${c.durum}</span>`;
-
-                    return `<tr${tamamlandi ? ' style="opacity:.55;"' : ''}>
-                        <td><strong>${c.cek_no}</strong></td>
-                        <td style="color:${renk}; font-weight:600; font-size:12px;">${c.islem_turu}</td>
-                        <td style="color:#7f8c8d; font-size:13px;">${girisTarihiYaz(c)}</td>
-                        <td><strong>${formatDate(c.vade_tarihi)}</strong></td>
-                        <td>${gunHtml}</td>
-                        <td style="text-align:right; font-weight:bold; color:${renk};">${formatMoney(c.tutar)}</td>
-                        <td>${durumBadge}</td>
-                        <td style="text-align:right;">${islemButonu(c.id)}</td>
-                    </tr>`;
-                }).join('');
+                document.querySelectorAll('.cari-item').forEach(el => el.classList.remove('active'));
+                this.classList.add('active');
+                cariEkstreGoster(cari);
             };
             container.appendChild(div);
         });
+        // Açık olan cari varsa tazele
+        if (seciliCari) {
+            const guncel = g_cariler.find(c => c.id === seciliCari.id);
+            if (guncel) cariEkstreGoster(guncel, true);
+        }
+    }
+
+    // İki tarih arasındaki gün farkı
+    function gunFarki(bas, son) {
+        if (!bas || !son) return null;
+        const a = new Date(bas); a.setHours(0,0,0,0);
+        const b = new Date(son); b.setHours(0,0,0,0);
+        return Math.round((b - a) / 86400000);
+    }
+
+    function cariEkstreGoster(cari, sessiz) {
+        seciliCari = cari;
+        document.getElementById('seciliCariBaslik').innerText = cari.unvan;
+        document.getElementById('btnEkstrePdf').classList.remove('hidden');
+        document.getElementById('cariTabloSarmal').classList.remove('hidden');
+
+        // Bu cariye ait tüm çekler — vadeye göre sıralı
+        const cekler = g_cekler.filter(c => c.cari_unvan === cari.unvan)
+            .slice().sort((a, b) => new Date(a.vade_tarihi) - new Date(b.vade_tarihi));
+
+        const tbody = document.getElementById('cariHareketGövde');
+        const ozetKutu = document.getElementById('cariOzetKutu');
+
+        if (cekler.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:#94a3b8; padding:22px;">Bu cariye ait çek kaydı yok.</td></tr>';
+            ozetKutu.innerHTML = '<div style="padding:16px; color:#94a3b8; font-size:13px;">Henüz işlem geçmişi bulunmuyor.</div>';
+            return;
+        }
+
+        // --- Hesaplamalar ---
+        let alinanTop = 0, alinanAdet = 0;
+        let aktifAlinanTop = 0, aktifAlinanAdet = 0;
+        let verilenTop = 0, verilenAdet = 0;
+        let aktifTop = 0, aktifAdet = 0;
+        let vadeAgirlik = 0, vadeTutarTop = 0, vadeliAdet = 0;
+
+        cekler.forEach(c => {
+            const tutar = Number(c.tutar) || 0;
+            const alinan = (c.islem_turu === 'Alınan Çek');
+            const bekliyor = (c.durum === 'Kasada' || c.durum === 'Tahsilde' || c.durum === 'Ödenecek');
+
+            if (alinan) {
+                alinanTop += tutar; alinanAdet++;
+                if (bekliyor) { aktifAlinanTop += tutar; aktifAlinanAdet++; }
+            } else {
+                verilenTop += tutar; verilenAdet++;
+            }
+
+            if (bekliyor) { aktifTop += tutar; aktifAdet++; }
+
+            // Ortalama vade: sadece cariden alınan çekler (giriş tarihi bilinenler)
+            if (alinan) {
+                const gt = girisTarihi(c);
+                const vg = gunFarki(gt, c.vade_tarihi);
+                if (vg !== null && vg >= 0) {
+                    vadeAgirlik += tutar * vg;
+                    vadeTutarTop += tutar;
+                    vadeliAdet++;
+                }
+            }
+        });
+
+        const ortVade = vadeTutarTop > 0 ? Math.round(vadeAgirlik / vadeTutarTop) : null;
+        const anlasmaVade = cari.anlasma_vade_gun;
+
+        // --- Anlaşma vade karşılaştırması ---
+        let vadeRenk = 'ozet-kutu', vadeMesaj = '', vadeMesajRenk = 'var(--faint)';
+        if (anlasmaVade && ortVade !== null) {
+            const fark = ortVade - anlasmaVade;
+            if (fark > 3) {
+                vadeRenk = 'ozet-kutu ozet-kirmizi';
+                vadeMesaj = `⚠ Anlaşmayı ${fark} gün aşıyor`;
+                vadeMesajRenk = 'var(--danger)';
+            } else if (fark >= -3) {
+                vadeRenk = 'ozet-kutu ozet-turuncu';
+                vadeMesaj = fark === 0 ? '● Anlaşmaya uygun' : `● Anlaşmaya yakın (${fark > 0 ? '+' : ''}${fark} gün)`;
+                vadeMesajRenk = 'var(--warning)';
+            } else {
+                vadeRenk = 'ozet-kutu ozet-yesil';
+                vadeMesaj = `✓ ${Math.abs(fark)} gün erken vadeli`;
+                vadeMesajRenk = 'var(--success)';
+            }
+        } else if (!anlasmaVade) {
+            vadeMesaj = 'Anlaşma vadesi girilmedi';
+        } else {
+            vadeMesaj = 'Vade verisi yetersiz';
+        }
+
+        // --- Özet kutuları ---
+        ozetKutu.innerHTML = `<div class="ekstre-ozet">
+            <div class="ozet-kutu ozet-mavi">
+                <div class="baslik">Toplam Giriş Yapılan</div>
+                <div class="deger">${formatMoney(alinanTop)}</div>
+                <div class="alt">${alinanAdet} adet · tüm zamanlar</div>
+            </div>
+            <div class="ozet-kutu ozet-yesil">
+                <div class="baslik">Alınan Çek (Bekleyen)</div>
+                <div class="deger">${formatMoney(aktifAlinanTop)}</div>
+                <div class="alt">${aktifAlinanAdet} adet</div>
+            </div>
+            <div class="ozet-kutu ozet-kirmizi">
+                <div class="baslik">Verilen Çek</div>
+                <div class="deger">${formatMoney(verilenTop)}</div>
+                <div class="alt">${verilenAdet} adet</div>
+            </div>
+            <div class="ozet-kutu">
+                <div class="baslik">Aktif (Bekleyen)</div>
+                <div class="deger" style="color:var(--accent);">${formatMoney(aktifTop)}</div>
+                <div class="alt">${aktifAdet} adet</div>
+            </div>
+            <div class="${vadeRenk}">
+                <div class="baslik">Ortalama Vade</div>
+                <div class="deger">${ortVade !== null ? ortVade + ' gün' : '—'}</div>
+                <div class="alt">${vadeliAdet} çek üzerinden</div>
+            </div>
+            <div class="ozet-kutu" style="background:#fff;">
+                <div class="baslik">Anlaşma Vade Günü</div>
+                <input type="number" class="vade-input" id="anlasmaVadeInput" value="${anlasmaVade || ''}" placeholder="—" min="0" max="365"
+                    onchange="anlasmaVadeKaydet(${cari.id}, this.value)">
+                <div class="vade-durum" style="color:${vadeMesajRenk};">${vadeMesaj}</div>
+            </div>
+        </div>
+        <div style="font-size:11.5px; font-weight:700; color:var(--muted); margin-bottom:8px; letter-spacing:.05em; text-transform:uppercase;">📅 Vade Takvimi <span style="font-weight:400; text-transform:none; letter-spacing:0;">(yakın vadeden uzağa)</span></div>`;
+
+        // --- Tablo satırları ---
+        tbody.innerHTML = cekler.map(c => {
+            const alinan = (c.islem_turu === 'Alınan Çek');
+            const renk = alinan ? 'var(--success)' : 'var(--danger)';
+            const tamamlandi = (c.durum === 'Ödendi');
+            const gt = girisTarihi(c);
+            const vadeGun = gunFarki(gt, c.vade_tarihi);
+            const kalan = calcDays(c.vade_tarihi);
+
+            let kalanHtml;
+            if (tamamlandi) kalanHtml = '<span style="color:#94a3b8;">—</span>';
+            else if (kalan < 0) kalanHtml = '<span style="color:var(--danger); font-weight:700;">Gecikti</span>';
+            else if (kalan <= 7) kalanHtml = `<span style="color:var(--danger); font-weight:700;">${kalan}</span>`;
+            else if (kalan <= 30) kalanHtml = `<span style="color:var(--warning); font-weight:700;">${kalan}</span>`;
+            else kalanHtml = `<span style="color:var(--success); font-weight:700;">${kalan}</span>`;
+
+            let durumBadge;
+            if (tamamlandi) durumBadge = '<span class="badge badge-gri">Tamamlandı</span>';
+            else if (c.durum === 'Kasada') durumBadge = '<span class="badge badge-kasa">Kasada</span>';
+            else if (c.durum === 'Tahsilde') durumBadge = '<span class="badge badge-tahsil">Tahsilde</span>';
+            else if (c.durum === 'Ödenecek') durumBadge = '<span class="badge badge-kendi">Ödenecek</span>';
+            else durumBadge = `<span class="badge badge-gri">${c.durum}</span>`;
+
+            return `<tr${tamamlandi ? ' style="opacity:.55;"' : ''}>
+                <td><strong>${c.cek_no}</strong></td>
+                <td style="color:${renk}; font-weight:600; font-size:12px;">${alinan ? 'Alınan' : 'Verilen'}</td>
+                <td style="color:var(--muted);">${gt ? formatDate(gt) : '<span style="color:#cbd5e1;">—</span>'}</td>
+                <td style="text-align:center; font-weight:600;">${vadeGun !== null && vadeGun >= 0 ? vadeGun + ' gün' : '<span style="color:#cbd5e1;">—</span>'}</td>
+                <td><strong>${formatDate(c.vade_tarihi)}</strong></td>
+                <td style="text-align:center;">${kalanHtml}</td>
+                <td style="text-align:right; font-weight:700; color:${renk};">${formatMoney(c.tutar)}</td>
+                <td>${durumBadge}</td>
+                <td style="text-align:right;">${islemButonu(c.id)}</td>
+            </tr>`;
+        }).join('');
+    }
+
+    // Anlaşma vadesini kaydet
+    async function anlasmaVadeKaydet(cariId, deger) {
+        const sayi = deger === '' ? null : parseInt(deger);
+        if (sayi !== null && (isNaN(sayi) || sayi < 0)) return alert('Geçerli bir gün sayısı giriniz.');
+
+        const { error } = await db.from('cariler').update({ anlasma_vade_gun: sayi }).eq('id', cariId);
+        if (error) return alert('Kaydedilemedi: ' + error.message + '\n\nNot: cariler tablosunda "anlasma_vade_gun" sütunu olmalı.');
+
+        const c = g_cariler.find(x => x.id === cariId);
+        if (c) { c.anlasma_vade_gun = sayi; cariEkstreGoster(c); }
+    }
+
+    // ================= EKSTRE PDF =================
+    function cariEkstrePdf() {
+        if (!seciliCari) return;
+        const cari = seciliCari;
+        const cekler = g_cekler.filter(c => c.cari_unvan === cari.unvan)
+            .slice().sort((a, b) => new Date(a.vade_tarihi) - new Date(b.vade_tarihi));
+
+        if (cekler.length === 0) return alert('Bu cariye ait çek kaydı bulunmuyor.');
+
+        let alinanTop = 0, alinanAdet = 0, verilenTop = 0, verilenAdet = 0, aktifTop = 0, aktifAdet = 0;
+        let vadeAgirlik = 0, vadeTutarTop = 0;
+
+        cekler.forEach(c => {
+            const tutar = Number(c.tutar) || 0;
+            const alinan = (c.islem_turu === 'Alınan Çek');
+            if (alinan) { alinanTop += tutar; alinanAdet++; } else { verilenTop += tutar; verilenAdet++; }
+            if (c.durum === 'Kasada' || c.durum === 'Tahsilde' || c.durum === 'Ödenecek') { aktifTop += tutar; aktifAdet++; }
+            if (alinan) {
+                const vg = gunFarki(girisTarihi(c), c.vade_tarihi);
+                if (vg !== null && vg >= 0) { vadeAgirlik += tutar * vg; vadeTutarTop += tutar; }
+            }
+        });
+
+        const ortVade = vadeTutarTop > 0 ? Math.round(vadeAgirlik / vadeTutarTop) : null;
+        const anlasma = cari.anlasma_vade_gun;
+        let vadeNot = '';
+        if (anlasma && ortVade !== null) {
+            const fark = ortVade - anlasma;
+            if (fark > 3) vadeNot = `Anlasma vadesini ${fark} gun asiyor`;
+            else if (fark >= -3) vadeNot = 'Anlasma vadesine uygun';
+            else vadeNot = `${Math.abs(fark)} gun erken vadeli`;
+        }
+
+        const bg = new Date();
+        const tarihStr = `${String(bg.getDate()).padStart(2,'0')}.${String(bg.getMonth()+1).padStart(2,'0')}.${bg.getFullYear()}`;
+
+        const satirlar = cekler.map(c => {
+            const alinan = (c.islem_turu === 'Alınan Çek');
+            const gt = girisTarihi(c);
+            const vg = gunFarki(gt, c.vade_tarihi);
+            const kalan = calcDays(c.vade_tarihi);
+            const tamam = (c.durum === 'Ödendi');
+            return `<tr>
+                <td>${c.cek_no}</td>
+                <td style="color:${alinan ? '#059669' : '#dc2626'};">${alinan ? 'Alinan' : 'Verilen'}</td>
+                <td>${gt ? formatDate(gt) : '-'}</td>
+                <td style="text-align:center;">${vg !== null && vg >= 0 ? vg : '-'}</td>
+                <td>${formatDate(c.vade_tarihi)}</td>
+                <td style="text-align:center;">${tamam ? '-' : (kalan < 0 ? 'Gecikti' : kalan)}</td>
+                <td style="text-align:right; font-weight:bold;">${formatMoney(c.tutar)}</td>
+                <td>${c.durum}</td>
+            </tr>`;
+        }).join('');
+
+        const html = `<div style="font-family:Arial,Helvetica,sans-serif; padding:26px; color:#0f172a; font-size:11px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #1e293b; padding-bottom:12px; margin-bottom:16px;">
+                <div>
+                    <div style="font-size:19px; font-weight:bold;">CARI EKSTRESI</div>
+                    <div style="font-size:15px; color:#334155; margin-top:3px;">${cari.unvan}</div>
+                </div>
+                <div style="text-align:right; font-size:10px; color:#64748b;">
+                    Rapor Tarihi: ${tarihStr}<br>Hazirlayan: ${aktifKullanici || '-'}
+                </div>
+            </div>
+
+            <table style="width:100%; border-collapse:collapse; margin-bottom:18px;">
+                <tr>
+                    <td style="width:25%; padding:9px; background:#eff6ff; border:1px solid #bfdbfe;">
+                        <div style="font-size:9px; color:#64748b; font-weight:bold;">TOPLAM GIRIS YAPILAN</div>
+                        <div style="font-size:14px; font-weight:bold; color:#2563eb;">${formatMoney(alinanTop)}</div>
+                        <div style="font-size:9px; color:#64748b;">${alinanAdet} adet cek</div>
+                    </td>
+                    <td style="width:25%; padding:9px; background:#fef2f2; border:1px solid #fecaca;">
+                        <div style="font-size:9px; color:#64748b; font-weight:bold;">VERILEN CEK</div>
+                        <div style="font-size:14px; font-weight:bold; color:#dc2626;">${formatMoney(verilenTop)}</div>
+                        <div style="font-size:9px; color:#64748b;">${verilenAdet} adet</div>
+                    </td>
+                    <td style="width:25%; padding:9px; background:#f8fafc; border:1px solid #e2e8f0;">
+                        <div style="font-size:9px; color:#64748b; font-weight:bold;">AKTIF BEKLEYEN</div>
+                        <div style="font-size:14px; font-weight:bold; color:#0f172a;">${formatMoney(aktifTop)}</div>
+                        <div style="font-size:9px; color:#64748b;">${aktifAdet} adet</div>
+                    </td>
+                    <td style="width:25%; padding:9px; background:#fffbeb; border:1px solid #fde68a;">
+                        <div style="font-size:9px; color:#64748b; font-weight:bold;">ORTALAMA VADE</div>
+                        <div style="font-size:14px; font-weight:bold; color:#d97706;">${ortVade !== null ? ortVade + ' gun' : '-'}</div>
+                        <div style="font-size:9px; color:#64748b;">${anlasma ? 'Anlasma: ' + anlasma + ' gun' : 'Anlasma girilmedi'}</div>
+                    </td>
+                </tr>
+            </table>
+
+            ${vadeNot ? `<div style="padding:9px 12px; background:#f1f5f9; border-left:3px solid #2563eb; margin-bottom:16px; font-size:11px;"><strong>Vade Degerlendirmesi:</strong> ${vadeNot}</div>` : ''}
+
+            <div style="font-size:12px; font-weight:bold; margin-bottom:8px;">CEK HAREKETLERI</div>
+            <table style="width:100%; border-collapse:collapse; font-size:10px;">
+                <thead>
+                    <tr style="background:#1e293b; color:#fff;">
+                        <th style="padding:7px; text-align:left;">Cek No</th>
+                        <th style="padding:7px; text-align:left;">Tur</th>
+                        <th style="padding:7px; text-align:left;">Giris Tarihi</th>
+                        <th style="padding:7px; text-align:center;">Vade Gunu</th>
+                        <th style="padding:7px; text-align:left;">Vade Tarihi</th>
+                        <th style="padding:7px; text-align:center;">Kalan</th>
+                        <th style="padding:7px; text-align:right;">Tutar</th>
+                        <th style="padding:7px; text-align:left;">Durum</th>
+                    </tr>
+                </thead>
+                <tbody>${satirlar}</tbody>
+            </table>
+
+            <div style="margin-top:22px; padding-top:10px; border-top:1px solid #e2e8f0; font-size:9px; color:#94a3b8; text-align:center;">
+                Bu belge Cek Yonetim Sistemi tarafindan otomatik olusturulmustur.
+            </div>
+        </div>`;
+
+        const kapsayici = document.createElement('div');
+        kapsayici.innerHTML = html;
+        kapsayici.querySelectorAll('tbody tr').forEach((tr, i) => {
+            tr.style.background = i % 2 ? '#f8fafc' : '#fff';
+            tr.querySelectorAll('td').forEach(td => { td.style.padding = '6px 7px'; td.style.borderBottom = '1px solid #e2e8f0'; });
+        });
+
+        const dosyaAdi = `Ekstre_${cari.unvan.replace(/[^a-zA-Z0-9ğüşıöçĞÜŞİÖÇ ]/g,'').replace(/\s+/g,'_')}_${tarihStr.replace(/\./g,'-')}.pdf`;
+
+        html2pdf().set({
+            margin: 8,
+            filename: dosyaAdi,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+        }).from(kapsayici).save();
     }
 
     function renderDropdowns() {
