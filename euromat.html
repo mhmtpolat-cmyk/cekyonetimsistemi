@@ -406,11 +406,13 @@
             <div class="card">
                 <h2><span class="sol"><i class="fa-solid fa-plus" style="color:var(--success);"></i> Yeni Kategori</span></h2>
                 <div class="form-row">
+                    <div class="form-group" style="flex:0 0 220px;"><label>Üst Kategori</label><select id="katUst" class="form-control" onchange="katFormGuncelle()"><option value="">— Ana kategori olarak ekle —</option></select></div>
                     <div class="form-group"><label>Kategori Adı</label><input type="text" id="katAd" class="form-control" placeholder="Örn: Personel Maaşı"></div>
-                    <div class="form-group" style="flex:0 0 170px;"><label>Tür</label><select id="katTur" class="form-control"><option value="CIKIS">📤 Gider</option><option value="GIRIS">📥 Gelir</option><option value="HER">🔄 Her ikisi</option></select></div>
-                    <div class="form-group" style="flex:0 0 110px;"><label>Renk</label><input type="color" id="katRenk" class="form-control" value="#2563eb" style="height:38px; padding:3px;"></div>
+                    <div class="form-group" style="flex:0 0 170px;" id="katTurDiv"><label>Tür</label><select id="katTur" class="form-control"><option value="CIKIS">📤 Gider</option><option value="GIRIS">📥 Gelir</option><option value="HER">🔄 Her ikisi</option></select></div>
+                    <div class="form-group" style="flex:0 0 110px;" id="katRenkDiv"><label>Renk</label><input type="color" id="katRenk" class="form-control" value="#2563eb" style="height:38px; padding:3px;"></div>
                     <div class="form-group" style="flex:0 0 auto; display:flex; align-items:flex-end;"><button class="btn btn-success" onclick="kategoriEkle()"><i class="fa-solid fa-plus"></i> Ekle</button></div>
                 </div>
+                <div style="font-size:12px; color:var(--muted); margin-top:4px;" id="katFormNot">Üst kategori seçerseniz alt kategori olarak eklenir; tür ve renk üst kategoriden gelir.</div>
             </div>
             <div class="grid-2">
                 <div class="card"><h2><span class="sol">📤 Gider Kategorileri</span></h2><div id="giderKatListe"></div></div>
@@ -443,7 +445,8 @@
             <div class="form-group"><label>Tutar (TL)</label><input type="text" id="fmTutar" class="form-control" placeholder="0,00" inputmode="decimal"></div>
             <div class="form-group" style="flex:0 0 160px;"><label>Tarih</label><input type="date" id="fmTarih" class="form-control"></div>
         </div>
-        <div class="form-group" id="fmKatDiv"><label>Kategori <span style="color:var(--danger);">*</span></label><select id="fmKategori" class="form-control"></select></div>
+        <div class="form-group" id="fmKatDiv"><label>Kategori <span style="color:var(--danger);">*</span></label><select id="fmKategori" class="form-control" onchange="altKategoriGuncelle()"></select></div>
+        <div class="form-group hidden" id="fmAltKatDiv"><label>Alt Kategori</label><select id="fmAltKategori" class="form-control"></select></div>
         <div class="form-group" id="fmCariDiv"><label>Cari</label><select id="fmCari" class="form-control"></select></div>
         <div class="form-group"><label>Açıklama</label><input type="text" id="fmAciklama" class="form-control" placeholder="Kısa açıklama"></div>
         <div class="form-group" id="fmBeklenenDiv">
@@ -526,10 +529,30 @@ const sayiOku = (m) => { if (!m) return NaN; return parseFloat(String(m).replace
 const hesapAdi = (id) => { const h = hesaplar.find(x => x.id === id); return h ? h.ad : (id || '-'); };
 const cariAdi = (id) => { const c = cariler.find(x => x.id == id); return c ? c.ad : ''; };
 const katBul = (ad) => kategoriler.find(k => k.ad === ad);
+
+// --- Alt kategori yardımcıları ---
+const anaKategoriler = () => kategoriler.filter(k => !k.ustId);
+const altKategoriler = (ustId) => kategoriler.filter(k => k.ustId === ustId);
+const katBulId = (id) => kategoriler.find(k => k.id === id);
+
+// Bir kategorinin ana kategorisini bulur (kendisi ana ise kendisini döner)
+function anaKatBul(ad) {
+    const k = katBul(ad);
+    if (!k) return null;
+    return k.ustId ? (katBulId(k.ustId) || k) : k;
+}
+
+// Kategori + alt kategori metnini birleştirir
+function katMetin(t) {
+    if (t.tur === 'TRANSFER') return 'Transfer';
+    if (!t.kategori) return '—';
+    return t.altKategori ? `${t.kategori} › ${t.altKategori}` : t.kategori;
+}
 const gunFark = (a, b) => { const x = new Date(a); x.setHours(0,0,0,0); const y = new Date(b); y.setHours(0,0,0,0); return Math.round((y - x) / 86400000); };
 
-const yetkiKategori = () => KATEGORI_YETKISI.includes((aktifKullaniciAdi || '').toLowerCase());
-const yetkiSilme = () => SILME_YETKISI.includes((aktifKullaniciAdi || '').toLowerCase());
+const kAdiKucuk = () => (aktifKullaniciAdi || '').toLocaleLowerCase('tr');
+const yetkiKategori = () => KATEGORI_YETKISI.some(y => kAdiKucuk().includes(y));
+const yetkiSilme = () => SILME_YETKISI.some(y => kAdiKucuk().includes(y));
 
 function modalAc(id) { document.getElementById(id).style.display = 'flex'; }
 function modalKapat(id) { document.getElementById(id).style.display = 'none'; }
@@ -547,7 +570,7 @@ window.onload = async function () {
         aktifKullaniciAdi = k ? k.kullanici_adi : girisAdi;
         aktifKullanici = k ? (k.ad_soyad || k.kullanici_adi) : girisAdi;
 
-        if (!SAYFA_YETKISI.includes(aktifKullaniciAdi.toLowerCase())) {
+        if (!SAYFA_YETKISI.some(y => aktifKullaniciAdi.toLocaleLowerCase('tr').includes(y))) {
             document.getElementById('acilis').style.display = 'none';
             document.getElementById('yetkiYok').classList.remove('hidden');
             return;
@@ -556,7 +579,7 @@ window.onload = async function () {
         document.getElementById('userGosterge').innerHTML =
             `<div class="avatar">${aktifKullanici.charAt(0).toUpperCase()}</div><span>${aktifKullanici}</span>`;
         if (yetkiKategori()) document.getElementById('mnKategori').classList.remove('hidden');
-        if (VARLIK_YETKISI.includes((aktifKullaniciAdi || '').toLowerCase())) {
+        if (VARLIK_YETKISI.some(y => kAdiKucuk().includes(y))) {
             document.getElementById('mnVarlik').classList.remove('hidden');
         }
 
@@ -586,11 +609,11 @@ async function verileriYukle() {
         islemler = (iR.data || []).map(t => ({
             id: parseInt(t.id), tarih: String(t.tarih).split('T')[0], tur: t.tur,
             hesap: t.hesap, hedefHesap: t.hedef_hesap, cariId: t.cari_id ? parseInt(t.cari_id) : null,
-            tutar: parseFloat(t.tutar) || 0, kategori: t.kategori || '', aciklama: t.aciklama || '',
+            tutar: parseFloat(t.tutar) || 0, kategori: t.kategori || '', altKategori: t.alt_kategori || '', aciklama: t.aciklama || '',
             beklenen: t.beklenen === true
         }));
         kategoriler = (kR.data && kR.data.length)
-            ? kR.data.map(k => ({ id: parseInt(k.id), ad: k.ad, tur: k.tur || 'CIKIS', renk: k.renk || '#64748b' }))
+            ? kR.data.map(k => ({ id: parseInt(k.id), ad: k.ad, tur: k.tur || 'CIKIS', renk: k.renk || '#64748b', ustId: k.ust_id ? parseInt(k.ust_id) : null }))
             : VARSAYILAN_KATEGORILER.slice();
 
         listeleriDoldur();
@@ -609,8 +632,22 @@ function listeleriDoldur() {
     document.getElementById('fmCari').innerHTML = '<option value="">— Cari seçilmedi —</option>' + cOps;
     document.getElementById('fCari').innerHTML = '<option value="ALL">Tüm Cariler</option>' + cOps;
 
-    document.getElementById('fKategori').innerHTML = '<option value="ALL">Tüm Kategoriler</option>' +
-        kategoriler.map(k => `<option value="${k.ad}">${k.ad}</option>`).join('');
+    // Kategori filtresi — alt kategoriler girintili görünür
+    let katOps = '<option value="ALL">Tüm Kategoriler</option>';
+    anaKategoriler().forEach(ana => {
+        katOps += `<option value="${ana.ad}">${ana.ad}</option>`;
+        altKategoriler(ana.id).forEach(alt => {
+            katOps += `<option value="ALT::${alt.ad}">&nbsp;&nbsp;&nbsp;› ${alt.ad}</option>`;
+        });
+    });
+    document.getElementById('fKategori').innerHTML = katOps;
+
+    // Kategori formundaki üst kategori listesi
+    const ustSec = document.getElementById('katUst');
+    if (ustSec) {
+        ustSec.innerHTML = '<option value="">— Ana kategori olarak ekle —</option>' +
+            anaKategoriler().map(k => `<option value="${k.id}">${k.ad}</option>`).join('');
+    }
 }
 
 // ================= GÖRÜNÜM =================
@@ -739,7 +776,7 @@ function beklenenYaz() {
             <td>${kalanHtml}</td>
             <td><span class="badge ${t.tur === 'GIRIS' ? 'b-giris' : 'b-cikis'}">${t.tur === 'GIRIS' ? 'GİRİŞ' : 'ÇIKIŞ'}</span></td>
             <td>${cariAdi(t.cariId) ? '<strong>' + cariAdi(t.cariId) + '</strong> — ' : ''}${t.aciklama}</td>
-            <td><span class="badge b-kat" style="${k ? 'border-color:' + k.renk + '55; color:' + k.renk : ''}">${t.kategori || '—'}</span></td>
+            <td><span class="badge b-kat" style="${k ? 'border-color:' + k.renk + '55; color:' + k.renk : ''}">${katMetin(t)}</span></td>
             <td style="text-align:right; font-weight:700; color:${t.tur === 'GIRIS' ? 'var(--success)' : 'var(--danger)'};">${para(t.tutar)}</td>
             <td style="text-align:right;">${islemButonu(t.id)}</td>
         </tr>`;
@@ -764,7 +801,7 @@ function satirYaz(t) {
         <td>${tarihYaz(t.tarih)}${t.beklenen ? ' <span class="badge b-bekleyen">beklenen</span>' : ''}</td>
         <td><strong>${hesapAdi(t.hesap)}</strong></td>
         <td><span class="badge ${sinif}">${etiket}</span></td>
-        <td>${t.tur === 'TRANSFER' ? '<span class="badge b-kat">Transfer</span>' : `<span class="badge b-kat" style="${k ? 'border-color:' + k.renk + '55; color:' + k.renk : ''}">${t.kategori || '—'}</span>`}</td>
+        <td>${t.tur === 'TRANSFER' ? '<span class="badge b-kat">Transfer</span>' : `<span class="badge b-kat" style="${k ? 'border-color:' + k.renk + '55; color:' + k.renk : ''}">${katMetin(t)}</span>`}</td>
         <td>${karsi ? '<strong>' + karsi + '</strong> — ' : ''}${t.aciklama}</td>
         <td style="text-align:right; font-weight:700; color:${renk};">${t.tur === 'CIKIS' ? '-' : ''}${para(t.tutar)}</td>
         <td style="text-align:right;">${islemButonu(t.id)}</td>
@@ -909,13 +946,17 @@ function filtrele() {
 
     return islemler.filter(t => {
         if (tur !== 'ALL' && t.tur !== tur) return false;
-        if (kat !== 'ALL' && t.kategori !== kat) return false;
+        if (kat !== 'ALL') {
+            if (kat.startsWith('ALT::')) {
+                if (t.altKategori !== kat.slice(5)) return false;
+            } else if (t.kategori !== kat) return false;
+        }
         if (cari !== 'ALL' && String(t.cariId) !== String(cari)) return false;
         if (hes !== 'ALL' && t.hesap !== hes && t.hedefHesap !== hes) return false;
         if (bas && t.tarih < bas) return false;
         if (bit && t.tarih > bit) return false;
         if (ara) {
-            const m = (t.aciklama + ' ' + cariAdi(t.cariId) + ' ' + hesapAdi(t.hesap) + ' ' + t.kategori).toLowerCase();
+            const m = (t.aciklama + ' ' + cariAdi(t.cariId) + ' ' + hesapAdi(t.hesap) + ' ' + t.kategori + ' ' + (t.altKategori || '')).toLowerCase();
             if (!m.includes(ara)) return false;
         }
         return true;
@@ -1015,7 +1056,7 @@ function cariDetayYaz() {
             <td>${tarihYaz(t.tarih)}${t.beklenen ? ' <span class="badge b-bekleyen">beklenen</span>' : ''}</td>
             <td>${hesapAdi(t.hesap)}</td>
             <td><span class="badge ${sinif}">${etiket}</span></td>
-            <td><span class="badge b-kat">${t.kategori || '—'}</span></td>
+            <td><span class="badge b-kat">${katMetin(t)}</span></td>
             <td>${t.aciklama}</td>
             <td style="text-align:right; font-weight:700; color:${renk};">${para(t.tutar)}</td>
             <td style="text-align:right;">${islemButonu(t.id)}</td>
@@ -1056,7 +1097,7 @@ function hesapDetayYaz() {
         return `<tr${t.beklenen ? ' style="background:var(--warning-bg);"' : ''}>
             <td>${tarihYaz(t.tarih)}${t.beklenen ? ' <span class="badge b-bekleyen">beklenen</span>' : ''}</td>
             <td><span class="badge ${giren ? 'b-giris' : 'b-cikis'}">${etiket}</span></td>
-            <td><span class="badge b-kat">${t.tur === 'TRANSFER' ? 'Transfer' : (t.kategori || '—')}</span></td>
+            <td><span class="badge b-kat">${katMetin(t)}</span></td>
             <td>${karsi ? '<strong>' + karsi + '</strong> — ' : ''}${t.aciklama}</td>
             <td style="text-align:right; color:var(--success); font-weight:700;">${giren ? para(t.tutar) : '—'}</td>
             <td style="text-align:right; color:var(--danger); font-weight:700;">${!giren ? para(t.tutar) : '—'}</td>
@@ -1099,24 +1140,59 @@ function raporYaz() {
         <th style="text-align:right; padding:14px; color:${tg-tc < 0 ? 'var(--danger)' : 'var(--success)'};">${tg-tc >= 0 ? '+' : ''}${para(tg - tc)}</th>
         <th style="text-align:right; padding:14px;">${ta}</th></tr>` : '';
 
-    // Kategori
+    // Kategori — ana kategori altında alt kırılım
     const kat = {};
     islemler.forEach(t => {
         if (t.beklenen || t.tur === 'TRANSFER') return;
         const k = t.kategori || 'Kategorisiz';
-        if (!kat[k]) kat[k] = { tur: t.tur, top: 0, adet: 0 };
+        if (!kat[k]) kat[k] = { tur: t.tur, top: 0, adet: 0, altlar: {} };
         kat[k].top += t.tutar; kat[k].adet++;
+        if (t.altKategori) {
+            if (!kat[k].altlar[t.altKategori]) kat[k].altlar[t.altKategori] = { top: 0, adet: 0 };
+            kat[k].altlar[t.altKategori].top += t.tutar;
+            kat[k].altlar[t.altKategori].adet++;
+        }
     });
     const kk = Object.keys(kat).sort((a, b) => kat[b].top - kat[a].top);
     document.getElementById('katRapor').innerHTML = kk.length ? kk.map(k => {
         const d = kat[k]; const kt = katBul(k);
-        return `<tr>
-            <td><span style="display:inline-block; width:9px; height:9px; border-radius:50%; background:${kt ? kt.renk : '#94a3b8'}; margin-right:8px;"></span><strong>${k}</strong></td>
+        const renk = kt ? kt.renk : '#94a3b8';
+        const tutarRenk = d.tur === 'GIRIS' ? 'var(--success)' : 'var(--danger)';
+
+        let satir = `<tr>
+            <td><span style="display:inline-block; width:9px; height:9px; border-radius:50%; background:${renk}; margin-right:8px;"></span><strong>${k}</strong></td>
             <td><span class="badge ${d.tur === 'GIRIS' ? 'b-giris' : 'b-cikis'}">${d.tur === 'GIRIS' ? 'Gelir' : 'Gider'}</span></td>
-            <td style="text-align:right; font-weight:700; color:${d.tur === 'GIRIS' ? 'var(--success)' : 'var(--danger)'};">${para(d.top)}</td>
+            <td style="text-align:right; font-weight:700; color:${tutarRenk};">${para(d.top)}</td>
             <td style="text-align:right; color:var(--muted);">${d.adet}</td>
             <td style="text-align:right; color:var(--muted);">${para(d.top / d.adet)}</td>
         </tr>`;
+
+        // Alt kategori satırları
+        const altAdlar = Object.keys(d.altlar).sort((a, b) => d.altlar[b].top - d.altlar[a].top);
+        altAdlar.forEach(a => {
+            const ad = d.altlar[a];
+            const pay = d.top ? ((ad.top * 100) / d.top).toFixed(0) : 0;
+            satir += `<tr style="background:#fafbfc;">
+                <td style="padding-left:32px; color:var(--muted); border-left:3px solid ${renk};">› ${a} <span style="font-size:11px; color:var(--faint);">(%${pay})</span></td>
+                <td></td>
+                <td style="text-align:right; font-weight:600; color:${tutarRenk}; opacity:.85;">${para(ad.top)}</td>
+                <td style="text-align:right; color:var(--faint);">${ad.adet}</td>
+                <td style="text-align:right; color:var(--faint);">${para(ad.top / ad.adet)}</td>
+            </tr>`;
+        });
+
+        // Alt kategorisi olmayan kısım
+        const altToplam = altAdlar.reduce((s, a) => s + d.altlar[a].top, 0);
+        const kalan = d.top - altToplam;
+        if (altAdlar.length > 0 && kalan > 0.01) {
+            satir += `<tr style="background:#fafbfc;">
+                <td style="padding-left:32px; color:var(--faint); border-left:3px solid ${renk}; font-style:italic;">› Alt kategorisiz</td>
+                <td></td>
+                <td style="text-align:right; color:var(--faint);">${para(kalan)}</td>
+                <td colspan="2"></td>
+            </tr>`;
+        }
+        return satir;
     }).join('') : '<tr><td colspan="5" class="empty">Henüz kayıt yok.</td></tr>';
 
     // Cari
@@ -1137,60 +1213,130 @@ function raporYaz() {
 }
 
 // ================= KATEGORİ YÖNETİMİ =================
+// Üst kategori seçilince tür/renk alanlarını gizle
+function katFormGuncelle() {
+    const ustId = document.getElementById('katUst').value;
+    const altMi = !!ustId;
+    document.getElementById('katTurDiv').style.display = altMi ? 'none' : '';
+    document.getElementById('katRenkDiv').style.display = altMi ? 'none' : '';
+    const ust = altMi ? katBulId(parseInt(ustId)) : null;
+    document.getElementById('katFormNot').innerHTML = altMi
+        ? `<strong>${ust ? ust.ad : ''}</strong> altına alt kategori eklenecek. Tür ve renk üst kategoriden alınır.`
+        : 'Üst kategori seçerseniz alt kategori olarak eklenir; tür ve renk üst kategoriden gelir.';
+}
+
 function kategorileriYaz() {
     if (!yetkiKategori()) { gorunum('dashboard'); return; }
 
     const yaz = (tur, hedef) => {
-        const liste = kategoriler.filter(k => k.tur === tur || k.tur === 'HER');
-        document.getElementById(hedef).innerHTML = liste.length ? liste.map(k => {
-            const kullanim = islemler.filter(t => t.kategori === k.ad).length;
+        const anaListe = anaKategoriler().filter(k => k.tur === tur || k.tur === 'HER');
+        if (!anaListe.length) {
+            document.getElementById(hedef).innerHTML = '<div class="empty">Bu türde kategori yok.</div>';
+            return;
+        }
+
+        document.getElementById(hedef).innerHTML = anaListe.map(k => {
+            const altlar = altKategoriler(k.id);
+            const anaKullanim = islemler.filter(t => t.kategori === k.ad).length;
+
+            const altHtml = altlar.map(a => {
+                const aKullanim = islemler.filter(t => t.altKategori === a.ad).length;
+                return `<div class="kat-satir" style="margin-left:26px; border-left:3px solid ${k.renk}; background:#fafbfc;">
+                    <div style="color:var(--faint); font-size:12px;">›</div>
+                    <div class="kat-ad" style="font-size:13px;">${a.ad}<div style="font-size:11px; color:var(--muted); font-weight:400;">${aKullanim} işlemde kullanılmış</div></div>
+                    <button class="btn btn-outline btn-sm" onclick="kategoriDuzenle(${a.id})"><i class="fa-solid fa-pen"></i></button>
+                    <button class="btn btn-outline btn-sm" style="color:var(--danger);" onclick="kategoriSil(${a.id}, '${a.ad.replace(/'/g,"")}', ${aKullanim})"><i class="fa-solid fa-trash"></i></button>
+                </div>`;
+            }).join('');
+
             return `<div class="kat-satir">
                 <div class="kat-nokta" style="background:${k.renk};"></div>
-                <div class="kat-ad">${k.ad}<div style="font-size:11px; color:var(--muted); font-weight:400;">${kullanim} işlemde kullanılmış</div></div>
+                <div class="kat-ad">${k.ad}<div style="font-size:11px; color:var(--muted); font-weight:400;">${anaKullanim} işlem · ${altlar.length} alt kategori</div></div>
                 ${k.tur === 'HER' ? '<span class="kat-tur" style="background:var(--accent-soft); color:var(--accent);">Her ikisi</span>' : ''}
+                <button class="btn btn-outline btn-sm" title="Alt kategori ekle" onclick="altKategoriEkleHazirla(${k.id})"><i class="fa-solid fa-plus"></i></button>
                 <button class="btn btn-outline btn-sm" onclick="kategoriDuzenle(${k.id})"><i class="fa-solid fa-pen"></i></button>
-                <button class="btn btn-outline btn-sm" style="color:var(--danger);" onclick="kategoriSil(${k.id}, '${k.ad.replace(/'/g,"")}', ${kullanim})"><i class="fa-solid fa-trash"></i></button>
-            </div>`;
-        }).join('') : '<div class="empty">Bu türde kategori yok.</div>';
+                <button class="btn btn-outline btn-sm" style="color:var(--danger);" onclick="kategoriSil(${k.id}, '${k.ad.replace(/'/g,"")}', ${anaKullanim})"><i class="fa-solid fa-trash"></i></button>
+            </div>${altHtml}`;
+        }).join('');
     };
 
     yaz('CIKIS', 'giderKatListe');
     yaz('GIRIS', 'gelirKatListe');
 }
 
+// "+" butonu: formu o ana kategori için hazırla
+function altKategoriEkleHazirla(ustId) {
+    document.getElementById('katUst').value = ustId;
+    katFormGuncelle();
+    const alan = document.getElementById('katAd');
+    alan.value = '';
+    alan.focus();
+    alan.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
 async function kategoriEkle() {
     if (!yetkiKategori()) return alert('Kategori ekleme yetkiniz yok.');
     const ad = document.getElementById('katAd').value.trim();
-    const tur = document.getElementById('katTur').value;
-    const renk = document.getElementById('katRenk').value;
-    if (!ad) return alert('Kategori adı giriniz.');
-    if (kategoriler.find(k => k.ad.toLowerCase() === ad.toLowerCase())) return alert('Bu kategori zaten var.');
+    const ustDeger = document.getElementById('katUst').value;
+    const ustId = ustDeger ? parseInt(ustDeger) : null;
 
-    const { error } = await db.from('euromat_kategoriler').insert([{ id: Date.now(), ad, tur, renk, kullanici: aktifKullaniciAdi }]);
-    if (error) return alert('Eklenemedi: ' + error.message);
+    if (!ad) return alert('Kategori adı giriniz.');
+    if (kategoriler.find(k => k.ad.toLowerCase() === ad.toLowerCase())) return alert('Bu isimde bir kategori zaten var.');
+
+    let tur, renk;
+    if (ustId) {
+        const ust = katBulId(ustId);
+        if (!ust) return alert('Üst kategori bulunamadı.');
+        tur = ust.tur; renk = ust.renk;          // Alt kategori üstünden devralır
+    } else {
+        tur = document.getElementById('katTur').value;
+        renk = document.getElementById('katRenk').value;
+    }
+
+    const { error } = await db.from('euromat_kategoriler')
+        .insert([{ id: Date.now(), ad, tur, renk, ust_id: ustId, kullanici: aktifKullaniciAdi }]);
+    if (error) return alert('Eklenemedi: ' + error.message + '\n\nNot: euromat_kategoriler tablosunda "ust_id" sütunu olmalı.');
+
     document.getElementById('katAd').value = '';
+    document.getElementById('katUst').value = '';
+    katFormGuncelle();
     await verileriYukle();
     kategorileriYaz();
 }
 
 async function kategoriDuzenle(id) {
     if (!yetkiKategori()) return;
-    const k = kategoriler.find(x => x.id === id);
+    const k = katBulId(id);
     if (!k) return;
     const yeni = prompt('Kategori adı:', k.ad);
     if (yeni === null || !yeni.trim()) return;
+    const yeniAd = yeni.trim();
+    if (yeniAd === k.ad) return;
+    if (kategoriler.find(x => x.id !== id && x.ad.toLowerCase() === yeniAd.toLowerCase())) return alert('Bu isimde bir kategori zaten var.');
 
-    const { error } = await db.from('euromat_kategoriler').update({ ad: yeni.trim() }).eq('id', id);
+    const { error } = await db.from('euromat_kategoriler').update({ ad: yeniAd }).eq('id', id);
     if (error) return alert('Güncellenemedi: ' + error.message);
 
     // Bu kategoriyi kullanan işlemleri de güncelle
-    await db.from('euromat_islemler').update({ kategori: yeni.trim() }).eq('kategori', k.ad);
+    if (k.ustId) await db.from('euromat_islemler').update({ alt_kategori: yeniAd }).eq('alt_kategori', k.ad);
+    else await db.from('euromat_islemler').update({ kategori: yeniAd }).eq('kategori', k.ad);
+
     await verileriYukle();
     kategorileriYaz();
 }
 
 async function kategoriSil(id, ad, kullanim) {
     if (!yetkiKategori()) return alert('Kategori silme yetkiniz yok.');
+    const k = katBulId(id);
+
+    // Ana kategoriyse önce alt kategorileri kontrol et
+    if (k && !k.ustId) {
+        const altlar = altKategoriler(id);
+        if (altlar.length > 0) {
+            return alert(`"${ad}" kategorisinin ${altlar.length} alt kategorisi var:\n\n${altlar.map(a => '• ' + a.ad).join('\n')}\n\nÖnce alt kategorileri silmelisiniz.`);
+        }
+    }
+
     if (kullanim > 0) return alert(`"${ad}" kategorisi ${kullanim} işlemde kullanılıyor.\n\nSilmeden önce bu işlemlerin kategorisini değiştirmelisiniz.`);
     if (!confirm(`"${ad}" kategorisi silinsin mi?`)) return;
 
@@ -1278,10 +1424,30 @@ function formGuncelle() {
 
     if (!transfer) {
         const uygun = kategoriler.filter(k => k.tur === tur || k.tur === 'HER');
-        document.getElementById('fmKategori').innerHTML = uygun.length
-            ? uygun.map(k => `<option value="${k.ad}">${k.ad}</option>`).join('')
+        const uygunAna = uygun.filter(k => !k.ustId);
+        document.getElementById('fmKategori').innerHTML = uygunAna.length
+            ? uygunAna.map(k => `<option value="${k.ad}">${k.ad}</option>`).join('')
             : '<option value="">— Kategori tanımlı değil —</option>';
+        altKategoriGuncelle();
     }
+}
+
+// Seçili ana kategoriye göre alt kategori listesini doldurur
+function altKategoriGuncelle() {
+    const anaAd = document.getElementById('fmKategori').value;
+    const div = document.getElementById('fmAltKatDiv');
+    const sec = document.getElementById('fmAltKategori');
+    const ana = katBul(anaAd);
+
+    const altlar = ana ? altKategoriler(ana.id) : [];
+    if (altlar.length === 0) {
+        div.classList.add('hidden');
+        sec.innerHTML = '';
+        return;
+    }
+    div.classList.remove('hidden');
+    sec.innerHTML = '<option value="">— Alt kategori seçilmedi —</option>' +
+        altlar.map(k => `<option value="${k.ad}">${k.ad}</option>`).join('');
 }
 
 async function islemKaydet() {
@@ -1294,7 +1460,7 @@ async function islemKaydet() {
     if (!tutar || tutar <= 0) return alert('Geçerli bir tutar giriniz.');
     if (!tarih) return alert('Tarih seçiniz.');
 
-    let kategori = null, cariId = null, hedef = null, beklenen = false;
+    let kategori = null, altKategori = null, cariId = null, hedef = null, beklenen = false;
 
     if (tur === 'TRANSFER') {
         hedef = document.getElementById('fmHedef').value;
@@ -1303,6 +1469,8 @@ async function islemKaydet() {
     } else {
         kategori = document.getElementById('fmKategori').value;
         if (!kategori) return alert('Kategori seçmelisiniz.\n\nKategori tanımlı değilse yöneticinize başvurun.');
+        const altDiv = document.getElementById('fmAltKatDiv');
+        altKategori = altDiv.classList.contains('hidden') ? null : (document.getElementById('fmAltKategori').value || null);
         const cd = document.getElementById('fmCari').value;
         cariId = cd ? parseInt(cd) : null;
         beklenen = document.getElementById('fmBeklenen').checked;
@@ -1314,7 +1482,7 @@ async function islemKaydet() {
     try {
         const kayit = {
             tarih, tur, hesap, hedef_hesap: hedef, cari_id: cariId,
-            tutar, kategori, aciklama, beklenen, kullanici: aktifKullaniciAdi
+            tutar, kategori, alt_kategori: altKategori, aciklama, beklenen, kullanici: aktifKullaniciAdi
         };
         if (duzenlenenId) {
             const { error } = await db.from('euromat_islemler').update(kayit).eq('id', duzenlenenId);
@@ -1345,6 +1513,15 @@ function islemDuzenle(id) {
     if (t.tur === 'TRANSFER') { if (t.hedefHesap) document.getElementById('fmHedef').value = t.hedefHesap; }
     else {
         document.getElementById('fmKategori').value = t.kategori;
+        altKategoriGuncelle();
+        if (t.altKategori) {
+            const altSec = document.getElementById('fmAltKategori');
+            if (!Array.from(altSec.options).some(o => o.value === t.altKategori)) {
+                altSec.innerHTML += `<option value="${t.altKategori}">${t.altKategori} (eski)</option>`;
+                document.getElementById('fmAltKatDiv').classList.remove('hidden');
+            }
+            altSec.value = t.altKategori;
+        }
         document.getElementById('fmCari').value = t.cariId || '';
         document.getElementById('fmBeklenen').checked = t.beklenen;
     }
@@ -1461,7 +1638,7 @@ function hareketPdf() {
     const satirlar = liste.map(t => `<tr>
         <td>${tarihYaz(t.tarih)}</td><td>${hesapAdi(t.hesap)}</td>
         <td>${t.tur === 'GIRIS' ? 'Giris' : (t.tur === 'CIKIS' ? 'Cikis' : 'Transfer')}</td>
-        <td>${t.kategori || '-'}</td><td>${cariAdi(t.cariId) || '-'}</td><td>${t.aciklama}</td>
+        <td>${t.kategori || '-'}${t.altKategori ? ' > ' + t.altKategori : ''}</td><td>${cariAdi(t.cariId) || '-'}</td><td>${t.aciklama}</td>
         <td style="text-align:right; font-weight:bold;">${para(t.tutar)}</td>
         <td>${t.beklenen ? 'Beklenen' : 'Gerceklesti'}</td></tr>`).join('');
 
@@ -1487,7 +1664,7 @@ function cariPdf() {
 
     const satirlar = ler.map(t => `<tr>
         <td>${tarihYaz(t.tarih)}</td><td>${hesapAdi(t.hesap)}</td>
-        <td>${t.tur === 'GIRIS' ? 'Giris' : 'Cikis'}</td><td>${t.kategori || '-'}</td>
+        <td>${t.tur === 'GIRIS' ? 'Giris' : 'Cikis'}</td><td>${t.kategori || '-'}${t.altKategori ? ' > ' + t.altKategori : ''}</td>
         <td>${t.aciklama}</td><td style="text-align:right; font-weight:bold;">${para(t.tutar)}</td>
         <td>${t.beklenen ? 'Beklenen' : 'Gerceklesti'}</td></tr>`).join('');
 
