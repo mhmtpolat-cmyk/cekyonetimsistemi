@@ -368,7 +368,7 @@
         <div id="v-hesapDetay" class="hidden">
             <div class="header"><div><h1 id="hdBaslik">Hesap</h1><div class="alt" id="hdAlt"></div></div>
                 <div style="display:flex; gap:9px;">
-                    <button class="btn btn-outline" onclick="hesapDuzenleAc(seciliHesapId)"><i class="fa-solid fa-pen"></i> Düzenle</button>
+                    <button class="btn btn-outline" onclick="hesapDuzenleAc()"><i class="fa-solid fa-pen"></i> Düzenle</button>
                     <button class="btn btn-outline" onclick="gorunum('dashboard')"><i class="fa-solid fa-arrow-left"></i> Geri</button>
                 </div>
             </div>
@@ -1647,11 +1647,11 @@ function hesapModalAc() {
     modalAc('modalHesap');
 }
 
-// Mevcut hesabı düzenlemek için açar
-function hesapDuzenleAc(id) {
-    const h = hesaplar.find(x => x.id === id);
-    if (!h) return;
-    duzenlenenHesapId = id;
+// Açık olan hesabı düzenlemek için modalı hazırlar
+function hesapDuzenleAc() {
+    const h = seciliHesap;
+    if (!h) { alert('Önce bir hesap seçin.'); return; }
+    duzenlenenHesapId = h.id;
     document.getElementById('hesapModalBaslik').innerText = 'Hesabı Düzenle';
     document.getElementById('btnHesapKaydet').innerText = 'Güncelle';
     document.getElementById('hesapAd').value = h.ad;
@@ -1695,6 +1695,11 @@ async function hesapKaydet() {
         }
         modalKapat('modalHesap');
         await verileriYukle();
+        // Açık olan hesap detayını güncel veriyle tazele
+        if (seciliHesap) {
+            const guncel = hesaplar.find(x => x.id === seciliHesap.id);
+            if (guncel) seciliHesap = guncel;
+        }
         if (!document.getElementById('v-hesapDetay').classList.contains('hidden')) hesapDetayYaz();
     } catch (e) {
         alert('Kaydedilemedi: ' + e.message + '\n\nNot: euromat_hesaplar tablosunda "kod" sütunu olmalı.');
