@@ -367,7 +367,20 @@
         <!-- ============ HESAP DETAY ============ -->
         <div id="v-hesapDetay" class="hidden">
             <div class="header"><div><h1 id="hdBaslik">Hesap</h1><div class="alt" id="hdAlt"></div></div>
-                <button class="btn btn-outline" onclick="gorunum('dashboard')"><i class="fa-solid fa-arrow-left"></i> Geri</button>
+                <div style="display:flex; gap:9px;">
+                    <button class="btn btn-outline" onclick="hesapDuzenleAc(seciliHesapId)"><i class="fa-solid fa-pen"></i> Düzenle</button>
+                    <button class="btn btn-outline" onclick="gorunum('dashboard')"><i class="fa-solid fa-arrow-left"></i> Geri</button>
+                </div>
+            </div>
+            <div class="card" id="hdKodKart" style="display:none; padding:16px 18px;">
+                <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                    <div style="width:42px; height:42px; border-radius:10px; background:var(--accent-soft); color:var(--accent); display:flex; align-items:center; justify-content:center; font-size:17px;"><i class="fa-solid fa-key"></i></div>
+                    <div>
+                        <div style="font-size:10.5px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--muted);">Hesap Kodu</div>
+                        <div id="hdKod" style="font-family:monospace; font-size:26px; font-weight:700; letter-spacing:6px; color:var(--text); line-height:1.25;">——————</div>
+                    </div>
+                    <button class="btn btn-outline btn-sm" style="margin-left:auto;" onclick="kodKopyala()"><i class="fa-solid fa-copy"></i> Kopyala</button>
+                </div>
             </div>
             <div class="card">
                 <div class="grid-4" id="hdOzet"></div>
@@ -477,11 +490,12 @@
 <!-- HESAP MODAL -->
 <div id="modalHesap" class="modal-overlay">
     <div class="modal" style="width:420px;">
-        <h2>Banka / Kasa Ekle</h2>
+        <h2 id="hesapModalBaslik">Banka / Kasa Ekle</h2>
         <div class="form-group"><label>Hesap Adı</label><input type="text" id="hesapAd" class="form-control" placeholder="Örn: Ziraat Bankası, Merkez Kasa"></div>
-        <div class="form-group"><label>Tür</label><select id="hesapTur" class="form-control"><option value="banka">🏦 Banka Hesabı</option><option value="kasa">💰 Nakit Kasa</option></select></div>
-        <div class="form-group"><label>Açılış Bakiyesi (TL)</label><input type="text" id="hesapBakiye" class="form-control" placeholder="0,00" inputmode="decimal"><div style="font-size:11.5px; color:var(--muted); margin-top:5px;">Hesapta hâlihazırda para varsa buraya yazın.</div></div>
-        <div class="modal-actions"><button class="btn btn-outline" onclick="modalKapat('modalHesap')">İptal</button><button class="btn btn-success" onclick="hesapKaydet()">Kaydet</button></div>
+        <div class="form-group" id="hesapTurDiv"><label>Tür</label><select id="hesapTur" class="form-control"><option value="banka">🏦 Banka Hesabı</option><option value="kasa">💰 Nakit Kasa</option></select></div>
+        <div class="form-group"><label>Hesap Kodu</label><input type="text" id="hesapKod" class="form-control" placeholder="Örn: 123456" maxlength="6" inputmode="numeric" style="letter-spacing:3px; font-family:monospace; font-size:16px;"><div style="font-size:11.5px; color:var(--muted); margin-top:5px;">6 haneli kendi kodunuz. Yalnızca hesap detay sayfasında görünür.</div></div>
+        <div class="form-group" id="hesapBakiyeDiv"><label>Açılış Bakiyesi (TL)</label><input type="text" id="hesapBakiye" class="form-control" placeholder="0,00" inputmode="decimal"><div style="font-size:11.5px; color:var(--muted); margin-top:5px;">Hesapta hâlihazırda para varsa buraya yazın.</div></div>
+        <div class="modal-actions"><button class="btn btn-outline" onclick="modalKapat('modalHesap')">İptal</button><button class="btn btn-success" id="btnHesapKaydet" onclick="hesapKaydet()">Kaydet</button></div>
     </div>
 </div>
 
@@ -604,7 +618,7 @@ async function verileriYukle() {
             db.from('euromat_kategoriler').select('*').order('ad')
         ]);
 
-        hesaplar = (hR.data || []).map(h => ({ id: h.id, ad: h.ad, tur: h.tur || 'banka', acilis: parseFloat(h.acilis_bakiye) || 0 }));
+        hesaplar = (hR.data || []).map(h => ({ id: h.id, ad: h.ad, tur: h.tur || 'banka', kod: h.kod || '', acilis: parseFloat(h.acilis_bakiye) || 0 }));
         cariler = (cR.data || []).map(c => ({ id: parseInt(c.id), ad: c.ad, tel: c.telefon || '', not: c.notlar || '' }));
         islemler = (iR.data || []).map(t => ({
             id: parseInt(t.id), tarih: String(t.tarih).split('T')[0], tur: t.tur,
@@ -637,7 +651,7 @@ function listeleriDoldur() {
     anaKategoriler().forEach(ana => {
         katOps += `<option value="${ana.ad}">${ana.ad}</option>`;
         altKategoriler(ana.id).forEach(alt => {
-            katOps += `<option value="ALT::${alt.ad}">&nbsp;&nbsp;&nbsp;› ${alt.ad}</option>`;
+            katOps += `<option value="ALT::${ana.ad}::${alt.ad}">&nbsp;&nbsp;&nbsp;› ${alt.ad}</option>`;
         });
     });
     document.getElementById('fKategori').innerHTML = katOps;
@@ -948,7 +962,10 @@ function filtrele() {
         if (tur !== 'ALL' && t.tur !== tur) return false;
         if (kat !== 'ALL') {
             if (kat.startsWith('ALT::')) {
-                if (t.altKategori !== kat.slice(5)) return false;
+                // "ALT::AnaKategori::AltKategori" — aynı isimli alt kategoriler karışmasın
+                const p = kat.split('::');
+                if (p.length === 3) { if (t.kategori !== p[1] || t.altKategori !== p[2]) return false; }
+                else if (t.altKategori !== p[1]) return false;
             } else if (t.kategori !== kat) return false;
         }
         if (cari !== 'ALL' && String(t.cariId) !== String(cari)) return false;
@@ -1073,6 +1090,15 @@ function hesapDetayYaz() {
     const bak = bakiyeler();
     document.getElementById('hdBaslik').innerText = h.ad;
     document.getElementById('hdAlt').innerText = (h.tur === 'kasa' ? 'Nakit Kasa' : 'Banka Hesabı') + ' · hareket dökümü';
+
+    // Hesap kodu — sadece tanımlıysa göster
+    const kodKart = document.getElementById('hdKodKart');
+    if (h.kod) {
+        kodKart.style.display = '';
+        document.getElementById('hdKod').innerText = h.kod;
+    } else {
+        kodKart.style.display = 'none';
+    }
 
     const ler = islemler.filter(t => t.hesap === h.id || t.hedefHesap === h.id);
     let g = 0, c = 0;
@@ -1240,7 +1266,8 @@ function kategorileriYaz() {
             const anaKullanim = islemler.filter(t => t.kategori === k.ad).length;
 
             const altHtml = altlar.map(a => {
-                const aKullanim = islemler.filter(t => t.altKategori === a.ad).length;
+                // Kullanım sayısı: aynı ana kategori altındaki bu alt kategori
+                const aKullanim = islemler.filter(t => t.altKategori === a.ad && t.kategori === k.ad).length;
                 return `<div class="kat-satir" style="margin-left:26px; border-left:3px solid ${k.renk}; background:#fafbfc;">
                     <div style="color:var(--faint); font-size:12px;">›</div>
                     <div class="kat-ad" style="font-size:13px;">${a.ad}<div style="font-size:11px; color:var(--muted); font-weight:400;">${aKullanim} işlemde kullanılmış</div></div>
@@ -1281,7 +1308,17 @@ async function kategoriEkle() {
     const ustId = ustDeger ? parseInt(ustDeger) : null;
 
     if (!ad) return alert('Kategori adı giriniz.');
-    if (kategoriler.find(k => k.ad.toLowerCase() === ad.toLowerCase())) return alert('Bu isimde bir kategori zaten var.');
+
+    // İsim kontrolü: aynı seviyede benzersiz olmalı
+    // Farklı ana kategoriler altında aynı isimli alt kategori olabilir (Personel › Diğer, Kira › Diğer gibi)
+    const ayniSeviye = kategoriler.find(k =>
+        (k.ustId || null) === ustId && k.ad.toLowerCase() === ad.toLowerCase()
+    );
+    if (ayniSeviye) {
+        return alert(ustId
+            ? `"${katBulId(ustId)?.ad}" altında zaten "${ad}" adlı bir alt kategori var.`
+            : `"${ad}" adlı bir ana kategori zaten var.`);
+    }
 
     let tur, renk;
     if (ustId) {
@@ -1312,14 +1349,27 @@ async function kategoriDuzenle(id) {
     if (yeni === null || !yeni.trim()) return;
     const yeniAd = yeni.trim();
     if (yeniAd === k.ad) return;
-    if (kategoriler.find(x => x.id !== id && x.ad.toLowerCase() === yeniAd.toLowerCase())) return alert('Bu isimde bir kategori zaten var.');
+
+    // Aynı seviyede çakışma var mı?
+    const cakisma = kategoriler.find(x =>
+        x.id !== id && (x.ustId || null) === (k.ustId || null) && x.ad.toLowerCase() === yeniAd.toLowerCase()
+    );
+    if (cakisma) return alert('Aynı seviyede bu isimde bir kategori zaten var.');
 
     const { error } = await db.from('euromat_kategoriler').update({ ad: yeniAd }).eq('id', id);
     if (error) return alert('Güncellenemedi: ' + error.message);
 
-    // Bu kategoriyi kullanan işlemleri de güncelle
-    if (k.ustId) await db.from('euromat_islemler').update({ alt_kategori: yeniAd }).eq('alt_kategori', k.ad);
-    else await db.from('euromat_islemler').update({ kategori: yeniAd }).eq('kategori', k.ad);
+    // İlgili işlemleri de güncelle
+    if (k.ustId) {
+        // Alt kategori — sadece kendi ana kategorisi altındakiler değişmeli
+        const ust = katBulId(k.ustId);
+        if (ust) {
+            await db.from('euromat_islemler').update({ alt_kategori: yeniAd })
+                .eq('alt_kategori', k.ad).eq('kategori', ust.ad);
+        }
+    } else {
+        await db.from('euromat_islemler').update({ kategori: yeniAd }).eq('kategori', k.ad);
+    }
 
     await verileriYukle();
     kategorileriYaz();
@@ -1571,21 +1621,86 @@ async function cariKaydet() {
     carileriYaz();
 }
 
-function hesapModalAc() { document.getElementById('hesapAd').value = ''; document.getElementById('hesapBakiye').value = ''; modalAc('modalHesap'); }
+// Hesap kodunu panoya kopyalar
+function kodKopyala() {
+    const kod = document.getElementById('hdKod').innerText.trim();
+    if (!kod || kod.startsWith('—')) return;
+    navigator.clipboard.writeText(kod).then(() => {
+        const b = event.currentTarget;
+        const eski = b.innerHTML;
+        b.innerHTML = '<i class="fa-solid fa-check"></i> Kopyalandı';
+        setTimeout(() => { b.innerHTML = eski; }, 1500);
+    }).catch(() => alert('Kod: ' + kod));
+}
+
+let duzenlenenHesapId = null;
+
+function hesapModalAc() {
+    duzenlenenHesapId = null;
+    document.getElementById('hesapModalBaslik').innerText = 'Banka / Kasa Ekle';
+    document.getElementById('btnHesapKaydet').innerText = 'Kaydet';
+    document.getElementById('hesapAd').value = '';
+    document.getElementById('hesapKod').value = '';
+    document.getElementById('hesapBakiye').value = '';
+    document.getElementById('hesapTurDiv').style.display = '';
+    document.getElementById('hesapBakiyeDiv').style.display = '';
+    modalAc('modalHesap');
+}
+
+// Mevcut hesabı düzenlemek için açar
+function hesapDuzenleAc(id) {
+    const h = hesaplar.find(x => x.id === id);
+    if (!h) return;
+    duzenlenenHesapId = id;
+    document.getElementById('hesapModalBaslik').innerText = 'Hesabı Düzenle';
+    document.getElementById('btnHesapKaydet').innerText = 'Güncelle';
+    document.getElementById('hesapAd').value = h.ad;
+    document.getElementById('hesapKod').value = h.kod || '';
+    document.getElementById('hesapBakiye').value = h.acilis ? String(h.acilis).replace('.', ',') : '';
+    document.getElementById('hesapTurDiv').style.display = 'none';   // tür sonradan değişmesin
+    document.getElementById('hesapBakiyeDiv').style.display = '';
+    modalAc('modalHesap');
+}
 
 async function hesapKaydet() {
     const ad = document.getElementById('hesapAd').value.trim();
-    const tur = document.getElementById('hesapTur').value;
+    const kodHam = document.getElementById('hesapKod').value.trim();
     const bak = sayiOku(document.getElementById('hesapBakiye').value) || 0;
     if (!ad) return alert('Hesap adı giriniz.');
 
-    const onEk = tur === 'kasa' ? 'KASA_' : 'BANKA_';
-    const { error } = await db.from('euromat_hesaplar').insert([{
-        id: onEk + Date.now(), ad, tur, acilis_bakiye: bak, kullanici: aktifKullaniciAdi
-    }]);
-    if (error) return alert('Kaydedilemedi: ' + error.message);
-    modalKapat('modalHesap');
-    await verileriYukle();
+    // Kod kontrolü — boş bırakılabilir, girilirse 6 hane olmalı
+    let kod = null;
+    if (kodHam) {
+        if (!/^[0-9]{6}$/.test(kodHam)) return alert('Hesap kodu 6 haneli sayı olmalıdır.\n\nÖrnek: 123456');
+        const cakisma = hesaplar.find(x => x.kod === kodHam && x.id !== duzenlenenHesapId);
+        if (cakisma) return alert(`Bu kod zaten "${cakisma.ad}" hesabında kullanılıyor.`);
+        kod = kodHam;
+    }
+
+    const btn = document.getElementById('btnHesapKaydet');
+    btn.disabled = true;
+
+    try {
+        if (duzenlenenHesapId) {
+            const { error } = await db.from('euromat_hesaplar')
+                .update({ ad, kod, acilis_bakiye: bak }).eq('id', duzenlenenHesapId);
+            if (error) throw error;
+        } else {
+            const tur = document.getElementById('hesapTur').value;
+            const onEk = tur === 'kasa' ? 'KASA_' : 'BANKA_';
+            const { error } = await db.from('euromat_hesaplar').insert([{
+                id: onEk + Date.now(), ad, tur, kod, acilis_bakiye: bak, kullanici: aktifKullaniciAdi
+            }]);
+            if (error) throw error;
+        }
+        modalKapat('modalHesap');
+        await verileriYukle();
+        if (!document.getElementById('v-hesapDetay').classList.contains('hidden')) hesapDetayYaz();
+    } catch (e) {
+        alert('Kaydedilemedi: ' + e.message + '\n\nNot: euromat_hesaplar tablosunda "kod" sütunu olmalı.');
+    } finally {
+        btn.disabled = false;
+    }
 }
 
 // ================= PDF =================
