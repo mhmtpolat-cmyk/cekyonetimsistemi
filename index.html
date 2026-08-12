@@ -118,7 +118,6 @@
         .empty-message { text-align: center; color: var(--faint); font-size: 13px; padding: 22px 0; }
 
         .charts-container { display: grid; grid-template-columns: 2fr 1fr; gap: 18px; margin-bottom: 22px; }
-        .charts-full-container { display: grid; grid-template-columns: 1fr; gap: 18px; margin-bottom: 22px; }
         .chart-box { background: var(--card-bg); padding: 18px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); }
         .chart-box h2 { font-size: 14px; font-weight: 700; margin: 0 0 14px 0; }
 
@@ -345,8 +344,16 @@
             <div class="chart-box"><h2>📊 Aylık Çek Çıkış Trendi <span style="font-size:12px; font-weight:400; color:var(--muted);">(Vade tarihine göre, önümüzdeki 6 ay)</span></h2><canvas id="barChart" height="100"></canvas></div>
             <div class="chart-box"><h2>⚖️ Varlık / Yükümlülük</h2><canvas id="pieChart" height="200"></canvas></div>
         </div>
-        <div class="charts-full-container">
-            <div class="chart-box"><h2>📅 Portföy Vade Dağılımı <span style="font-size:12px; font-weight:400; color:var(--muted);">(Kasadaki Çekler)</span></h2><canvas id="portfoyChart" height="80"></canvas></div>
+
+        <div class="agenda-grid">
+            <div class="agenda-box">
+                <h2 style="color:var(--success);"><i class="fa-solid fa-ranking-star"></i> En Çok Çek Aldıklarımız</h2>
+                <div id="topListGiris"><div class="empty-message">Kayıt bulunmuyor.</div></div>
+            </div>
+            <div class="agenda-box">
+                <h2 style="color:var(--danger);"><i class="fa-solid fa-ranking-star"></i> En Çok Çek Verdiklerimiz</h2>
+                <div id="topListCikis"><div class="empty-message">Kayıt bulunmuyor.</div></div>
+            </div>
         </div>
 
         <div class="list-box">
@@ -662,7 +669,7 @@
 
     // ================= ÇEK YÖNETİM SİSTEMİ MANTIĞI =================
     let g_cariler = []; let g_cekler = [];
-    let pieChartInstance = null; let barChartInstance = null; let portfoyChartInstance = null;
+    let pieChartInstance = null; let barChartInstance = null;
 
     async function loadData() {
         const { data: cariData } = await db.from('cariler').select('*').order('unvan', { ascending: true }); g_cariler = cariData || []; 
@@ -921,6 +928,97 @@
     // ================= CARİ EKSTRE =================
     let seciliCari = null;
 
+    // ================= CARİ TOP LİSTE =================
+    function renderTopListeler() {
+        const giris = {}, cikis = {};
+
+        g_cekler.forEach(c => {
+            const tutar = Number(c.tutar) || 0;
+
+            // Cariden alınan çekler
+            if (c.islem_turu === 'Alınan Çek' && c.cari_unvan) {
+                if (!giris[c.cari_unvan]) giris[c.cari_unvan] = { top: 0, adet: 0 };
+                giris[c.cari_unvan].top += tutar; giris[c.cari_unvan].adet++;
+            }
+
+            // Cariye ciro edilen kasa çekleri
+            if (c.durum === 'Ciro Edildi' && c.banka_bilgisi) {
+                if (!cikis[c.banka_bilgisi]) cikis[c.banka_bilgisi] = { top: 0, adet: 0 };
+                cikis[c.banka_bilgisi].top += tutar; cikis[c.banka_bilgisi].adet++;
+            }
+
+            // Kendi kestiğimiz, cariye verilen çekler (bankaya değil)
+            if (c.islem_turu === 'Kendi Çekimiz' && c.cari_unvan && !c.banka_bilgisi) {
+                if (!cikis[c.cari_unvan]) cikis[c.cari_unvan] = { top: 0, adet: 0 };
+                cikis[c.cari_unvan].top += tutar; cikis[c.cari_unvan].adet++;
+            }
+        });
+
+        const yaz = (veri, hedefId, renk) => {
+            const sirali = Object.keys(veri).sort((a, b) => veri[b].top - veri[a].top).slice(0, 8);
+            const el = document.getElementById(hedefId);
+            if (sirali.length === 0) { el.innerHTML = '<div class="empty-message">Kayıt bulunmuyor.</div>'; return; }
+
+            const enBuyuk = veri[sirali[0]].top;
+            const genelToplam = Object.keys(veri).reduce((s, k) => s + veri[k].top, 0);
+
+            el.innerHTML = sirali.map((ad, i) => {
+                const d = veri[ad];
+                const oran = enBuyuk ? (d.top / enBuyuk) * 100 : 0;
+                const pay = genelToplam ? ((d.top * 100) / genelToplam).toFixed(1) : 0;
+                return `<div style="padding:9px 0; border-bottom:1px solid #f1f5f9; cursor:pointer;" onclick="cariEkstresiAc('${ad.replace(/'/g, "\\'")}')">
+                    <div style="display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:5px;">
+                        <div style="font-size:13px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                            <span style="display:inline-block; width:19px; height:19px; line-height:19px; text-align:center; border-radius:5px; background:#f1f5f9; color:var(--muted); font-size:10.5px; font-weight:700; margin-right:7px;">${i + 1}</span>${ad}
+                        </div>
+                        <div style="text-align:right; white-space:nowrap;">
+                            <div style="font-size:13.5px; font-weight:700; color:${renk};">${formatMoney(d.top)}</div>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:9px;">
+                        <div style="flex-grow:1; height:5px; background:#f1f5f9; border-radius:3px; overflow:hidden;">
+                            <div style="width:${oran}%; height:100%; background:${renk}; border-radius:3px;"></div>
+                        </div>
+                        <div style="font-size:10.5px; color:var(--faint); white-space:nowrap;">${d.adet} çek · %${pay}</div>
+                    </div>
+                </div>`;
+            }).join('');
+        };
+
+        yaz(giris, 'topListGiris', 'var(--success)');
+        yaz(cikis, 'topListCikis', 'var(--danger)');
+    }
+
+    // Top listeden cari ekstresini açar
+    function cariEkstresiAc(unvan) {
+        const cari = g_cariler.find(c => c.unvan === unvan);
+        if (!cari) return alert('Bu cari kayıtlı değil: ' + unvan);
+        openModal('modalCariYonetim');
+        setTimeout(() => {
+            document.querySelectorAll('.cari-item').forEach(el => {
+                if (el.innerText === unvan) { el.classList.add('active'); el.scrollIntoView({ block: 'center' }); }
+                else el.classList.remove('active');
+            });
+            cariEkstreGoster(cari);
+        }, 60);
+    }
+
+
+    // 1) Ondan alınan çekler (cari_unvan)
+    // 2) Ona ciro edilen kasa çekleri (banka_bilgisi + Ciro Edildi)
+    function cariCekleri(unvan) {
+        return g_cekler.filter(c =>
+            c.cari_unvan === unvan ||
+            (c.durum === 'Ciro Edildi' && c.banka_bilgisi === unvan)
+        );
+    }
+
+    // Çek bu cari açısından "verilen" mi? (ciro veya kendi çekimiz)
+    function cariyeVerilenMi(c, unvan) {
+        if (c.durum === 'Ciro Edildi' && c.banka_bilgisi === unvan) return true;
+        return c.cari_unvan === unvan && c.islem_turu !== 'Alınan Çek';
+    }
+
     function renderCariler() {
         const container = document.getElementById('cariListContainer');
         if (g_cariler.length === 0) { container.innerHTML = '<div style="padding:15px; color:#94a3b8; font-size:13px;">Kayıtlı cari yok.</div>'; return; }
@@ -958,7 +1056,7 @@
         document.getElementById('cariTabloSarmal').classList.remove('hidden');
 
         // Bu cariye ait tüm çekler — vadeye göre sıralı
-        const cekler = g_cekler.filter(c => c.cari_unvan === cari.unvan)
+        const cekler = cariCekleri(cari.unvan)
             .slice().sort((a, b) => new Date(a.vade_tarihi) - new Date(b.vade_tarihi));
 
         const tbody = document.getElementById('cariHareketGövde');
@@ -979,7 +1077,9 @@
 
         cekler.forEach(c => {
             const tutar = Number(c.tutar) || 0;
-            const alinan = (c.islem_turu === 'Alınan Çek');
+            // Bu cariye verilmiş mi (ciro veya kendi çekimiz), yoksa ondan mı alınmış?
+            const verilen = cariyeVerilenMi(c, cari.unvan);
+            const alinan = !verilen;
             const bekliyor = (c.durum === 'Kasada' || c.durum === 'Tahsilde' || c.durum === 'Ödenecek');
 
             if (alinan) {
@@ -991,8 +1091,8 @@
 
             if (bekliyor) { aktifTop += tutar; aktifAdet++; }
 
-            // Ortalama vade: sadece cariden alınan çekler (giriş tarihi bilinenler)
-            if (alinan) {
+            // Ortalama vade: sadece bu cariden alınan çekler
+            if (alinan && c.islem_turu === 'Alınan Çek') {
                 const gt = girisTarihi(c);
                 const vg = gunFarki(gt, c.vade_tarihi);
                 if (vg !== null && vg >= 0) {
@@ -1067,7 +1167,7 @@
 
         // --- Tablo satırları ---
         tbody.innerHTML = cekler.map(c => {
-            const alinan = (c.islem_turu === 'Alınan Çek');
+            const alinan = !cariyeVerilenMi(c, cari.unvan);
             const renk = alinan ? 'var(--success)' : 'var(--danger)';
             const tamamlandi = (c.durum === 'Ödendi');
             const gt = girisTarihi(c);
@@ -1090,7 +1190,7 @@
 
             return `<tr${tamamlandi ? ' style="opacity:.55;"' : ''}>
                 <td><strong>${c.cek_no}</strong></td>
-                <td style="color:${renk}; font-weight:600; font-size:12px;">${alinan ? 'Alınan' : 'Verilen'}</td>
+                <td style="color:${renk}; font-weight:600; font-size:12px;">${alinan ? 'Alınan' : (c.durum === 'Ciro Edildi' ? 'Ciro' : 'Verilen')}</td>
                 <td style="color:var(--muted);">${gt ? formatDate(gt) : '<span style="color:#cbd5e1;">—</span>'}</td>
                 <td style="text-align:center; font-weight:600;">${vadeGun !== null && vadeGun >= 0 ? vadeGun + ' gün' : '<span style="color:#cbd5e1;">—</span>'}</td>
                 <td><strong>${formatDate(c.vade_tarihi)}</strong></td>
@@ -1118,7 +1218,7 @@
     function cariEkstrePdf() {
         if (!seciliCari) return;
         const cari = seciliCari;
-        const cekler = g_cekler.filter(c => c.cari_unvan === cari.unvan)
+        const cekler = cariCekleri(cari.unvan)
             .slice().sort((a, b) => new Date(a.vade_tarihi) - new Date(b.vade_tarihi));
 
         if (cekler.length === 0) return alert('Bu cariye ait çek kaydı bulunmuyor.');
@@ -1128,10 +1228,10 @@
 
         cekler.forEach(c => {
             const tutar = Number(c.tutar) || 0;
-            const alinan = (c.islem_turu === 'Alınan Çek');
+            const alinan = !cariyeVerilenMi(c, cari.unvan);
             if (alinan) { alinanTop += tutar; alinanAdet++; } else { verilenTop += tutar; verilenAdet++; }
             if (c.durum === 'Kasada' || c.durum === 'Tahsilde' || c.durum === 'Ödenecek') { aktifTop += tutar; aktifAdet++; }
-            if (alinan) {
+            if (alinan && c.islem_turu === 'Alınan Çek') {
                 const vg = gunFarki(girisTarihi(c), c.vade_tarihi);
                 if (vg !== null && vg >= 0) { vadeAgirlik += tutar * vg; vadeTutarTop += tutar; }
             }
@@ -1151,14 +1251,14 @@
         const tarihStr = `${String(bg.getDate()).padStart(2,'0')}.${String(bg.getMonth()+1).padStart(2,'0')}.${bg.getFullYear()}`;
 
         const satirlar = cekler.map(c => {
-            const alinan = (c.islem_turu === 'Alınan Çek');
+            const alinan = !cariyeVerilenMi(c, cari.unvan);
             const gt = girisTarihi(c);
             const vg = gunFarki(gt, c.vade_tarihi);
             const kalan = calcDays(c.vade_tarihi);
             const tamam = (c.durum === 'Ödendi');
             return `<tr>
                 <td>${c.cek_no}</td>
-                <td style="color:${alinan ? '#059669' : '#dc2626'};">${alinan ? 'Alinan' : 'Verilen'}</td>
+                <td style="color:${alinan ? '#059669' : '#dc2626'};">${alinan ? 'Alinan' : (c.durum === 'Ciro Edildi' ? 'Ciro' : 'Verilen')}</td>
                 <td>${gt ? formatDate(gt) : '-'}</td>
                 <td style="text-align:center;">${vg !== null && vg >= 0 ? vg : '-'}</td>
                 <td>${formatDate(c.vade_tarihi)}</td>
@@ -1407,6 +1507,7 @@
         updateCharts(toplamVarlik, topOdenecek);
 
         renderAylikRapor();
+        renderTopListeler();
     }
 
     function updateCharts(varlik, yukumluluk) {
@@ -1456,7 +1557,6 @@
 
         const today = new Date(); let barLabels = []; let monthBuckets = []; 
         for(let i=0; i<6; i++) { let d = new Date(today.getFullYear(), today.getMonth() + i, 1); barLabels.push(monthNamesShort[d.getMonth()] + " '" + d.getFullYear().toString().substr(-2)); monthBuckets.push({ year: d.getFullYear(), month: d.getMonth() }); }
-        let portfoyData = [0,0,0,0,0,0];
         // Çıkış türüne göre ayrı seriler
         let kendiData = [0,0,0,0,0,0];      // Kendi kestiğimiz çekler
         let bankaData = [0,0,0,0,0,0];      // Bankaya tahsile verilenler
@@ -1466,7 +1566,6 @@
             let d = new Date(c.vade_tarihi); let index = monthBuckets.findIndex(b => b.year === d.getFullYear() && b.month === d.getMonth());
             if(index !== -1) {
                 const tutar = Number(c.tutar) || 0;
-                if (c.durum === 'Kasada') portfoyData[index] += tutar;
 
                 // Çıkış kırılımı
                 if (c.islem_turu === 'Kendi Çekimiz') kendiData[index] += tutar;
@@ -1511,8 +1610,6 @@
             }
         }); }
         
-        if(portfoyChartInstance) { portfoyChartInstance.data.labels = barLabels; portfoyChartInstance.data.datasets[0].data = portfoyData; portfoyChartInstance.update(); } 
-        else { portfoyChartInstance = new Chart(document.getElementById('portfoyChart').getContext('2d'), { type: 'bar', data: { labels: barLabels, datasets: [{ label: 'Kasadaki Çekler (Gelecek Nakit)', data: portfoyData, backgroundColor: '#2563eb', borderRadius: 5 }] }, options: { plugins: { datalabels: { display: false }, tooltip: { enabled: true } }, scales: { y: { beginAtZero: true } } } }); }
     }
 
     function handleCekTuruChange() {
