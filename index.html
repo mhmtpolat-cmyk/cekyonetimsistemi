@@ -342,7 +342,7 @@
         </div>
 
         <div class="charts-container">
-            <div class="chart-box"><h2>📊 Aylık Çek Trendi <span style="font-size:12px; font-weight:400; color:var(--muted);">(Önümüzdeki 6 Ay)</span></h2><canvas id="barChart" height="100"></canvas></div>
+            <div class="chart-box"><h2>📊 Aylık Çek Çıkış Trendi <span style="font-size:12px; font-weight:400; color:var(--muted);">(Vade tarihine göre, önümüzdeki 6 ay)</span></h2><canvas id="barChart" height="100"></canvas></div>
             <div class="chart-box"><h2>⚖️ Varlık / Yükümlülük</h2><canvas id="pieChart" height="200"></canvas></div>
         </div>
         <div class="charts-full-container">
@@ -556,14 +556,16 @@
         btnMenuFinans.style.display = (yetkiFinans === 'false') ? 'none' : 'block';
 
         // Euromat Nakit sayfası yetkisi
-        const kAdi = (aktifKullaniciAdi || '').toLowerCase();
-        document.getElementById('btnMenuEuromat').style.display =
-            EUROMAT_YETKISI.includes(kAdi) ? 'block' : 'none';
+        // Not: tam eşleşme yerine "içerir" kontrolü — ad soyad girilmiş olsa bile çalışır
+        const kAdi = (aktifKullaniciAdi || '').toLocaleLowerCase('tr');
+        const euromatYetkili = EUROMAT_YETKISI.some(y => kAdi.includes(y));
+        document.getElementById('btnMenuEuromat').style.display = euromatYetkili ? 'block' : 'none';
+        console.log('[Yetki] kullanıcı adı:', aktifKullaniciAdi, '| euromat:', euromatYetkili);
 
         // Kullanıcı yönetimi sadece Mehmet'te görünür
-        const userAdi = (aktifKullaniciAdi || "").toLowerCase();
+        const userAdi = (aktifKullaniciAdi || "").toLocaleLowerCase('tr');
         const btnKullanici = document.getElementById('btnKullaniciYonetim');
-        btnKullanici.style.display = (userAdi === 'mehmet') ? 'block' : 'none';
+        btnKullanici.style.display = userAdi.includes('mehmet') ? 'block' : 'none';
 
         loadData();
     }
@@ -755,7 +757,8 @@
     const SILME_YETKISI = ['mehmet'];
 
     function silmeYetkisiVar() {
-        return SILME_YETKISI.includes((aktifKullaniciAdi || '').toLowerCase());
+        const k = (aktifKullaniciAdi || '').toLocaleLowerCase('tr');
+        return SILME_YETKISI.some(y => k.includes(y));
     }
 
     async function cekSil(id, cekNo) {
@@ -1453,19 +1456,60 @@
 
         const today = new Date(); let barLabels = []; let monthBuckets = []; 
         for(let i=0; i<6; i++) { let d = new Date(today.getFullYear(), today.getMonth() + i, 1); barLabels.push(monthNamesShort[d.getMonth()] + " '" + d.getFullYear().toString().substr(-2)); monthBuckets.push({ year: d.getFullYear(), month: d.getMonth() }); }
-        let varlikData = [0,0,0,0,0,0]; let odenecekData = [0,0,0,0,0,0]; let portfoyData = [0,0,0,0,0,0]; 
+        let portfoyData = [0,0,0,0,0,0];
+        // Çıkış türüne göre ayrı seriler
+        let kendiData = [0,0,0,0,0,0];      // Kendi kestiğimiz çekler
+        let bankaData = [0,0,0,0,0,0];      // Bankaya tahsile verilenler
+        let tedarikciData = [0,0,0,0,0,0];  // Cariye ciro edilenler
 
         g_cekler.forEach(c => {
             let d = new Date(c.vade_tarihi); let index = monthBuckets.findIndex(b => b.year === d.getFullYear() && b.month === d.getMonth());
             if(index !== -1) {
-                if (c.durum === 'Kasada' || c.durum === 'Tahsilde') varlikData[index] += Number(c.tutar);
-                if (c.durum === 'Ödenecek') odenecekData[index] += Number(c.tutar);
-                if (c.durum === 'Kasada') portfoyData[index] += Number(c.tutar); 
+                const tutar = Number(c.tutar) || 0;
+                if (c.durum === 'Kasada') portfoyData[index] += tutar;
+
+                // Çıkış kırılımı
+                if (c.islem_turu === 'Kendi Çekimiz') kendiData[index] += tutar;
+                else if (c.durum === 'Tahsilde' || c.durum === 'Kredi Ödemesi') bankaData[index] += tutar;
+                else if (c.durum === 'Ciro Edildi') tedarikciData[index] += tutar;
             }
         });
 
-        if(barChartInstance) { barChartInstance.data.labels = barLabels; barChartInstance.data.datasets[0].data = varlikData; barChartInstance.data.datasets[1].data = odenecekData; barChartInstance.update(); } 
-        else { barChartInstance = new Chart(document.getElementById('barChart').getContext('2d'), { type: 'bar', data: { labels: barLabels, datasets: [{ label: 'Varlıklar (Kasa+Tahsil)', data: varlikData, backgroundColor: '#059669', borderRadius: 5 }, { label: 'Ödenecekler', data: odenecekData, backgroundColor: '#dc2626', borderRadius: 5 }] }, options: { plugins: { datalabels: { display: false }, tooltip: { enabled: true, mode: 'index', intersect: false } }, scales: { y: { beginAtZero: true } } } }); }
+        const trendSeriler = [
+            { label: 'Kendi Çeklerimiz', data: kendiData, backgroundColor: '#dc2626', borderRadius: 5 },
+            { label: 'Bankaya Verilen', data: bankaData, backgroundColor: '#2563eb', borderRadius: 5 },
+            { label: 'Tedarikçiye Verilen', data: tedarikciData, backgroundColor: '#d97706', borderRadius: 5 }
+        ];
+
+        if(barChartInstance) {
+            barChartInstance.data.labels = barLabels;
+            trendSeriler.forEach((s, i) => { barChartInstance.data.datasets[i].data = s.data; });
+            barChartInstance.update();
+        }
+        else { barChartInstance = new Chart(document.getElementById('barChart').getContext('2d'), {
+            type: 'bar',
+            data: { labels: barLabels, datasets: trendSeriler },
+            options: {
+                plugins: {
+                    datalabels: { display: false },
+                    legend: { position: 'bottom', labels: { boxWidth: 13, padding: 14, font: { size: 12 } } },
+                    tooltip: {
+                        mode: 'index', intersect: false,
+                        callbacks: {
+                            label: (ctx) => ctx.dataset.label + ': ' + formatMoney(ctx.raw),
+                            footer: (items) => {
+                                const t = items.reduce((s, i) => s + i.raw, 0);
+                                return t > 0 ? 'Toplam: ' + formatMoney(t) : '';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: { beginAtZero: true, stacked: false, ticks: { callback: (v) => v >= 1000 ? (v/1000).toLocaleString('tr-TR') + 'B' : v }, grid: { color: '#f1f5f9' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        }); }
         
         if(portfoyChartInstance) { portfoyChartInstance.data.labels = barLabels; portfoyChartInstance.data.datasets[0].data = portfoyData; portfoyChartInstance.update(); } 
         else { portfoyChartInstance = new Chart(document.getElementById('portfoyChart').getContext('2d'), { type: 'bar', data: { labels: barLabels, datasets: [{ label: 'Kasadaki Çekler (Gelecek Nakit)', data: portfoyData, backgroundColor: '#2563eb', borderRadius: 5 }] }, options: { plugins: { datalabels: { display: false }, tooltip: { enabled: true } }, scales: { y: { beginAtZero: true } } } }); }
