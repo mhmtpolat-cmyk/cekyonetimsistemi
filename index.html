@@ -347,12 +347,20 @@
 
         <div class="agenda-grid">
             <div class="agenda-box">
-                <h2 style="color:var(--success);"><i class="fa-solid fa-ranking-star"></i> En Çok Çek Aldıklarımız</h2>
+                <h2 style="color:var(--success); justify-content:space-between; display:flex; align-items:center; flex-wrap:wrap; gap:8px;">
+                    <span><i class="fa-solid fa-ranking-star"></i> En Çok Çek Aldıklarımız</span>
+                    <select id="topDonemGiris" onchange="renderTopListeler()" style="padding:5px 9px; border:1px solid var(--border); border-radius:7px; font-size:11.5px; font-weight:600; color:var(--secondary); background:#fff; font-family:inherit; max-width:170px;"></select>
+                </h2>
                 <div id="topListGiris"><div class="empty-message">Kayıt bulunmuyor.</div></div>
+                <div id="topOzetGiris"></div>
             </div>
             <div class="agenda-box">
-                <h2 style="color:var(--danger);"><i class="fa-solid fa-ranking-star"></i> En Çok Çek Verdiklerimiz</h2>
+                <h2 style="color:var(--danger); justify-content:space-between; display:flex; align-items:center; flex-wrap:wrap; gap:8px;">
+                    <span><i class="fa-solid fa-ranking-star"></i> En Çok Çek Verdiklerimiz</span>
+                    <select id="topDonemCikis" onchange="renderTopListeler()" style="padding:5px 9px; border:1px solid var(--border); border-radius:7px; font-size:11.5px; font-weight:600; color:var(--secondary); background:#fff; font-family:inherit; max-width:170px;"></select>
+                </h2>
                 <div id="topListCikis"><div class="empty-message">Kayıt bulunmuyor.</div></div>
+                <div id="topOzetCikis"></div>
             </div>
         </div>
 
@@ -929,7 +937,76 @@
     let seciliCari = null;
 
     // ================= CARİ TOP LİSTE =================
+
+    // Çekin hangi tarihte "hareket ettiğini" bulur
+    // Giriş için: sisteme giriş tarihi | Çıkış için: elden çıkış tarihi
+    function topTarih(c, cikisMi) {
+        const t = cikisMi ? (cikisTarihi(c) || girisTarihi(c)) : girisTarihi(c);
+        return t || null;
+    }
+
+    // Dönem seçeneklerini kayıtlardan üretir
+    function topDonemleriDoldur() {
+        const yillar = new Set(), aylar = new Set();
+
+        g_cekler.forEach(c => {
+            [girisTarihi(c), cikisTarihi(c)].forEach(t => {
+                if (!t) return;
+                const d = new Date(t);
+                if (isNaN(d)) return;
+                yillar.add(d.getFullYear());
+                aylar.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+            });
+        });
+
+        let ops = '<option value="ALL">Tüm Zamanlar</option>';
+
+        const yilListe = [...yillar].sort((a, b) => b - a);
+        if (yilListe.length) {
+            ops += '<optgroup label="Yıllık">';
+            yilListe.forEach(y => { ops += `<option value="Y-${y}">${y} yılı</option>`; });
+            ops += '</optgroup>';
+        }
+
+        const ayListe = [...aylar].sort().reverse();
+        if (ayListe.length) {
+            ops += '<optgroup label="Aylık">';
+            ayListe.forEach(a => {
+                const [y, m] = a.split('-');
+                ops += `<option value="A-${a}">${monthNames[parseInt(m) - 1]} ${y}</option>`;
+            });
+            ops += '</optgroup>';
+        }
+
+        ['topDonemGiris', 'topDonemCikis'].forEach(id => {
+            const sec = document.getElementById(id);
+            if (!sec) return;
+            const onceki = sec.value;
+            sec.innerHTML = ops;
+            if (onceki && Array.from(sec.options).some(o => o.value === onceki)) sec.value = onceki;
+        });
+    }
+
+    // Seçilen döneme uyuyor mu?
+    function donemeUyar(tarih, donem) {
+        if (donem === 'ALL') return true;
+        if (!tarih) return false;
+        const d = new Date(tarih);
+        if (isNaN(d)) return false;
+        if (donem.startsWith('Y-')) return d.getFullYear() === parseInt(donem.slice(2));
+        if (donem.startsWith('A-')) {
+            const [y, m] = donem.slice(2).split('-');
+            return d.getFullYear() === parseInt(y) && (d.getMonth() + 1) === parseInt(m);
+        }
+        return true;
+    }
+
     function renderTopListeler() {
+        topDonemleriDoldur();
+
+        const donemGiris = document.getElementById('topDonemGiris').value || 'ALL';
+        const donemCikis = document.getElementById('topDonemCikis').value || 'ALL';
+
         const giris = {}, cikis = {};
 
         g_cekler.forEach(c => {
@@ -937,30 +1014,52 @@
 
             // Cariden alınan çekler
             if (c.islem_turu === 'Alınan Çek' && c.cari_unvan) {
-                if (!giris[c.cari_unvan]) giris[c.cari_unvan] = { top: 0, adet: 0 };
-                giris[c.cari_unvan].top += tutar; giris[c.cari_unvan].adet++;
+                if (donemeUyar(topTarih(c, false), donemGiris)) {
+                    if (!giris[c.cari_unvan]) giris[c.cari_unvan] = { top: 0, adet: 0 };
+                    giris[c.cari_unvan].top += tutar; giris[c.cari_unvan].adet++;
+                }
             }
 
             // Cariye ciro edilen kasa çekleri
             if (c.durum === 'Ciro Edildi' && c.banka_bilgisi) {
-                if (!cikis[c.banka_bilgisi]) cikis[c.banka_bilgisi] = { top: 0, adet: 0 };
-                cikis[c.banka_bilgisi].top += tutar; cikis[c.banka_bilgisi].adet++;
+                if (donemeUyar(topTarih(c, true), donemCikis)) {
+                    if (!cikis[c.banka_bilgisi]) cikis[c.banka_bilgisi] = { top: 0, adet: 0 };
+                    cikis[c.banka_bilgisi].top += tutar; cikis[c.banka_bilgisi].adet++;
+                }
             }
 
             // Kendi kestiğimiz, cariye verilen çekler (bankaya değil)
             if (c.islem_turu === 'Kendi Çekimiz' && c.cari_unvan && !c.banka_bilgisi) {
-                if (!cikis[c.cari_unvan]) cikis[c.cari_unvan] = { top: 0, adet: 0 };
-                cikis[c.cari_unvan].top += tutar; cikis[c.cari_unvan].adet++;
+                if (donemeUyar(topTarih(c, true), donemCikis)) {
+                    if (!cikis[c.cari_unvan]) cikis[c.cari_unvan] = { top: 0, adet: 0 };
+                    cikis[c.cari_unvan].top += tutar; cikis[c.cari_unvan].adet++;
+                }
             }
         });
 
-        const yaz = (veri, hedefId, renk) => {
-            const sirali = Object.keys(veri).sort((a, b) => veri[b].top - veri[a].top).slice(0, 8);
-            const el = document.getElementById(hedefId);
-            if (sirali.length === 0) { el.innerHTML = '<div class="empty-message">Kayıt bulunmuyor.</div>'; return; }
+        const donemAdi = (d) => {
+            if (d === 'ALL') return 'Tüm zamanlar';
+            if (d.startsWith('Y-')) return d.slice(2) + ' yılı';
+            const [y, m] = d.slice(2).split('-');
+            return `${monthNames[parseInt(m) - 1]} ${y}`;
+        };
 
+        const yaz = (veri, hedefId, ozetId, renk, donem) => {
+            const tumAdlar = Object.keys(veri);
+            const el = document.getElementById(hedefId);
+            const ozetEl = document.getElementById(ozetId);
+
+            if (tumAdlar.length === 0) {
+                el.innerHTML = `<div class="empty-message">${donemAdi(donem)} için kayıt bulunmuyor.</div>`;
+                ozetEl.innerHTML = '';
+                return;
+            }
+
+            const genelToplam = tumAdlar.reduce((s, k) => s + veri[k].top, 0);
+            const genelAdet = tumAdlar.reduce((s, k) => s + veri[k].adet, 0);
+
+            const sirali = tumAdlar.sort((a, b) => veri[b].top - veri[a].top).slice(0, 8);
             const enBuyuk = veri[sirali[0]].top;
-            const genelToplam = Object.keys(veri).reduce((s, k) => s + veri[k].top, 0);
 
             el.innerHTML = sirali.map((ad, i) => {
                 const d = veri[ad];
@@ -983,11 +1082,21 @@
                     </div>
                 </div>`;
             }).join('');
+
+            const gizli = tumAdlar.length - sirali.length;
+            ozetEl.innerHTML = `<div style="margin-top:12px; padding-top:11px; border-top:2px solid ${renk}; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                    <div style="font-size:10.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--muted);">${donemAdi(donem)} Toplamı</div>
+                    <div style="font-size:11.5px; color:var(--faint); margin-top:2px;">${tumAdlar.length} firma · ${genelAdet} çek${gizli > 0 ? ` · ${gizli} firma listede yok` : ''}</div>
+                </div>
+                <div style="font-size:19px; font-weight:700; color:${renk};">${formatMoney(genelToplam)}</div>
+            </div>`;
         };
 
-        yaz(giris, 'topListGiris', 'var(--success)');
-        yaz(cikis, 'topListCikis', 'var(--danger)');
+        yaz(giris, 'topListGiris', 'topOzetGiris', 'var(--success)', donemGiris);
+        yaz(cikis, 'topListCikis', 'topOzetCikis', 'var(--danger)', donemCikis);
     }
+
 
     // Top listeden cari ekstresini açar
     function cariEkstresiAc(unvan) {
