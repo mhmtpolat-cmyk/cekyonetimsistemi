@@ -269,12 +269,34 @@
                 </div>
             </div>
 
-            <!-- BEKLENEN -->
+            <!-- PLANLANAN ÖDEMELER -->
             <div class="card" id="beklenenKart">
-                <h2><span class="sol"><i class="fa-solid fa-hourglass-half" style="color:var(--warning);"></i> Beklenen Hareketler</span><span class="sub">önümüzdeki 30 gün</span></h2>
+                <h2>
+                    <span class="sol"><i class="fa-solid fa-calendar-check" style="color:var(--warning);"></i> Planlanan Ödeme & Tahsilatlar</span>
+                    <span style="display:flex; gap:8px; align-items:center;">
+                        <select id="planDonem" onchange="beklenenYaz()" style="padding:5px 9px; border:1px solid var(--border); border-radius:7px; font-size:11.5px; font-weight:600; background:#fff; font-family:inherit;">
+                            <option value="30">Önümüzdeki 30 gün</option>
+                            <option value="7">Önümüzdeki 7 gün</option>
+                            <option value="90">Önümüzdeki 90 gün</option>
+                            <option value="0">Tümü</option>
+                        </select>
+                        <button class="btn btn-outline btn-sm" onclick="planlananEkle()"><i class="fa-solid fa-plus"></i> Plan Ekle</button>
+                    </span>
+                </h2>
                 <div class="grid-3" id="beklenenOzet"></div>
                 <div class="tablo-sarmal" style="margin-top:14px;">
-                    <table><thead><tr><th>Tarih</th><th>Kalan</th><th>Tür</th><th>Cari / Açıklama</th><th>Kategori</th><th style="text-align:right;">Tutar</th><th style="text-align:right;">İşlem</th></tr></thead><tbody id="beklenenTablo"></tbody></table>
+                    <table><thead><tr><th>Tarih</th><th>Kalan</th><th>Tür</th><th>Cari / Açıklama</th><th>Kategori</th><th style="text-align:right;">Tutar</th><th style="text-align:center;">Durum</th><th style="text-align:right;">İşlem</th></tr></thead><tbody id="beklenenTablo"></tbody></table>
+                </div>
+            </div>
+
+            <!-- BORÇ DURUMU -->
+            <div class="card hidden" id="borcKart">
+                <h2>
+                    <span class="sol"><i class="fa-solid fa-hand-holding-dollar" style="color:var(--danger);"></i> Borç Durumu</span>
+                    <span class="sub">kategorisinde "borç" geçen hareketlerden hesaplanır</span>
+                </h2>
+                <div class="tablo-sarmal">
+                    <table><thead><tr><th>Cari</th><th style="text-align:right;">Alınan Borç</th><th style="text-align:right;">Ödenen</th><th style="text-align:right;">Kalan Borç</th><th>Son Hareket</th><th style="text-align:right;">İşlem</th></tr></thead><tbody id="borcTablo"></tbody></table>
                 </div>
             </div>
 
@@ -458,9 +480,9 @@
             <div class="form-group"><label>Tutar (TL)</label><input type="text" id="fmTutar" class="form-control" placeholder="0,00" inputmode="decimal"></div>
             <div class="form-group" style="flex:0 0 160px;"><label>Tarih</label><input type="date" id="fmTarih" class="form-control"></div>
         </div>
-        <div class="form-group" id="fmKatDiv"><label>Kategori <span style="color:var(--danger);">*</span></label><select id="fmKategori" class="form-control" onchange="altKategoriGuncelle()"></select></div>
+        <div class="form-group" id="fmKatDiv"><label>Kategori <span style="color:var(--danger);">*</span></label><select id="fmKategori" class="form-control" onchange="altKategoriGuncelle(); borcCariFiltrele();"></select></div>
         <div class="form-group hidden" id="fmAltKatDiv"><label>Alt Kategori</label><select id="fmAltKategori" class="form-control"></select></div>
-        <div class="form-group" id="fmCariDiv"><label>Cari</label><select id="fmCari" class="form-control"></select></div>
+        <div class="form-group" id="fmCariDiv"><label>Cari</label><select id="fmCari" class="form-control"></select><div id="fmCariNot" style="font-size:11.5px; color:var(--accent); margin-top:5px; display:none;"></div></div>
         <div class="form-group"><label>Açıklama</label><input type="text" id="fmAciklama" class="form-control" placeholder="Kısa açıklama"></div>
         <div class="form-group" id="fmBeklenenDiv">
             <label style="display:flex; align-items:center; gap:9px; cursor:pointer; font-weight:500;">
@@ -752,52 +774,241 @@ function panelYaz() {
     }
 
     beklenenYaz();
+    borcYaz();
     grafikCiz();
     sonHareketlerYaz();
 }
 
 // ---- Beklenen hareketler ----
 function beklenenYaz() {
-    const bek = islemler.filter(t => t.beklenen).sort((a, b) => new Date(a.tarih) - new Date(b.tarih));
+    const donemSec = document.getElementById('planDonem');
+    const gunSayisi = donemSec ? parseInt(donemSec.value) : 30;
+
+    const tumBek = islemler.filter(t => t.beklenen).sort((a, b) => new Date(a.tarih) - new Date(b.tarih));
     const kart = document.getElementById('beklenenKart');
-
-    if (!bek.length) { kart.classList.add('hidden'); return; }
-    kart.classList.remove('hidden');
-
     const bg = bugun();
-    let gelecek = 0, cikacak = 0, geciken = 0;
-    bek.forEach(t => {
+
+    // Dönem filtresi — tarihi geçmişler her zaman görünür
+    const bek = tumBek.filter(t => {
+        if (gunSayisi === 0) return true;
         const f = gunFark(bg, t.tarih);
-        if (f < 0) geciken++;
-        if (f <= 30) { if (t.tur === 'GIRIS') gelecek += t.tutar; else cikacak += t.tutar; }
+        return f < 0 || f <= gunSayisi;
     });
 
+    kart.classList.remove('hidden');
+
+    if (!tumBek.length) {
+        document.getElementById('beklenenOzet').innerHTML =
+            '<div class="empty" style="grid-column:1/-1;">Henüz planlanan ödeme yok.<br><span style="font-size:12px;">Kredi taksiti, kira, çek ödemesi gibi ileri tarihli giderleri önceden girebilirsiniz.</span></div>';
+        document.getElementById('beklenenTablo').innerHTML = '';
+        return;
+    }
+
+    let gelecek = 0, cikacak = 0, geciken = 0, gecikenTutar = 0;
+    tumBek.forEach(t => {
+        const f = gunFark(bg, t.tarih);
+        if (f < 0) { geciken++; gecikenTutar += t.tutar; }
+        if (gunSayisi === 0 || f <= gunSayisi) {
+            if (t.tur === 'GIRIS') gelecek += t.tutar; else cikacak += t.tutar;
+        }
+    });
+
+    const donemAdi = gunSayisi === 0 ? 'Toplam' : gunSayisi + ' Günde';
     document.getElementById('beklenenOzet').innerHTML = `
-        <div class="metrik m-yesil"><div class="lbl">30 Günde Gelecek</div><div class="val">${para(gelecek)}</div></div>
-        <div class="metrik m-kirmizi"><div class="lbl">30 Günde Çıkacak</div><div class="val">${para(cikacak)}</div></div>
-        <div class="metrik ${geciken ? 'm-kirmizi' : 'm-mavi'}"><div class="lbl">Tarihi Geçen</div><div class="val">${geciken}</div><div class="alt">${geciken ? 'kontrol edin' : 'sorun yok'}</div></div>`;
+        <div class="metrik m-yesil"><div class="lbl">${donemAdi} Gelecek</div><div class="val">${para(gelecek)}</div></div>
+        <div class="metrik m-kirmizi"><div class="lbl">${donemAdi} Çıkacak</div><div class="val">${para(cikacak)}</div></div>
+        <div class="metrik ${geciken ? 'm-kirmizi' : 'm-mavi'}"><div class="lbl">Tarihi Geçen</div><div class="val">${geciken}</div><div class="alt">${geciken ? para(gecikenTutar) : 'sorun yok'}</div></div>`;
+
+    if (!bek.length) {
+        document.getElementById('beklenenTablo').innerHTML =
+            '<tr><td colspan="8" class="empty">Bu dönemde planlanan hareket yok.</td></tr>';
+        return;
+    }
 
     document.getElementById('beklenenTablo').innerHTML = bek.map(t => {
         const f = gunFark(bg, t.tarih);
-        let kalanHtml;
-        if (f < 0) kalanHtml = `<span style="color:var(--danger); font-weight:700;">${Math.abs(f)} gün geçti</span>`;
-        else if (f === 0) kalanHtml = '<span style="color:var(--warning); font-weight:700;">Bugün</span>';
-        else if (f <= 7) kalanHtml = `<span style="color:var(--warning); font-weight:700;">${f} gün</span>`;
-        else kalanHtml = `<span style="color:var(--muted);">${f} gün</span>`;
+        let kalanHtml, durumHtml;
+        if (f < 0) {
+            kalanHtml = `<span style="color:var(--danger); font-weight:700;">${Math.abs(f)} gün geçti</span>`;
+            durumHtml = '<span class="badge b-cikis">Gecikti</span>';
+        } else if (f === 0) {
+            kalanHtml = '<span style="color:var(--warning); font-weight:700;">Bugün</span>';
+            durumHtml = '<span class="badge b-bekleyen">Bugün</span>';
+        } else if (f <= 7) {
+            kalanHtml = `<span style="color:var(--warning); font-weight:700;">${f} gün</span>`;
+            durumHtml = '<span class="badge b-bekleyen">Yaklaşıyor</span>';
+        } else {
+            kalanHtml = `<span style="color:var(--muted);">${f} gün</span>`;
+            durumHtml = '<span class="badge b-kat">Planlandı</span>';
+        }
         const k = katBul(t.kategori);
-        return `<tr>
-            <td>${tarihYaz(t.tarih)}</td>
+        return `<tr${f < 0 ? ' style="background:var(--danger-bg);"' : ''}>
+            <td><strong>${tarihYaz(t.tarih)}</strong></td>
             <td>${kalanHtml}</td>
             <td><span class="badge ${t.tur === 'GIRIS' ? 'b-giris' : 'b-cikis'}">${t.tur === 'GIRIS' ? 'GİRİŞ' : 'ÇIKIŞ'}</span></td>
             <td>${cariAdi(t.cariId) ? '<strong>' + cariAdi(t.cariId) + '</strong> — ' : ''}${t.aciklama}</td>
             <td><span class="badge b-kat" style="${k ? 'border-color:' + k.renk + '55; color:' + k.renk : ''}">${katMetin(t)}</span></td>
             <td style="text-align:right; font-weight:700; color:${t.tur === 'GIRIS' ? 'var(--success)' : 'var(--danger)'};">${para(t.tutar)}</td>
-            <td style="text-align:right;">${islemButonu(t.id)}</td>
+            <td style="text-align:center;">${durumHtml}</td>
+            <td style="text-align:right; white-space:nowrap;">
+                <button class="btn btn-success btn-sm" onclick="planlananGerceklestir(${t.id})" title="Gerçekleşti olarak işaretle"><i class="fa-solid fa-check"></i> Öde</button>
+                ${islemButonu(t.id)}
+            </td>
         </tr>`;
     }).join('');
 }
 
-// ---- Son hareketler ----
+// Planlanan ödeme eklemek için formu hazırlar
+function planlananEkle() {
+    islemModalAc('CIKIS');
+    document.getElementById('islemBaslik').innerText = '📅 Planlanan Ödeme Ekle';
+    document.getElementById('fmBeklenen').checked = true;
+    const d = new Date();
+    d.setMonth(d.getMonth() + 1);
+    document.getElementById('fmTarih').value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+// ---- Borç durumu tablosu ----
+function borcYaz() {
+    const kart = document.getElementById('borcKart');
+    const durum = borcDurumu();
+
+    const tumu = Object.keys(durum)
+        .filter(id => durum[id].alinan > 0)
+        .map(id => ({ id: parseInt(id), ad: cariAdi(id), ...durum[id] }))
+        .sort((a, b) => b.kalan - a.kalan);
+
+    if (!tumu.length) { kart.classList.add('hidden'); return; }
+    kart.classList.remove('hidden');
+
+    document.getElementById('borcTablo').innerHTML = tumu.map(b => {
+        const kapandi = b.kalan <= 0.01;
+        return `<tr${kapandi ? ' style="opacity:.55;"' : ''}>
+            <td><strong>${b.ad || 'Bilinmeyen'}</strong></td>
+            <td style="text-align:right; color:var(--warning); font-weight:600;">${para(b.alinan)}</td>
+            <td style="text-align:right; color:var(--success); font-weight:600;">${para(b.odenen)}</td>
+            <td style="text-align:right; font-weight:700; font-size:15px; color:${kapandi ? 'var(--success)' : 'var(--danger)'};">${para(Math.max(b.kalan, 0))}</td>
+            <td style="color:var(--muted);">${b.sonTarih ? tarihYaz(b.sonTarih) : '—'}</td>
+            <td style="text-align:right;">
+                ${kapandi
+                    ? '<span class="badge b-giris">✓ Kapandı</span>'
+                    : `<button class="btn btn-danger btn-sm" onclick="borcOde(${b.id}, ${b.kalan.toFixed(2)})"><i class="fa-solid fa-money-bill-transfer"></i> Borç Öde</button>`}
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+
+// ================= BORÇ TAKİBİ =================
+// Adında "borç" geçen kategoriler borç hareketi sayılır
+// GİRİŞ = borç aldık (+) · ÇIKIŞ = borç ödedik (−)
+function borcKategorisiMi(katAd) {
+    if (!katAd) return false;
+    return katAd.toLocaleLowerCase('tr').includes('borç') || katAd.toLocaleLowerCase('tr').includes('borc');
+}
+
+// Cari bazında kalan borcu hesaplar
+function borcDurumu() {
+    const durum = {};
+    islemler.forEach(t => {
+        if (t.beklenen || !t.cariId) return;
+        if (!borcKategorisiMi(t.kategori) && !borcKategorisiMi(t.altKategori)) return;
+
+        if (!durum[t.cariId]) durum[t.cariId] = { alinan: 0, odenen: 0, sonTarih: null };
+        if (t.tur === 'GIRIS') durum[t.cariId].alinan += t.tutar;
+        else if (t.tur === 'CIKIS') durum[t.cariId].odenen += t.tutar;
+
+        if (!durum[t.cariId].sonTarih || t.tarih > durum[t.cariId].sonTarih) durum[t.cariId].sonTarih = t.tarih;
+    });
+
+    Object.keys(durum).forEach(id => {
+        durum[id].kalan = durum[id].alinan - durum[id].odenen;
+    });
+    return durum;
+}
+
+// Borcu olan carileri döner
+function borcluCariler() {
+    const d = borcDurumu();
+    return Object.keys(d)
+        .filter(id => d[id].kalan > 0.01)
+        .map(id => ({ id: parseInt(id), ad: cariAdi(id), ...d[id] }))
+        .sort((a, b) => b.kalan - a.kalan);
+}
+
+// Borç ödeme formunu hazır açar
+function borcOde(cariId, kalan) {
+    islemModalAc('CIKIS');
+    document.getElementById('islemBaslik').innerText = '💸 Borç Ödemesi';
+
+    // Borç ödeme kategorisini bul (adında "borç" geçen bir gider kategorisi)
+    const sec = document.getElementById('fmKategori');
+    const secenekler = Array.from(sec.options).map(o => o.value);
+    const odemeKat = secenekler.find(v => borcKategorisiMi(v) && v.toLocaleLowerCase('tr').includes('öde'))
+                  || secenekler.find(v => borcKategorisiMi(v));
+    if (odemeKat) { sec.value = odemeKat; altKategoriGuncelle(); }
+
+    document.getElementById('fmCari').value = cariId;
+    if (kalan) document.getElementById('fmTutar').value = String(Math.round(kalan * 100) / 100).replace('.', ',');
+    document.getElementById('fmAciklama').value = (cariAdi(cariId) || '') + ' borç ödemesi';
+    borcCariFiltrele();
+}
+
+// Borç ödeme kategorisi seçiliyse cari listesini borçlulara indirger
+function borcCariFiltrele() {
+    const tur = document.getElementById('fmTur').value;
+    const kat = document.getElementById('fmKategori').value;
+    const sec = document.getElementById('fmCari');
+    const not = document.getElementById('fmCariNot');
+    const oncekiDeger = sec.value;
+
+    const borcOdemesi = (tur === 'CIKIS' && borcKategorisiMi(kat));
+
+    if (borcOdemesi) {
+        const borclular = borcluCariler();
+        if (borclular.length === 0) {
+            sec.innerHTML = '<option value="">— Borçlu cari yok —</option>';
+            not.innerHTML = '⚠️ Kayıtlı borcunuz bulunmuyor. Borç almak için "Para Girişi" kaydedin.';
+            not.style.display = '';
+            return;
+        }
+        sec.innerHTML = '<option value="">— Cari seçin —</option>' +
+            borclular.map(b => `<option value="${b.id}">${b.ad} — kalan ${para(b.kalan)}</option>`).join('');
+        not.innerHTML = `💡 Yalnızca borcu olan ${borclular.length} cari listeleniyor.`;
+        not.style.display = '';
+        if (borclular.some(b => String(b.id) === oncekiDeger)) sec.value = oncekiDeger;
+    } else {
+        sec.innerHTML = '<option value="">— Cari seçilmedi —</option>' +
+            cariler.map(c => `<option value="${c.id}">${c.ad}</option>`).join('');
+        not.style.display = 'none';
+        if (cariler.some(c => String(c.id) === oncekiDeger)) sec.value = oncekiDeger;
+    }
+}
+
+// Planlanan gideri gerçekleşmiş olarak işaretler
+async function planlananGerceklestir(id) {
+    const t = islemler.find(x => x.id === id);
+    if (!t) return;
+
+    const bugunTarih = bugun();
+    const mesaj = `Bu ${t.tur === 'GIRIS' ? 'tahsilat' : 'ödeme'} gerçekleşti mi?\n\n` +
+        `${cariAdi(t.cariId) ? cariAdi(t.cariId) + ' · ' : ''}${t.aciklama}\n` +
+        `${para(t.tutar)} · ${hesapAdi(t.hesap)}\n\n` +
+        `Onaylarsanız bakiyeye işlenecek ve planlanan listesinden çıkacak.`;
+    if (!confirm(mesaj)) return;
+
+    // Tarihi geçmişse bugüne çek
+    const yeniTarih = (t.tarih < bugunTarih) ? bugunTarih : t.tarih;
+
+    const { error } = await db.from('euromat_islemler')
+        .update({ beklenen: false, tarih: yeniTarih }).eq('id', id);
+    if (error) return alert('İşlenemedi: ' + error.message);
+
+    await verileriYukle();
+    gorunumTazele();
+}
+
+
 function sonHareketlerYaz() {
     const liste = islemler.filter(t => !t.beklenen).slice(0, 15);
     document.getElementById('sonHareketler').innerHTML = liste.length
@@ -1479,6 +1690,7 @@ function formGuncelle() {
             ? uygunAna.map(k => `<option value="${k.ad}">${k.ad}</option>`).join('')
             : '<option value="">— Kategori tanımlı değil —</option>';
         altKategoriGuncelle();
+        borcCariFiltrele();
     }
 }
 
