@@ -379,9 +379,9 @@
             <div class="list-header"><h2><i class="fa-solid fa-file-invoice-dollar" style="color:var(--danger);"></i> Düzenlenen Çekler <span style="font-size:12px; font-weight:400; color:var(--muted);">(Kendi Kestiğimiz — Yükümlülükler)</span></h2><input type="text" id="searchDuzenlenen" class="search-input" onkeyup="filterTable('searchDuzenlenen', 'tableDuzenlenen')" placeholder="🔍 Ara..."></div>
             <div class="tablo-sarmal">
             <table class="cek-table" id="tableDuzenlenen">
-                <thead><tr><th>Çek No</th><th>Verilen Cari / Tedarikçi</th><th>Banka</th><th>Giriş Tarihi</th><th>Vade Tarihi</th><th style="text-align: right;">Tutar</th><th style="text-align: right;">Durum</th><th style="text-align: right;">İşlem</th></tr></thead>
+                <thead><tr><th>Çek No</th><th>Verilen Cari / Tedarikçi</th><th>Banka</th><th>Çıkış Tarihi</th><th style="text-align:center;">Çıkıştan Vade</th><th>Vade Tarihi</th><th style="text-align: right;">Tutar</th><th style="text-align: right;">Durum</th><th style="text-align: right;">İşlem</th></tr></thead>
                 <tbody id="tbodyDuzenlenen"></tbody>
-                <tfoot><tr><th colspan="5" style="text-align:right;">Toplam:</th><th id="totalDuzenlenen" style="text-align: right; color:var(--danger);">₺0.00</th><th colspan="2"></th></tr></tfoot>
+                <tfoot><tr><th colspan="6" style="text-align:right;">Toplam:</th><th id="totalDuzenlenen" style="text-align: right; color:var(--danger);">₺0.00</th><th colspan="2"></th></tr></tfoot>
             </table>
             </div>
         </div>
@@ -441,12 +441,12 @@
 </div>
 
 <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalIstatistik')">Kapat</button></div></div></div>
-<div id="modalCariYonetim" class="modal-overlay"><div class="cek-modal modal-xl modal-resize" style="width:1180px;"><h2><i class="fa-solid fa-users" style="color:var(--accent);"></i> Cari Yönetimi</h2><div style="display:flex; gap:10px; margin-bottom:10px;"><input type="text" id="yeniCariInput" class="form-control" placeholder="Firma Ünvanı"><button class="btn btn-success" onclick="dbYeniCariEkle()"><i class="fa-solid fa-plus"></i> Kaydet</button></div><div class="cari-layout"><div class="cari-list" id="cariListContainer"></div><div class="cari-details"><div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;"><h3 id="seciliCariBaslik" style="margin:0; font-size:16px; font-weight:700;">Soldan bir cari seçiniz</h3><button class="btn btn-outline hidden" id="btnEkstrePdf" onclick="cariEkstrePdf()"><i class="fa-solid fa-file-pdf"></i> Ekstre PDF İndir</button></div><div id="cariOzetKutu"></div><div class="tablo-sarmal hidden" id="cariTabloSarmal"><table class="cek-table" id="cariHareketTablosu" style="min-width:840px;"><thead><tr><th>Çek No</th><th>Tür</th><th>Giriş Tarihi</th><th style="text-align:center;">Vade Günü</th><th>Vade Tarihi</th><th style="text-align:center;">Kalan Gün</th><th style="text-align:right;">Tutar</th><th>Durum</th><th style="text-align:right;">İşlem</th></tr></thead><tbody id="cariHareketGövde"></tbody></table></div></div></div><div class="resize-ipucu">↘ Pencereyi büyütmek için sağ alt köşeden çekebilirsiniz</div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalCariYonetim')">Kapat</button></div></div></div>
+<div id="modalCariYonetim" class="modal-overlay"><div class="cek-modal modal-xl modal-resize" style="width:1180px;"><h2><i class="fa-solid fa-users" style="color:var(--accent);"></i> Cari Yönetimi</h2><div style="display:flex; gap:10px; margin-bottom:10px;"><input type="text" id="yeniCariInput" class="form-control" placeholder="Firma Ünvanı"><button class="btn btn-success" onclick="dbYeniCariEkle()"><i class="fa-solid fa-plus"></i> Kaydet</button></div><div class="cari-layout"><div class="cari-list" id="cariListContainer"></div><div class="cari-details"><div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;"><h3 id="seciliCariBaslik" style="margin:0; font-size:16px; font-weight:700;">Soldan bir cari seçiniz</h3><button class="btn btn-outline hidden" id="btnEkstrePdf" onclick="cariEkstrePdf()"><i class="fa-solid fa-file-pdf"></i> Ekstre PDF İndir</button></div><div id="cariOzetKutu"></div><div class="tablo-sarmal hidden" id="cariTabloSarmal"><table class="cek-table" id="cariHareketTablosu" style="min-width:1060px;"><thead><tr><th>Çek No</th><th>Tür</th><th>Giriş Tarihi</th><th style="text-align:center;">Vade Günü</th><th>Çıkış Tarihi</th><th style="text-align:center;">Çıkıştan Vade</th><th>Vade Tarihi</th><th style="text-align:center;">Kalan Gün</th><th style="text-align:right;">Tutar</th><th>Durum</th><th style="text-align:right;">İşlem</th></tr></thead><tbody id="cariHareketGövde"></tbody></table></div></div></div><div class="resize-ipucu">↘ Pencereyi büyütmek için sağ alt köşeden çekebilirsiniz</div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalCariYonetim')">Kapat</button></div></div></div>
 
 <div id="modalCekGiris" class="modal-overlay"><div class="cek-modal"><h2><i class="fa-solid fa-arrow-down-to-bracket" style="color:var(--success);"></i> Çek Girişi</h2><div class="form-group"><label>Cari</label><select class="form-control" id="girisCariSecim"></select></div><div class="form-group"><label>Banka</label><select class="form-control" id="girisBankaSecim"><optgroup label="Kamu Bankaları"><option value="T.C. Ziraat Bankası">T.C. Ziraat Bankası</option><option value="Türkiye Halk Bankası">Türkiye Halk Bankası</option><option value="Türkiye Vakıflar Bankası">Türkiye Vakıflar Bankası</option></optgroup><optgroup label="Özel Bankalar"><option value="Türkiye İş Bankası">Türkiye İş Bankası</option><option value="Garanti BBVA">Garanti BBVA</option><option value="Akbank">Akbank</option><option value="Yapı Kredi">Yapı Kredi</option><option value="QNB Finansbank">QNB Finansbank</option><option value="DenizBank">DenizBank</option><option value="Türk Ekonomi Bankası (TEB)">Türk Ekonomi Bankası (TEB)</option><option value="İNG Bank">İNG Bank</option><option value="Şekerbank">Şekerbank</option><option value="Anadolubank">Anadolubank</option><option value="Odea Bank">Odea Bank</option><option value="Fibabanka">Fibabanka</option><option value="Burgan Bank">Burgan Bank</option><option value="Alternatif Bank">Alternatif Bank</option><option value="ICBC Turkey Bank">ICBC Turkey Bank</option><option value="HSBC Bank">HSBC Bank</option></optgroup><optgroup label="Katılım Bankaları"><option value="Kuveyt Türk Katılım Bankası">Kuveyt Türk Katılım Bankası</option><option value="Albaraka Türk Katılım Bankası">Albaraka Türk Katılım Bankası</option><option value="Türkiye Finans Katılım Bankası">Türkiye Finans Katılım Bankası</option><option value="Vakıf Katılım Bankası">Vakıf Katılım Bankası</option><option value="Ziraat Katılım Bankası">Ziraat Katılım Bankası</option><option value="Emlak Katılım Bankası">Emlak Katılım Bankası</option><option value="T.O.M. Katılım Bankası">T.O.M. Katılım Bankası</option><option value="Hayat Finans Katılım Bankası">Hayat Finans Katılım Bankası</option></optgroup></select></div><div class="form-group"><label>Çek No</label><input type="text" class="form-control" id="girisCekNo"></div><div class="form-group"><label>Tutar</label><input type="number" class="form-control" id="girisTutar"></div><div class="form-group"><label>Vade</label><input type="date" class="form-control" id="girisVade"></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalCekGiris')">İptal</button><button class="btn btn-success" onclick="dbCekGirisKaydet()">Kaydet</button></div></div></div>
 <div id="modalCekCikis" class="modal-overlay"><div class="cek-modal"><h2><i class="fa-solid fa-arrow-up-from-bracket" style="color:var(--danger);"></i> Çek Çıkışı</h2><div class="form-group"><label>Tür</label><select class="form-control" id="cekTuruSelect" onchange="handleCekTuruChange()"><option value="kendi">Kendi Çekimiz</option><option value="kasa">Kasadan Seç</option></select></div><div class="form-group hidden" id="kasadanSecimDiv"><label>Portföy <span style="font-weight:400; color:var(--muted); font-size:11.5px;">(vadesi yakın olan üstte)</span></label><select class="form-control" id="kasaCekListesi" onchange="autoFillCekNo()"></select></div><div class="form-group"><label>Çek No</label><input type="text" class="form-control" id="cikisCekNo"></div><div class="form-group"><label>Tutar</label><input type="number" class="form-control" id="cikisTutar"></div><div class="form-group"><label>Vade</label><input type="date" class="form-control" id="cikisVade"></div><div class="form-group"><label>Hedef</label><select class="form-control" id="cikisHedefi" onchange="handleCikisHedefi()"><option value="tedarikci">Cari</option><option value="banka_tahsil">Tahsil</option></select></div><div class="form-group hidden" id="cikisCariDiv"><label>Cari</label><select class="form-control" id="cikisCariSecim"></select></div><div class="form-group hidden" id="bankaListesiDiv"><label>İlgili Bankayı Seçiniz</label><select class="form-control" id="cikisBankaSecim"><optgroup label="Kamu Bankaları"><option value="T.C. Ziraat Bankası">T.C. Ziraat Bankası</option><option value="Türkiye Halk Bankası">Türkiye Halk Bankası</option><option value="Türkiye Vakıflar Bankası">Türkiye Vakıflar Bankası</option></optgroup><optgroup label="Özel Bankalar"><option value="Türkiye İş Bankası">Türkiye İş Bankası</option><option value="Garanti BBVA">Garanti BBVA</option><option value="Akbank">Akbank</option><option value="Yapı Kredi">Yapı Kredi</option><option value="QNB Finansbank">QNB Finansbank</option><option value="DenizBank">DenizBank</option><option value="Türk Ekonomi Bankası (TEB)">Türk Ekonomi Bankası (TEB)</option><option value="İNG Bank">İNG Bank</option><option value="Şekerbank">Şekerbank</option><option value="Anadolubank">Anadolubank</option><option value="Odea Bank">Odea Bank</option><option value="Fibabanka">Fibabanka</option><option value="Burgan Bank">Burgan Bank</option><option value="Alternatif Bank">Alternatif Bank</option><option value="ICBC Turkey Bank">ICBC Turkey Bank</option><option value="HSBC Bank">HSBC Bank</option></optgroup><optgroup label="Katılım Bankaları"><option value="Kuveyt Türk Katılım Bankası">Kuveyt Türk Katılım Bankası</option><option value="Albaraka Türk Katılım Bankası">Albaraka Türk Katılım Bankası</option><option value="Türkiye Finans Katılım Bankası">Türkiye Finans Katılım Bankası</option><option value="Vakıf Katılım Bankası">Vakıf Katılım Bankası</option><option value="Ziraat Katılım Bankası">Ziraat Katılım Bankası</option><option value="Emlak Katılım Bankası">Emlak Katılım Bankası</option><option value="T.O.M. Katılım Bankası">T.O.M. Katılım Bankası</option><option value="Hayat Finans Katılım Bankası">Hayat Finans Katılım Bankası</option></optgroup></select></div><div class="form-group" id="kendiBankaDiv"><label>Kendi Çekimizin Bankası</label><select class="form-control" id="kendiBankaSecim"><optgroup label="Kamu Bankaları"><option value="T.C. Ziraat Bankası">T.C. Ziraat Bankası</option><option value="Türkiye Halk Bankası">Türkiye Halk Bankası</option><option value="Türkiye Vakıflar Bankası">Türkiye Vakıflar Bankası</option></optgroup><optgroup label="Özel Bankalar"><option value="Türkiye İş Bankası">Türkiye İş Bankası</option><option value="Garanti BBVA">Garanti BBVA</option><option value="Akbank">Akbank</option><option value="Yapı Kredi">Yapı Kredi</option><option value="QNB Finansbank">QNB Finansbank</option><option value="DenizBank">DenizBank</option><option value="Türk Ekonomi Bankası (TEB)">Türk Ekonomi Bankası (TEB)</option><option value="İNG Bank">İNG Bank</option><option value="Şekerbank">Şekerbank</option><option value="Anadolubank">Anadolubank</option><option value="Odea Bank">Odea Bank</option><option value="Fibabanka">Fibabanka</option><option value="Burgan Bank">Burgan Bank</option><option value="Alternatif Bank">Alternatif Bank</option><option value="ICBC Turkey Bank">ICBC Turkey Bank</option><option value="HSBC Bank">HSBC Bank</option></optgroup><optgroup label="Katılım Bankaları"><option value="Kuveyt Türk Katılım Bankası">Kuveyt Türk Katılım Bankası</option><option value="Albaraka Türk Katılım Bankası">Albaraka Türk Katılım Bankası</option><option value="Türkiye Finans Katılım Bankası">Türkiye Finans Katılım Bankası</option><option value="Vakıf Katılım Bankası">Vakıf Katılım Bankası</option><option value="Ziraat Katılım Bankası">Ziraat Katılım Bankası</option><option value="Emlak Katılım Bankası">Emlak Katılım Bankası</option><option value="T.O.M. Katılım Bankası">T.O.M. Katılım Bankası</option><option value="Hayat Finans Katılım Bankası">Hayat Finans Katılım Bankası</option></optgroup></select></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalCekCikis')">İptal</button><button class="btn btn-danger" onclick="dbCekCikisKaydet()">Kaydet</button></div></div></div>
 <div id="modalCekDuzenle" class="modal-overlay"><div class="cek-modal"><h2><i class="fa-solid fa-pen" style="color:var(--warning);"></i> Çeki Düzenle</h2><input type="hidden" id="duzenleId"><div class="form-group"><label>Çek No</label><input type="text" class="form-control" id="duzenleCekNo"></div><div class="form-group"><label>Cari</label><input type="text" class="form-control" id="duzenleCari" readonly style="background:#f1f1f1;"></div><div class="form-group"><label>Banka</label><select class="form-control" id="duzenleBanka"><optgroup label="Kamu Bankaları"><option value="T.C. Ziraat Bankası">T.C. Ziraat Bankası</option><option value="Türkiye Halk Bankası">Türkiye Halk Bankası</option><option value="Türkiye Vakıflar Bankası">Türkiye Vakıflar Bankası</option></optgroup><optgroup label="Özel Bankalar"><option value="Türkiye İş Bankası">Türkiye İş Bankası</option><option value="Garanti BBVA">Garanti BBVA</option><option value="Akbank">Akbank</option><option value="Yapı Kredi">Yapı Kredi</option><option value="QNB Finansbank">QNB Finansbank</option><option value="DenizBank">DenizBank</option><option value="Türk Ekonomi Bankası (TEB)">Türk Ekonomi Bankası (TEB)</option><option value="İNG Bank">İNG Bank</option><option value="Şekerbank">Şekerbank</option><option value="Anadolubank">Anadolubank</option><option value="Odea Bank">Odea Bank</option><option value="Fibabanka">Fibabanka</option><option value="Burgan Bank">Burgan Bank</option><option value="Alternatif Bank">Alternatif Bank</option><option value="ICBC Turkey Bank">ICBC Turkey Bank</option><option value="HSBC Bank">HSBC Bank</option></optgroup><optgroup label="Katılım Bankaları"><option value="Kuveyt Türk Katılım Bankası">Kuveyt Türk Katılım Bankası</option><option value="Albaraka Türk Katılım Bankası">Albaraka Türk Katılım Bankası</option><option value="Türkiye Finans Katılım Bankası">Türkiye Finans Katılım Bankası</option><option value="Vakıf Katılım Bankası">Vakıf Katılım Bankası</option><option value="Ziraat Katılım Bankası">Ziraat Katılım Bankası</option><option value="Emlak Katılım Bankası">Emlak Katılım Bankası</option><option value="T.O.M. Katılım Bankası">T.O.M. Katılım Bankası</option><option value="Hayat Finans Katılım Bankası">Hayat Finans Katılım Bankası</option></optgroup></select></div><div class="form-group"><label>Tutar</label><input type="number" class="form-control" id="duzenleTutar"></div><div class="form-group"><label>Vade</label><input type="date" class="form-control" id="duzenleVade"></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalCekDuzenle')">İptal</button><button class="btn btn-primary" onclick="dbCekGuncelleKaydet()">Değişiklikleri Kaydet</button></div></div></div>
-<div id="modalCikisListesi" class="modal-overlay"><div class="cek-modal modal-large"><h2><i class="fa-solid fa-list-check" style="color:var(--accent);"></i> Çıkış Yapılanlar</h2><table class="cek-table"><thead><tr><th>Çek No</th><th>Sahibi</th><th>Yeri</th><th>Vade</th><th style="text-align:right;">Tutar</th><th style="text-align:right;">İşlem</th></tr></thead><tbody id="tbodyCikis"></tbody></table><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalCikisListesi')">Kapat</button></div></div></div>
+<div id="modalCikisListesi" class="modal-overlay"><div class="cek-modal modal-large"><h2><i class="fa-solid fa-list-check" style="color:var(--accent);"></i> Çıkış Yapılanlar</h2><table class="cek-table"><thead><tr><th>Çek No</th><th>Sahibi</th><th>Yeri</th><th>Çıkış Tarihi</th><th style="text-align:center;">Çıkıştan Vade</th><th>Vade</th><th style="text-align:right;">Tutar</th><th style="text-align:right;">İşlem</th></tr></thead><tbody id="tbodyCikis"></tbody></table><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalCikisListesi')">Kapat</button></div></div></div>
 <div id="modalVadeHesapla" class="modal-overlay"><div class="cek-modal modal-large"><h2><i class="fa-solid fa-clock" style="color:var(--accent);"></i> Vade Hesapla</h2><div style="display:flex; gap:10px; margin-bottom:20px; background:#f8f9fa; padding:15px; border-radius:8px;"><div style="flex:1;"><label>Tutar (TL)</label><input type="number" id="hesaplaTutar" class="form-control"></div><div style="flex:1;"><label>Vade</label><input type="date" id="hesaplaVade" class="form-control"></div><div style="display:flex; align-items:flex-end;"><button class="btn btn-primary" onclick="geciciCekEkle()">+ Ekle</button></div></div><table class="cek-table"><thead><tr><th>Sıra</th><th style="text-align:right;">Tutar</th><th style="text-align:right;">Vade Tarihi</th><th style="text-align:right;">Kalan Gün</th></tr></thead><tbody id="vadeTablosu"></tbody></table><div style="margin-top:20px; padding:15px; background:#eafaf1; border-radius:8px; border:1px solid var(--success);"><p><strong>Toplam Tutar:</strong> <span id="toplamTutarMetni">0 TL</span></p><p><strong>Ortalama Vade:</strong> <span id="ortalamaVadeMetni" style="color:var(--danger); font-weight:bold; font-size:18px;">0 Gün</span></p></div><div class="modal-actions"><button class="btn btn-outline" onclick="geciciCekleriTemizle()">Temizle</button><button class="btn btn-outline" onclick="closeModal('modalVadeHesapla')">Kapat</button></div></div></div>
 
 <div id="islemMenu" class="islem-menu"></div>
@@ -630,6 +630,18 @@
     function girisTarihiYaz(c) {
         const t = girisTarihi(c);
         return t ? formatDate(t) : '<span style="color:#bbb;">—</span>';
+    }
+    // Çıkış tarihini yazdırır
+    function cikisTarihiYaz(c) {
+        const t = cikisTarihi(c);
+        return t ? formatDate(t) : '<span style="color:#bbb;">—</span>';
+    }
+    // Çıkış tarihinden vadeye kaç gün var
+    function cikisVadeYaz(c) {
+        const t = cikisTarihi(c);
+        if (!t) return '<span style="color:#bbb;">—</span>';
+        const g = gunFarki(t, c.vade_tarihi);
+        return (g !== null && g >= 0) ? g + ' gün' : '<span style="color:#bbb;">—</span>';
     }
     // Bugünün tarihini YYYY-AA-GG olarak verir
     function bugunTarih() {
@@ -1238,6 +1250,34 @@
             vadeMesaj = 'Vade verisi yetersiz';
         }
 
+        // --- Çıkış (verilen) hareketlerin aylık dökümü ve son çıkış tarihi ---
+        const cikisAylar = {};
+        let sonCikis = null, sonCikisCek = null;
+
+        cekler.forEach(c => {
+            if (!cariyeVerilenMi(c, cari.unvan)) return;
+            const ct = cikisTarihi(c);
+            if (!ct) return;
+            const d = new Date(ct);
+            if (isNaN(d)) return;
+
+            const anahtar = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            if (!cikisAylar[anahtar]) cikisAylar[anahtar] = { etiket: `${monthNames[d.getMonth()]} ${d.getFullYear()}`, top: 0, adet: 0 };
+            cikisAylar[anahtar].top += Number(c.tutar) || 0;
+            cikisAylar[anahtar].adet++;
+
+            if (!sonCikis || ct > sonCikis) { sonCikis = ct; sonCikisCek = c; }
+        });
+
+        const cikisAyKeys = Object.keys(cikisAylar).sort().reverse();
+        let sonCikisMetni = '—', sonCikisAlt = 'Henüz çıkış yok';
+        if (sonCikis) {
+            sonCikisMetni = formatDate(sonCikis);
+            const gecen = Math.round((new Date().setHours(0,0,0,0) - new Date(sonCikis).setHours(0,0,0,0)) / 86400000);
+            sonCikisAlt = (gecen === 0 ? 'Bugün' : gecen === 1 ? 'Dün' : gecen + ' gün önce') +
+                (sonCikisCek ? ' · ' + formatMoney(sonCikisCek.tutar) : '');
+        }
+
         // --- Özet kutuları ---
         ozetKutu.innerHTML = `<div class="ekstre-ozet">
             <div class="ozet-kutu ozet-mavi">
@@ -1271,7 +1311,26 @@
                     onchange="anlasmaVadeKaydet(${cari.id}, this.value)">
                 <div class="vade-durum" style="color:${vadeMesajRenk};">${vadeMesaj}</div>
             </div>
+            <div class="ozet-kutu ozet-turuncu">
+                <div class="baslik">Son Çek Çıkışı</div>
+                <div class="deger" style="font-size:15px;">${sonCikisMetni}</div>
+                <div class="alt">${sonCikisAlt}</div>
+            </div>
         </div>
+
+        ${cikisAyKeys.length ? `
+        <div style="font-size:11.5px; font-weight:700; color:var(--muted); margin-bottom:8px; letter-spacing:.05em; text-transform:uppercase;">📤 Aylık Çek Çıkışı <span style="font-weight:400; text-transform:none; letter-spacing:0;">(bu cariye verilenler)</span></div>
+        <div style="display:flex; gap:9px; flex-wrap:wrap; margin-bottom:18px;">
+            ${cikisAyKeys.map(k => {
+                const a = cikisAylar[k];
+                return `<div style="background:var(--danger-bg); border:1px solid var(--danger-line); border-radius:9px; padding:9px 13px; min-width:118px;">
+                    <div style="font-size:10.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.04em;">${a.etiket}</div>
+                    <div style="font-size:15px; font-weight:700; color:var(--danger); margin-top:2px;">${formatMoney(a.top)}</div>
+                    <div style="font-size:10.5px; color:var(--faint);">${a.adet} çek</div>
+                </div>`;
+            }).join('')}
+        </div>` : ''}
+
         <div style="font-size:11.5px; font-weight:700; color:var(--muted); margin-bottom:8px; letter-spacing:.05em; text-transform:uppercase;">📅 Vade Takvimi <span style="font-weight:400; text-transform:none; letter-spacing:0;">(yakın vadeden uzağa)</span></div>`;
 
         // --- Tablo satırları ---
@@ -1281,6 +1340,8 @@
             const tamamlandi = (c.durum === 'Ödendi');
             const gt = girisTarihi(c);
             const vadeGun = gunFarki(gt, c.vade_tarihi);
+            const ct = cikisTarihi(c);
+            const cikisVadeGun = gunFarki(ct, c.vade_tarihi);
             const kalan = calcDays(c.vade_tarihi);
 
             let kalanHtml;
@@ -1302,6 +1363,8 @@
                 <td style="color:${renk}; font-weight:600; font-size:12px;">${alinan ? 'Alınan' : (c.durum === 'Ciro Edildi' ? 'Ciro' : 'Verilen')}</td>
                 <td style="color:var(--muted);">${gt ? formatDate(gt) : '<span style="color:#cbd5e1;">—</span>'}</td>
                 <td style="text-align:center; font-weight:600;">${vadeGun !== null && vadeGun >= 0 ? vadeGun + ' gün' : '<span style="color:#cbd5e1;">—</span>'}</td>
+                <td style="color:var(--muted);">${ct ? formatDate(ct) : '<span style="color:#cbd5e1;">—</span>'}</td>
+                <td style="text-align:center; font-weight:600; color:${cikisVadeGun !== null ? 'var(--accent)' : 'inherit'};">${cikisVadeGun !== null && cikisVadeGun >= 0 ? cikisVadeGun + ' gün' : '<span style="color:#cbd5e1;">—</span>'}</td>
                 <td><strong>${formatDate(c.vade_tarihi)}</strong></td>
                 <td style="text-align:center;">${kalanHtml}</td>
                 <td style="text-align:right; font-weight:700; color:${renk};">${formatMoney(c.tutar)}</td>
@@ -1363,6 +1426,8 @@
             const alinan = !cariyeVerilenMi(c, cari.unvan);
             const gt = girisTarihi(c);
             const vg = gunFarki(gt, c.vade_tarihi);
+            const ct = cikisTarihi(c);
+            const cvg = gunFarki(ct, c.vade_tarihi);
             const kalan = calcDays(c.vade_tarihi);
             const tamam = (c.durum === 'Ödendi');
             return `<tr>
@@ -1370,6 +1435,8 @@
                 <td style="color:${alinan ? '#059669' : '#dc2626'};">${alinan ? 'Alinan' : (c.durum === 'Ciro Edildi' ? 'Ciro' : 'Verilen')}</td>
                 <td>${gt ? formatDate(gt) : '-'}</td>
                 <td style="text-align:center;">${vg !== null && vg >= 0 ? vg : '-'}</td>
+                <td>${ct ? formatDate(ct) : '-'}</td>
+                <td style="text-align:center;">${cvg !== null && cvg >= 0 ? cvg : '-'}</td>
                 <td>${formatDate(c.vade_tarihi)}</td>
                 <td style="text-align:center;">${tamam ? '-' : (kalan < 0 ? 'Gecikti' : kalan)}</td>
                 <td style="text-align:right; font-weight:bold;">${formatMoney(c.tutar)}</td>
@@ -1423,6 +1490,8 @@
                         <th style="padding:7px; text-align:left;">Tur</th>
                         <th style="padding:7px; text-align:left;">Giris Tarihi</th>
                         <th style="padding:7px; text-align:center;">Vade Gunu</th>
+                        <th style="padding:7px; text-align:left;">Cikis Tarihi</th>
+                        <th style="padding:7px; text-align:center;">Cikistan Vade</th>
                         <th style="padding:7px; text-align:left;">Vade Tarihi</th>
                         <th style="padding:7px; text-align:center;">Kalan</th>
                         <th style="padding:7px; text-align:right;">Tutar</th>
@@ -1444,15 +1513,25 @@
             tr.querySelectorAll('td').forEach(td => { td.style.padding = '6px 7px'; td.style.borderBottom = '1px solid #e2e8f0'; });
         });
 
+        // html2pdf ekranda olmayan içeriği boş basar — geçici olarak sayfaya ekliyoruz
+        kapsayici.style.position = 'fixed';
+        kapsayici.style.left = '-10000px';
+        kapsayici.style.top = '0';
+        kapsayici.style.width = '1120px';
+        kapsayici.style.background = '#fff';
+        document.body.appendChild(kapsayici);
+
         const dosyaAdi = `Ekstre_${cari.unvan.replace(/[^a-zA-Z0-9ğüşıöçĞÜŞİÖÇ ]/g,'').replace(/\s+/g,'_')}_${tarihStr.replace(/\./g,'-')}.pdf`;
 
         html2pdf().set({
             margin: 8,
             filename: dosyaAdi,
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
+            html2canvas: { scale: 2, useCORS: true, windowWidth: 1120 },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
-        }).from(kapsayici).save();
+        }).from(kapsayici).save()
+          .then(() => kapsayici.remove())
+          .catch((e) => { kapsayici.remove(); alert('PDF oluşturulamadı: ' + e.message); });
     }
 
     function renderDropdowns() {
@@ -1558,7 +1637,7 @@
         let htmlVarlik = '', htmlOdenecek = '', htmlCikis = '', htmlOdendi = ''; let htmlGundemTahsil = '', htmlGundemOdenecek = '';
         const currentMonth = new Date().getMonth(); const currentYear = new Date().getFullYear();
 
-        if(g_cekler.length === 0) { htmlVarlik = '<tr><td colspan="9" style="text-align:center; color:#999;">Kayıt bulunamadı.</td></tr>'; htmlOdenecek = '<tr><td colspan="8" style="text-align:center; color:#999;">Kayıt bulunamadı.</td></tr>'; htmlCikis = '<tr><td colspan="6" style="text-align:center; color:#999;">Kayıt bulunamadı.</td></tr>'; }
+        if(g_cekler.length === 0) { htmlVarlik = '<tr><td colspan="9" style="text-align:center; color:#999;">Kayıt bulunamadı.</td></tr>'; htmlOdenecek = '<tr><td colspan="9" style="text-align:center; color:#999;">Kayıt bulunamadı.</td></tr>'; htmlCikis = '<tr><td colspan="8" style="text-align:center; color:#999;">Kayıt bulunamadı.</td></tr>'; }
         
         g_cekler.forEach(c => {
             const gun = calcDays(c.vade_tarihi); const isThisMonth = (new Date(c.vade_tarihi).getMonth() === currentMonth && new Date(c.vade_tarihi).getFullYear() === currentYear);
@@ -1580,11 +1659,11 @@
             }
             if(c.durum === 'Ödenecek') {
                 topOdenecek += Number(c.tutar);
-                htmlOdenecek += `<tr ${rowClass}><td>${c.cek_no}</td><td>${c.cari_unvan}</td><td>${c.banka_adi || '-'}</td><td style="color:#7f8c8d; font-size:13px;">${girisTarihiYaz(c)}</td><td><strong>${formatDate(c.vade_tarihi)}</strong></td><td style="text-align:right; font-weight:bold; color:var(--danger);">${formatMoney(c.tutar)}</td><td style="text-align:right;"><span class="badge badge-kendi">Ödenecek</span></td><td style="text-align:right;">${islemHucre}</td></tr>`;
+                htmlOdenecek += `<tr ${rowClass}><td>${c.cek_no}</td><td>${c.cari_unvan}</td><td>${c.banka_adi || '-'}</td><td style="color:#7f8c8d; font-size:13px;">${cikisTarihiYaz(c)}</td><td style="text-align:center; font-weight:600; color:var(--accent);">${cikisVadeYaz(c)}</td><td><strong>${formatDate(c.vade_tarihi)}</strong></td><td style="text-align:right; font-weight:bold; color:var(--danger);">${formatMoney(c.tutar)}</td><td style="text-align:right;"><span class="badge badge-kendi">Ödenecek</span></td><td style="text-align:right;">${islemHucre}</td></tr>`;
                 if(isThisMonth) { gundemOdenecekToplam += Number(c.tutar); htmlGundemOdenecek += `<div class="agenda-item"><div><strong>${c.cek_no}</strong> - ${c.cari_unvan}<br><span style="font-size:12px;color:var(--danger); font-weight:bold;">🏦 ${c.banka_adi || 'Kendi Çekimiz'}</span></div><div style="text-align:right;"><span style="font-size:12px;color:#666;">${formatDate(c.vade_tarihi)}</span><br><strong style="color:var(--danger);">${formatMoney(c.tutar)}</strong></div></div>`; }
             }
             if(c.durum === 'Ciro Edildi' || c.durum === 'Kredi Ödemesi') {
-                htmlCikis += `<tr><td>${c.cek_no}</td><td>${c.cari_unvan}</td><td>${c.banka_bilgisi}</td><td>${formatDate(c.vade_tarihi)}</td><td style="text-align:right; font-weight:bold;">${formatMoney(c.tutar)}</td><td style="text-align:right;">${islemButonu(c.id)}</td></tr>`;
+                htmlCikis += `<tr><td>${c.cek_no}</td><td>${c.cari_unvan}</td><td>${c.banka_bilgisi}</td><td style="color:#7f8c8d; font-size:13px;">${cikisTarihiYaz(c)}</td><td style="text-align:center; font-weight:600; color:var(--accent);">${cikisVadeYaz(c)}</td><td>${formatDate(c.vade_tarihi)}</td><td style="text-align:right; font-weight:bold;">${formatMoney(c.tutar)}</td><td style="text-align:right;">${islemButonu(c.id)}</td></tr>`;
             }
         });
 
