@@ -453,7 +453,8 @@
     <label>İşlem Türü</label>
     <select class="form-control" id="iadeTuru" onchange="iadeFormGuncelle()">
         <option value="degisim">🔄 Değişim — çeki geri verip yerine yeni çek alıyorum</option>
-        <option value="iade">↩️ İade — çeki geri veriyorum, yerine çek almıyorum</option>
+        <option value="iade">↩️ İade — çeki cariye geri veriyorum, sistemden çıksın</option>
+        <option value="gerial">📥 Geri Alım — çeki geri aldım, kasaya girsin</option>
     </select>
 </div>
 
@@ -1640,9 +1641,21 @@
     function iadeFormGuncelle() {
         const tur = document.getElementById('iadeTuru').value;
         document.getElementById('yeniCekAlani').style.display = (tur === 'degisim') ? 'block' : 'none';
-        document.getElementById('btnIadeKaydet').innerHTML = (tur === 'degisim')
-            ? '<i class="fa-solid fa-right-left"></i> Değişimi Kaydet'
-            : '<i class="fa-solid fa-rotate-left"></i> İadeyi Kaydet';
+
+        const btn = document.getElementById('btnIadeKaydet');
+        if (tur === 'degisim') btn.innerHTML = '<i class="fa-solid fa-right-left"></i> Değişimi Kaydet';
+        else if (tur === 'gerial') btn.innerHTML = '<i class="fa-solid fa-arrow-down-to-bracket"></i> Kasaya Geri Al';
+        else btn.innerHTML = '<i class="fa-solid fa-rotate-left"></i> İadeyi Kaydet';
+
+        // Geri alımda kasadaki çekler anlamsız — çıkış yapılanları göster
+        const kaynak = document.getElementById('iadeKaynak');
+        if (tur === 'gerial' && kaynak.value === 'kasa') {
+            kaynak.value = 'cikis';
+            iadeCekListesiDoldur();
+        }
+
+        // Seçili çek varsa bilgi kutusunu tazele
+        if (document.getElementById('iadeCekSecim').value) iadeCekBilgiGoster();
     }
 
     // Seçilen çekin bilgilerini gösterir ve yeni çek alanlarını ön doldurur
@@ -1666,6 +1679,7 @@
         else konum = c.durum;
 
         const cikisMi = (c.durum !== 'Kasada');
+        const islemTuru = document.getElementById('iadeTuru').value;
 
         kutu.innerHTML = `<div style="font-weight:700; color:var(--primary); margin-bottom:6px;">İade edilecek çek</div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px 14px; color:var(--secondary);">
@@ -1676,9 +1690,19 @@
                 <div>Banka: ${c.banka_adi || '-'}</div>
                 <div>Durum: <strong>${konum}</strong></div>
             </div>
-            ${cikisMi ? `<div style="margin-top:9px; padding:8px 10px; background:var(--warning-bg); border:1px solid var(--warning-line); border-radius:7px; font-size:11.5px; color:var(--warning);">
-                <i class="fa-solid fa-triangle-exclamation"></i> Bu çek çıkış yapılmış durumda. İade işlemi öncesi ilgili yerden geri aldığınızdan emin olun.
-            </div>` : ''}`;
+            ${islemTuru === 'gerial'
+                ? (cikisMi
+                    ? `<div style="margin-top:9px; padding:8px 10px; background:var(--success-bg); border:1px solid var(--success-line); border-radius:7px; font-size:11.5px; color:var(--success);">
+                        <i class="fa-solid fa-arrow-down-to-bracket"></i> Bu çek geri alınıp <strong>kasaya</strong> girecek, tekrar kullanılabilir olacak.
+                    </div>`
+                    : `<div style="margin-top:9px; padding:8px 10px; background:var(--warning-bg); border:1px solid var(--warning-line); border-radius:7px; font-size:11.5px; color:var(--warning);">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Bu çek zaten kasada, geri alma işlemi gerekmiyor.
+                    </div>`)
+                : (cikisMi
+                    ? `<div style="margin-top:9px; padding:8px 10px; background:var(--warning-bg); border:1px solid var(--warning-line); border-radius:7px; font-size:11.5px; color:var(--warning);">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Bu çek çıkış yapılmış durumda. İade işlemi öncesi ilgili yerden geri aldığınızdan emin olun.
+                    </div>`
+                    : '')}`;
 
         // Değişimde yeni çek alanlarını aynı bilgilerle başlat
         if (document.getElementById('iadeTuru').value === 'degisim') {
@@ -1722,6 +1746,13 @@
                 `Cari: ${eski.cari_unvan}\n\n` +
                 `${nerede} düşecek, yeni çek kasaya girecek.\n\nOnaylıyor musunuz?`;
             if (!confirm(onay)) return;
+        } else if (tur === 'gerial') {
+            if (eski.durum === 'Kasada') return alert('Bu çek zaten kasada. Geri alma işlemi gerekmiyor.');
+            const onay = `GERİ ALIM ONAYI\n\n${eski.cek_no} · ${formatMoney(eski.tutar)} · ${formatDate(eski.vade_tarihi)}\n` +
+                `Şu anki yeri: ${eski.durum}${eski.banka_bilgisi ? ' (' + eski.banka_bilgisi + ')' : ''}\n` +
+                `Cari: ${eski.cari_unvan}\n\n` +
+                `Bu çek geri alınıp KASAYA girecek.\n\nOnaylıyor musunuz?`;
+            if (!confirm(onay)) return;
         } else {
             const onay = `İADE ONAYI\n\n${eski.cek_no} · ${formatMoney(eski.tutar)} · ${formatDate(eski.vade_tarihi)}\n` +
                 `Çekin yeri: ${eski.durum}${eski.banka_bilgisi ? ' (' + eski.banka_bilgisi + ')' : ''}\n` +
@@ -1733,23 +1764,37 @@
         btn.disabled = true;
 
         try {
-            // Eski çeki iade olarak işaretle
-            const { error: e1 } = await db.from('cekler').update({
-                durum: 'İade Edildi',
-                cikis_tarihi: bugunTarih(),
-                banka_bilgisi: eski.cari_unvan + (not ? ' — ' + not : ''),
-                son_duzenleyen_kullanici: aktifKullanici,
-                guncelleme_tarihi: new Date()
-            }).eq('id', seciliId);
-            if (e1) throw e1;
+            if (tur === 'gerial') {
+                // Çek geri alındı — kasaya döner, çıkış bilgisi temizlenir
+                const { error: e0 } = await db.from('cekler').update({
+                    durum: 'Kasada',
+                    banka_bilgisi: '',
+                    cikis_tarihi: null,
+                    son_duzenleyen_kullanici: `${aktifKullanici} (geri alım${not ? ': ' + not : ''})`,
+                    guncelleme_tarihi: new Date()
+                }).eq('id', seciliId);
+                if (e0) throw e0;
+            } else {
+                // İade veya değişim — çek elden çıkar
+                const { error: e1 } = await db.from('cekler').update({
+                    durum: 'İade Edildi',
+                    cikis_tarihi: bugunTarih(),
+                    banka_bilgisi: eski.cari_unvan + (not ? ' — ' + not : ''),
+                    son_duzenleyen_kullanici: aktifKullanici,
+                    guncelleme_tarihi: new Date()
+                }).eq('id', seciliId);
+                if (e1) throw e1;
 
-            // Değişimse yeni çeki ekle
-            if (yeniCek) {
-                const { error: e2 } = await db.from('cekler').insert([yeniCek]);
-                if (e2) throw e2;
+                // Değişimse yeni çeki ekle
+                if (yeniCek) {
+                    const { error: e2 } = await db.from('cekler').insert([yeniCek]);
+                    if (e2) throw e2;
+                }
             }
 
-            alert(tur === 'degisim' ? 'Değişim kaydedildi.' : 'İade kaydedildi.');
+            const mesaj = tur === 'degisim' ? 'Değişim kaydedildi.'
+                        : (tur === 'gerial' ? `Çek kasaya geri alındı.\n\n${eski.cek_no} · ${formatMoney(eski.tutar)}` : 'İade kaydedildi.');
+            alert(mesaj);
             closeModal('modalCekIade');
             await loadData();
         } catch (e) {
