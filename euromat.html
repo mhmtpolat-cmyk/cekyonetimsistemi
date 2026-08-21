@@ -270,6 +270,7 @@
                 <div class="tb-sag">
                     <div class="tb-kutu"><div class="etiket">Bankalar</div><div class="deger tb-mavi" id="tbBanka">₺0,00</div></div>
                     <div class="tb-kutu"><div class="etiket">Kasa</div><div class="deger tb-yesil" id="tbKasa">₺0,00</div></div>
+                    <div class="tb-kutu" id="tbEksiKutu" style="display:none;"><div class="etiket">Eksi Bakiye</div><div class="deger tb-kirmizi" id="tbEksi">₺0,00</div></div>
                 </div>
             </div>
 
@@ -816,9 +817,11 @@ function bakiyeler() {
 // ================= ANA PANEL =================
 function panelYaz() {
     const bak = bakiyeler();
-    let toplam = 0, bankaTop = 0, kasaTop = 0;
+    // Eksi bakiyeler nakit varlık sayılmaz, ayrı takip edilir
+    let toplam = 0, bankaTop = 0, kasaTop = 0, eksiTop = 0, eksiAdet = 0;
     hesaplar.forEach(h => {
         const v = bak[h.id] || 0;
+        if (v < 0) { eksiTop += v; eksiAdet++; return; }
         toplam += v;
         if (h.tur === 'kasa') kasaTop += v; else bankaTop += v;
     });
@@ -848,7 +851,18 @@ function panelYaz() {
     document.getElementById('tbToplam').innerText = para(toplam);
     document.getElementById('tbBanka').innerText = para(bankaTop);
     document.getElementById('tbKasa').innerText = para(kasaTop);
-    document.getElementById('tbNot').innerText = `${hesaplar.length} hesap · toplam ${islemler.length} kayıt`;
+    // Eksi bakiyeli hesap varsa ayrı göster
+    const eksiKutu = document.getElementById('tbEksiKutu');
+    if (eksiAdet > 0) {
+        eksiKutu.style.display = '';
+        document.getElementById('tbEksi').innerText = para(eksiTop);
+    } else {
+        eksiKutu.style.display = 'none';
+    }
+
+    document.getElementById('tbNot').innerText =
+        `${hesaplar.length} hesap · toplam ${islemler.length} kayıt` +
+        (eksiAdet > 0 ? ` · ${eksiAdet} hesap eksi bakiyede (toplama dahil değil)` : '');
 
     // Bu ay kutuları
     document.getElementById('buAyEtiket').innerText = `${AYLAR[bg.getMonth()]} ${bg.getFullYear()}`;
@@ -1562,7 +1576,8 @@ function raporYaz() {
 
     // Mevcut bakiye
     const bak = bakiyeler();
-    const mevcutBakiye = hesaplar.reduce((s, hh) => s + (bak[hh.id] || 0), 0);
+    // Eksi bakiyeler nakit varlık sayılmaz (panelle tutarlı)
+    const mevcutBakiye = hesaplar.reduce((s, hh) => s + Math.max(bak[hh.id] || 0, 0), 0);
 
     // Gider karşılama oranı
     const karsilama = toplamC > 0 ? (toplamG / toplamC) : 0;
