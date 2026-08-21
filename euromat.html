@@ -264,9 +264,33 @@
                 <div class="tb-sag">
                     <div class="tb-kutu"><div class="etiket">Bankalar</div><div class="deger tb-mavi" id="tbBanka">₺0,00</div></div>
                     <div class="tb-kutu"><div class="etiket">Kasa</div><div class="deger tb-yesil" id="tbKasa">₺0,00</div></div>
-                    <div class="tb-kutu"><div class="etiket">Bu Ay Giren</div><div class="deger tb-yesil" id="tbGiren">₺0,00</div></div>
-                    <div class="tb-kutu"><div class="etiket">Bu Ay Çıkan</div><div class="deger tb-kirmizi" id="tbCikan">₺0,00</div></div>
                 </div>
+            </div>
+
+            <!-- AKIŞ ÖZETİ -->
+            <div class="grid-2" style="margin-bottom:18px;">
+                <div class="card" style="margin-bottom:0;">
+                    <h2><span class="sol"><i class="fa-solid fa-calendar-day" style="color:var(--accent);"></i> Bu Ay</span><span class="sub" id="buAyEtiket"></span></h2>
+                    <div class="grid-3">
+                        <div class="metrik m-yesil"><div class="lbl">Giren</div><div class="val" id="tbGiren">₺0,00</div><div class="alt" id="ayGirenAdet"></div></div>
+                        <div class="metrik m-kirmizi"><div class="lbl">Çıkan</div><div class="val" id="tbCikan">₺0,00</div><div class="alt" id="ayCikanAdet"></div></div>
+                        <div class="metrik m-mavi"><div class="lbl">Net</div><div class="val" id="ayNet">₺0,00</div><div class="alt">bu ayın farkı</div></div>
+                    </div>
+                </div>
+                <div class="card" style="margin-bottom:0;">
+                    <h2><span class="sol"><i class="fa-solid fa-forward" style="color:var(--warning);"></i> Önümüzdeki 30 Gün</span><span class="sub">planlanan hareketler</span></h2>
+                    <div class="grid-3">
+                        <div class="metrik m-yesil"><div class="lbl">Girecek</div><div class="val" id="planGirecek">₺0,00</div><div class="alt" id="planGirecekAdet"></div></div>
+                        <div class="metrik m-kirmizi"><div class="lbl">Çıkacak</div><div class="val" id="planCikacak">₺0,00</div><div class="alt" id="planCikacakAdet"></div></div>
+                        <div class="metrik" id="tahminKutu"><div class="lbl">Tahmini Bakiye</div><div class="val" id="tahminBakiye">₺0,00</div><div class="alt">30 gün sonra</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HESAPLAR -->
+            <div class="card">
+                <h2><span class="sol"><i class="fa-solid fa-wallet" style="color:var(--accent);"></i> Hesaplar</span><span class="sub">karta tıklayınca hareket geçmişi açılır</span></h2>
+                <div class="grid-3" id="hesapListesi"></div>
             </div>
 
             <!-- PLANLANAN ÖDEMELER -->
@@ -298,12 +322,6 @@
                 <div class="tablo-sarmal">
                     <table><thead><tr><th>Cari</th><th style="text-align:right;">Alınan Borç</th><th style="text-align:right;">Ödenen</th><th style="text-align:right;">Kalan Borç</th><th>Son Hareket</th><th style="text-align:right;">İşlem</th></tr></thead><tbody id="borcTablo"></tbody></table>
                 </div>
-            </div>
-
-            <!-- HESAPLAR -->
-            <div class="card">
-                <h2><span class="sol"><i class="fa-solid fa-wallet" style="color:var(--accent);"></i> Hesaplar</span><span class="sub">karta tıklayınca hareket geçmişi açılır</span></h2>
-                <div class="grid-3" id="hesapListesi"></div>
             </div>
 
             <!-- GRAFİKLER -->
@@ -414,23 +432,68 @@
 
         <!-- ============ RAPORLAR ============ -->
         <div id="v-rapor" class="hidden">
-            <div class="header"><div><h1>Raporlar</h1><div class="alt">Dönemsel nakit akış özetleri</div></div></div>
+            <div class="header">
+                <div><h1>Raporlar & Analiz</h1><div class="alt" id="raporAlt">Nakit akış değerlendirmesi</div></div>
+                <select id="raporDonem" onchange="raporYaz()" class="form-control" style="width:auto; font-size:12.5px; padding:7px 11px;">
+                    <option value="12">Son 12 Ay</option>
+                    <option value="6">Son 6 Ay</option>
+                    <option value="3">Son 3 Ay</option>
+                    <option value="0">Tüm Zamanlar</option>
+                </select>
+            </div>
+
+            <!-- ANALİZ -->
+            <div class="card">
+                <h2><span class="sol"><i class="fa-solid fa-lightbulb" style="color:var(--warning);"></i> Nakit Akış Analizi</span><span class="sub">otomatik değerlendirme</span></h2>
+                <div class="grid-4" id="analizMetrik" style="margin-bottom:16px;"></div>
+                <div id="analizNotlar"></div>
+            </div>
+
+            <!-- TREND GRAFİĞİ -->
+            <div class="card">
+                <h2><span class="sol"><i class="fa-solid fa-chart-line" style="color:var(--accent);"></i> Aylık Trend</span><span class="sub">giren, çıkan ve net akış</span></h2>
+                <div class="chart-wrap" style="height:300px;"><canvas id="trendChart"></canvas></div>
+            </div>
+
+            <div class="grid-2">
+                <!-- BAKİYE SEYRİ -->
+                <div class="card">
+                    <h2><span class="sol"><i class="fa-solid fa-wave-square" style="color:var(--success);"></i> Bakiye Seyri</span><span class="sub">dönem sonu bakiyeleri</span></h2>
+                    <div class="chart-wrap"><canvas id="bakiyeChart"></canvas></div>
+                </div>
+                <!-- GELİR-GİDER ORANI -->
+                <div class="card">
+                    <h2><span class="sol"><i class="fa-solid fa-scale-balanced" style="color:var(--mor);"></i> Gelir / Gider Dengesi</span><span class="sub">aylık oran</span></h2>
+                    <div class="chart-wrap"><canvas id="oranChart"></canvas></div>
+                </div>
+            </div>
+
+            <!-- AYLIK TABLO -->
             <div class="card">
                 <h2><span class="sol"><i class="fa-solid fa-calendar" style="color:var(--accent);"></i> Aylık Nakit Akışı</span></h2>
                 <div class="tablo-sarmal">
-                    <table><thead><tr><th>Dönem</th><th style="text-align:right;">Giren</th><th style="text-align:right;">Çıkan</th><th style="text-align:right;">Net</th><th style="text-align:right;">İşlem</th></tr></thead><tbody id="aylikRapor"></tbody><tfoot id="aylikRaporAlt"></tfoot></table>
+                    <table><thead><tr><th>Dönem</th><th style="text-align:right;">Giren</th><th style="text-align:right;">Çıkan</th><th style="text-align:right;">Net</th><th style="text-align:right;">Değişim</th><th style="text-align:right;">İşlem</th></tr></thead><tbody id="aylikRapor"></tbody><tfoot id="aylikRaporAlt"></tfoot></table>
                 </div>
             </div>
-            <div class="card">
-                <h2><span class="sol"><i class="fa-solid fa-tags" style="color:var(--mor);"></i> Kategori Bazlı Özet</span></h2>
-                <div class="tablo-sarmal">
-                    <table><thead><tr><th>Kategori</th><th>Tür</th><th style="text-align:right;">Toplam</th><th style="text-align:right;">İşlem Sayısı</th><th style="text-align:right;">Ortalama</th></tr></thead><tbody id="katRapor"></tbody></table>
-                </div>
+
+            <!-- BORÇ ÖZETİ -->
+            <div class="card hidden" id="raporBorcKart">
+                <h2><span class="sol"><i class="fa-solid fa-hand-holding-dollar" style="color:var(--danger);"></i> Borç Özeti</span><span class="sub">kategorisiz borç hareketleri</span></h2>
+                <div class="grid-3" id="raporBorcMetrik"></div>
             </div>
-            <div class="card">
-                <h2><span class="sol"><i class="fa-solid fa-users" style="color:var(--success);"></i> Cari Bazlı Özet</span></h2>
-                <div class="tablo-sarmal">
-                    <table><thead><tr><th>Cari</th><th style="text-align:right;">Gelen</th><th style="text-align:right;">Giden</th><th style="text-align:right;">Net</th><th style="text-align:right;">Son İşlem</th></tr></thead><tbody id="cariRapor"></tbody></table>
+
+            <div class="grid-2">
+                <div class="card">
+                    <h2><span class="sol"><i class="fa-solid fa-tags" style="color:var(--mor);"></i> Kategori Bazlı Özet</span></h2>
+                    <div class="tablo-sarmal">
+                        <table><thead><tr><th>Kategori</th><th>Tür</th><th style="text-align:right;">Toplam</th><th style="text-align:right;">İşlem</th><th style="text-align:right;">Ortalama</th></tr></thead><tbody id="katRapor"></tbody></table>
+                    </div>
+                </div>
+                <div class="card">
+                    <h2><span class="sol"><i class="fa-solid fa-users" style="color:var(--success);"></i> Cari Bazlı Özet</span></h2>
+                    <div class="tablo-sarmal">
+                        <table><thead><tr><th>Cari</th><th style="text-align:right;">Gelen</th><th style="text-align:right;">Giden</th><th style="text-align:right;">Net</th><th style="text-align:right;">Son İşlem</th></tr></thead><tbody id="cariRapor"></tbody></table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -469,6 +532,8 @@
             <select id="fmTur" class="form-control" onchange="formGuncelle()">
                 <option value="GIRIS">📥 Para Girişi</option>
                 <option value="CIKIS">📤 Para Çıkışı</option>
+                <option value="BORC_AL">🤝 Borç Alma</option>
+                <option value="BORC_ODE">💸 Borç Ödeme</option>
                 <option value="TRANSFER">🔄 Hesaplar Arası Transfer</option>
             </select>
         </div>
@@ -559,6 +624,14 @@ let akisChart = null, giderChart = null, gelirChart = null;
 
 // ================= YARDIMCILAR =================
 const para = (t) => '₺' + new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(parseFloat(t) || 0);
+// Grafik eksenleri için kısaltılmış tutar
+const paraKisa = (t) => {
+    const v = Math.abs(parseFloat(t) || 0);
+    const isaret = (parseFloat(t) || 0) < 0 ? '-' : '';
+    if (v >= 1000000) return isaret + '₺' + (v / 1000000).toFixed(1).replace('.', ',') + 'M';
+    if (v >= 1000) return isaret + '₺' + Math.round(v / 1000) + 'B';
+    return isaret + '₺' + Math.round(v);
+};
 const tarihYaz = (t) => { if (!t) return '-'; const p = String(t).split('T')[0].split('-'); return p.length === 3 ? `${p[2]}.${p[1]}.${p[0]}` : t; };
 const bugun = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 const sayiOku = (m) => { if (!m) return NaN; return parseFloat(String(m).replace(/\./g, '').replace(',', '.')); };
@@ -734,24 +807,57 @@ function panelYaz() {
     });
 
     const bg = new Date();
-    let ayGiren = 0, ayCikan = 0, ayAdet = 0;
+    let ayGiren = 0, ayCikan = 0, ayGirenAdet = 0, ayCikanAdet = 0;
     islemler.forEach(t => {
         if (t.beklenen || t.tur === 'TRANSFER') return;
         const d = new Date(t.tarih);
         if (d.getMonth() === bg.getMonth() && d.getFullYear() === bg.getFullYear()) {
-            ayAdet++;
-            if (t.tur === 'GIRIS') ayGiren += t.tutar; else ayCikan += t.tutar;
+            if (t.tur === 'GIRIS') { ayGiren += t.tutar; ayGirenAdet++; }
+            else { ayCikan += t.tutar; ayCikanAdet++; }
         }
+    });
+
+    // Önümüzdeki 30 günde planlananlar
+    const bugunStr = bugun();
+    let planGirecek = 0, planCikacak = 0, planGirAdet = 0, planCikAdet = 0;
+    islemler.forEach(t => {
+        if (!t.beklenen) return;
+        const f = gunFark(bugunStr, t.tarih);
+        if (f > 30) return;                       // 30 günden uzak olanlar hariç
+        if (t.tur === 'GIRIS') { planGirecek += t.tutar; planGirAdet++; }
+        else { planCikacak += t.tutar; planCikAdet++; }
     });
 
     document.getElementById('tbToplam').innerText = para(toplam);
     document.getElementById('tbBanka').innerText = para(bankaTop);
     document.getElementById('tbKasa').innerText = para(kasaTop);
+    document.getElementById('tbNot').innerText = `${hesaplar.length} hesap · toplam ${islemler.length} kayıt`;
+
+    // Bu ay kutuları
+    document.getElementById('buAyEtiket').innerText = `${AYLAR[bg.getMonth()]} ${bg.getFullYear()}`;
     document.getElementById('tbGiren').innerText = para(ayGiren);
     document.getElementById('tbCikan').innerText = para(ayCikan);
-    document.getElementById('tbNot').innerText = `${hesaplar.length} hesap · ${AYLAR[bg.getMonth()]} ayında ${ayAdet} işlem`;
+    document.getElementById('ayGirenAdet').innerText = ayGirenAdet + ' işlem';
+    document.getElementById('ayCikanAdet').innerText = ayCikanAdet + ' işlem';
+    const ayNet = ayGiren - ayCikan;
+    const ayNetEl = document.getElementById('ayNet');
+    ayNetEl.innerText = (ayNet >= 0 ? '+' : '') + para(ayNet);
+    ayNetEl.style.color = ayNet >= 0 ? 'var(--success)' : 'var(--danger)';
+
+    // 30 gün kutuları
+    document.getElementById('planGirecek').innerText = para(planGirecek);
+    document.getElementById('planCikacak').innerText = para(planCikacak);
+    document.getElementById('planGirecekAdet').innerText = planGirAdet ? planGirAdet + ' planlı tahsilat' : 'plan yok';
+    document.getElementById('planCikacakAdet').innerText = planCikAdet ? planCikAdet + ' planlı ödeme' : 'plan yok';
+
+    const tahmin = toplam + planGirecek - planCikacak;
+    const tahminEl = document.getElementById('tahminBakiye');
+    tahminEl.innerText = para(tahmin);
+    tahminEl.style.color = tahmin < 0 ? 'var(--danger)' : (tahmin < toplam ? 'var(--warning)' : 'var(--success)');
+    const tahminKutu = document.getElementById('tahminKutu');
+    tahminKutu.className = 'metrik ' + (tahmin < 0 ? 'm-kirmizi' : (tahmin < toplam ? 'm-turuncu' : 'm-yesil'));
     document.getElementById('baslikAlt').innerText =
-        `${bg.getDate()} ${AYLAR[bg.getMonth()]} ${bg.getFullYear()} · toplam ${islemler.length} kayıt`;
+        `${bg.getDate()} ${AYLAR[bg.getMonth()]} ${bg.getFullYear()}`;
 
     // Hesap kartları
     const hl = document.getElementById('hesapListesi');
@@ -902,6 +1008,11 @@ function borcYaz() {
 // ================= BORÇ TAKİBİ =================
 // Adında "borç" geçen kategoriler borç hareketi sayılır
 // GİRİŞ = borç aldık (+) · ÇIKIŞ = borç ödedik (−)
+// Bu işlem bir borç hareketi mi? (kategori dağılımlarında ayrı tutulur)
+function borcHareketiMi(t) {
+    return t.kategori === BORC_ALMA_KAT || t.kategori === BORC_ODEME_KAT;
+}
+
 function borcKategorisiMi(katAd) {
     if (!katAd) return false;
     return katAd.toLocaleLowerCase('tr').includes('borç') || katAd.toLocaleLowerCase('tr').includes('borc');
@@ -938,31 +1049,23 @@ function borcluCariler() {
 
 // Borç ödeme formunu hazır açar
 function borcOde(cariId, kalan) {
-    islemModalAc('CIKIS');
+    islemModalAc('BORC_ODE');
     document.getElementById('islemBaslik').innerText = '💸 Borç Ödemesi';
-
-    // Borç ödeme kategorisini bul (adında "borç" geçen bir gider kategorisi)
-    const sec = document.getElementById('fmKategori');
-    const secenekler = Array.from(sec.options).map(o => o.value);
-    const odemeKat = secenekler.find(v => borcKategorisiMi(v) && v.toLocaleLowerCase('tr').includes('öde'))
-                  || secenekler.find(v => borcKategorisiMi(v));
-    if (odemeKat) { sec.value = odemeKat; altKategoriGuncelle(); }
-
     document.getElementById('fmCari').value = cariId;
     if (kalan) document.getElementById('fmTutar').value = String(Math.round(kalan * 100) / 100).replace('.', ',');
     document.getElementById('fmAciklama').value = (cariAdi(cariId) || '') + ' borç ödemesi';
-    borcCariFiltrele();
 }
 
 // Borç ödeme kategorisi seçiliyse cari listesini borçlulara indirger
 function borcCariFiltrele() {
-    const tur = document.getElementById('fmTur').value;
+    const secim = document.getElementById('fmTur').value;
     const kat = document.getElementById('fmKategori').value;
     const sec = document.getElementById('fmCari');
     const not = document.getElementById('fmCariNot');
     const oncekiDeger = sec.value;
 
-    const borcOdemesi = (tur === 'CIKIS' && borcKategorisiMi(kat));
+    // Borç ödeme türü veya adında "borç" geçen bir gider kategorisi seçiliyse
+    const borcOdemesi = (secim === 'BORC_ODE') || (secim === 'CIKIS' && borcKategorisiMi(kat));
 
     if (borcOdemesi) {
         const borclular = borcluCariler();
@@ -1112,6 +1215,7 @@ function kategoriGrafik(tur, canvasId, ata, mevcut) {
     const toplam = {};
     islemler.forEach(t => {
         if (t.beklenen || t.tur !== tur) return;
+        if (borcHareketiMi(t)) return;              // borç hareketleri kategori dağılımına girmez
         const k = t.kategori || 'Kategorisiz';
         toplam[k] = (toplam[k] || 0) + t.tutar;
     });
@@ -1250,7 +1354,7 @@ function cariDetayYaz() {
     ler.forEach(t => {
         if (t.beklenen) return;
         if (t.tur === 'GIRIS') g += t.tutar; else if (t.tur === 'CIKIS') ck += t.tutar;
-        const k = t.kategori || 'Kategorisiz';
+        const k = borcHareketiMi(t) ? t.kategori : (t.kategori || 'Kategorisiz');
         katDagilim[k] = (katDagilim[k] || 0) + t.tutar;
     });
 
@@ -1344,43 +1448,299 @@ function hesapDetayYaz() {
 }
 
 // ================= RAPORLAR =================
+let trendChart = null, bakiyeChart = null, oranChart = null;
+
 function raporYaz() {
-    // Aylık
-    const aylik = {};
+    const donemSec = document.getElementById('raporDonem');
+    const ayAdedi = donemSec ? parseInt(donemSec.value) : 12;
+    const bg = new Date();
+
+    // --- Aylık gruplama ---
+    const aylar = {};
     islemler.forEach(t => {
         if (t.beklenen || t.tur === 'TRANSFER') return;
         const d = new Date(t.tarih);
-        const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-        if (!aylik[key]) aylik[key] = { etiket: `${AYLAR[d.getMonth()]} ${d.getFullYear()}`, g: 0, c: 0, adet: 0 };
-        if (t.tur === 'GIRIS') aylik[key].g += t.tutar; else aylik[key].c += t.tutar;
-        aylik[key].adet++;
+        if (isNaN(d)) return;
+        const anahtar = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        if (!aylar[anahtar]) aylar[anahtar] = {
+            etiket: `${AYLAR[d.getMonth()]} ${d.getFullYear()}`,
+            kisa: `${AYLAR[d.getMonth()].substring(0, 3)} ${String(d.getFullYear()).substr(-2)}`,
+            g: 0, ck: 0, adet: 0
+        };
+        if (t.tur === 'GIRIS') aylar[anahtar].g += t.tutar; else aylar[anahtar].ck += t.tutar;
+        aylar[anahtar].adet++;
     });
 
-    const keys = Object.keys(aylik).sort().reverse();
+    let anahtarlar = Object.keys(aylar).sort();
+    if (ayAdedi > 0) anahtarlar = anahtarlar.slice(-ayAdedi);
+
+    document.getElementById('raporAlt').innerText = anahtarlar.length
+        ? `${aylar[anahtarlar[0]].etiket} — ${aylar[anahtarlar[anahtarlar.length - 1]].etiket}`
+        : 'Henüz kayıt yok';
+
+    // --- Analiz metrikleri ---
+    const toplamG = anahtarlar.reduce((s, k) => s + aylar[k].g, 0);
+    const toplamC = anahtarlar.reduce((s, k) => s + aylar[k].ck, 0);
+    const net = toplamG - toplamC;
+    const ayOrtG = anahtarlar.length ? toplamG / anahtarlar.length : 0;
+    const ayOrtC = anahtarlar.length ? toplamC / anahtarlar.length : 0;
+    const ayOrtNet = ayOrtG - ayOrtC;
+
+    // Mevcut bakiye
+    const bak = bakiyeler();
+    const mevcutBakiye = hesaplar.reduce((s, hh) => s + (bak[hh.id] || 0), 0);
+
+    // Gider karşılama oranı
+    const karsilama = toplamC > 0 ? (toplamG / toplamC) : 0;
+    // Kaç ay dayanır (net negatifse)
+    const dayanma = (ayOrtNet < 0 && mevcutBakiye > 0) ? Math.floor(mevcutBakiye / Math.abs(ayOrtNet)) : null;
+
+    document.getElementById('analizMetrik').innerHTML = `
+        <div class="metrik ${net >= 0 ? 'm-yesil' : 'm-kirmizi'}">
+            <div class="lbl">Dönem Net Akışı</div>
+            <div class="val">${net >= 0 ? '+' : ''}${para(net)}</div>
+            <div class="alt">${anahtarlar.length} ay toplamı</div>
+        </div>
+        <div class="metrik m-mavi">
+            <div class="lbl">Aylık Ortalama Net</div>
+            <div class="val" style="color:${ayOrtNet >= 0 ? 'var(--success)' : 'var(--danger)'};">${ayOrtNet >= 0 ? '+' : ''}${para(ayOrtNet)}</div>
+            <div class="alt">giren ${paraKisa(ayOrtG)} · çıkan ${paraKisa(ayOrtC)}</div>
+        </div>
+        <div class="metrik ${karsilama >= 1 ? 'm-yesil' : 'm-turuncu'}">
+            <div class="lbl">Gider Karşılama</div>
+            <div class="val">${toplamC > 0 ? '%' + Math.round(karsilama * 100) : '—'}</div>
+            <div class="alt">${karsilama >= 1 ? 'gelir gideri karşılıyor' : 'gelir yetersiz'}</div>
+        </div>
+        <div class="metrik ${dayanma !== null ? (dayanma < 3 ? 'm-kirmizi' : 'm-turuncu') : 'm-yesil'}">
+            <div class="lbl">${dayanma !== null ? 'Bakiye Dayanma Süresi' : 'Mevcut Bakiye'}</div>
+            <div class="val">${dayanma !== null ? dayanma + ' ay' : para(mevcutBakiye)}</div>
+            <div class="alt">${dayanma !== null ? 'bu hızla giderse' : 'nakit pozisyonu'}</div>
+        </div>`;
+
+    // --- Analiz notları ---
+    const notlar = [];
+
+    if (anahtarlar.length >= 2) {
+        const sonAy = aylar[anahtarlar[anahtarlar.length - 1]];
+        const oncekiAy = aylar[anahtarlar[anahtarlar.length - 2]];
+        const sonNet = sonAy.g - sonAy.ck, oncekiNet = oncekiAy.g - oncekiAy.ck;
+        const fark = sonNet - oncekiNet;
+        if (Math.abs(fark) > 1) {
+            notlar.push({
+                tip: fark > 0 ? 'iyi' : 'uyari',
+                baslik: fark > 0 ? 'Net akış iyileşti' : 'Net akış geriledi',
+                metin: `${sonAy.etiket} net akışı ${para(sonNet)} — bir önceki aya göre ${fark > 0 ? '+' : ''}${para(fark)} değişim.`
+            });
+        }
+    }
+
+    if (dayanma !== null) {
+        notlar.push({
+            tip: dayanma < 3 ? 'kritik' : 'uyari',
+            baslik: dayanma < 3 ? 'Nakit sıkışıklığı riski' : 'Giderler geliri aşıyor',
+            metin: `Aylık ortalama ${para(Math.abs(ayOrtNet))} açık veriyorsunuz. Mevcut bakiye bu hızla yaklaşık ${dayanma} ay yeter.`
+        });
+    } else if (net > 0 && anahtarlar.length >= 3) {
+        notlar.push({
+            tip: 'iyi',
+            baslik: 'Nakit akışı pozitif',
+            metin: `Dönem boyunca ${para(net)} net birikim sağlanmış. Aylık ortalama fazla ${para(ayOrtNet)}.`
+        });
+    }
+
+    // En büyük gider kategorisi
+    const giderKat = {};
+    islemler.forEach(t => {
+        if (t.beklenen || t.tur !== 'CIKIS' || borcHareketiMi(t)) return;
+        const d = new Date(t.tarih);
+        const anahtar = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        if (!anahtarlar.includes(anahtar)) return;
+        const k = t.kategori || 'Kategorisiz';
+        giderKat[k] = (giderKat[k] || 0) + t.tutar;
+    });
+    const enBuyukGider = Object.keys(giderKat).sort((a, b) => giderKat[b] - giderKat[a])[0];
+    if (enBuyukGider && toplamC > 0) {
+        const pay = (giderKat[enBuyukGider] / toplamC) * 100;
+        notlar.push({
+            tip: pay > 40 ? 'uyari' : 'bilgi',
+            baslik: `En büyük gider: ${enBuyukGider}`,
+            metin: `Toplam giderlerin %${pay.toFixed(0)}'ı bu kaleme gidiyor (${para(giderKat[enBuyukGider])}).` +
+                   (pay > 40 ? ' Tek kalemde yoğunlaşma var, gözden geçirmekte fayda olabilir.' : '')
+        });
+    }
+
+    // Planlanan ödemeler uyarısı
+    const bugunStr = bugun();
+    let plan30Cikacak = 0, gecikenPlan = 0;
+    islemler.forEach(t => {
+        if (!t.beklenen) return;
+        const f = gunFark(bugunStr, t.tarih);
+        if (f < 0) gecikenPlan++;
+        if (f <= 30 && t.tur === 'CIKIS') plan30Cikacak += t.tutar;
+    });
+    if (plan30Cikacak > 0) {
+        const yeterli = mevcutBakiye >= plan30Cikacak;
+        notlar.push({
+            tip: yeterli ? 'bilgi' : 'kritik',
+            baslik: yeterli ? 'Planlanan ödemeler karşılanabilir' : 'Planlanan ödemeler için bakiye yetersiz',
+            metin: `Önümüzdeki 30 günde ${para(plan30Cikacak)} ödeme planlanmış. Mevcut bakiye ${para(mevcutBakiye)}.` +
+                   (yeterli ? '' : ` ${para(plan30Cikacak - mevcutBakiye)} açık görünüyor.`)
+        });
+    }
+    if (gecikenPlan > 0) {
+        notlar.push({ tip: 'uyari', baslik: 'Tarihi geçen planlar var',
+            metin: `${gecikenPlan} planlanan hareketin tarihi geçmiş. Gerçekleştiyse "Öde" ile işaretleyin.` });
+    }
+
+    // Borç durumu
+    const bd = borcDurumu();
+    const toplamBorc = Object.keys(bd).reduce((s, k) => s + Math.max(bd[k].kalan, 0), 0);
+    if (toplamBorc > 0.01) {
+        notlar.push({
+            tip: toplamBorc > mevcutBakiye ? 'uyari' : 'bilgi',
+            baslik: 'Açık borç bulunuyor',
+            metin: `Toplam ${para(toplamBorc)} borcunuz var.` +
+                   (toplamBorc > mevcutBakiye ? ' Bu tutar mevcut bakiyenizin üzerinde.' : '')
+        });
+    }
+
+    const renkler = { iyi: 'var(--success)', bilgi: 'var(--accent)', uyari: 'var(--warning)', kritik: 'var(--danger)' };
+    const arka = { iyi: 'var(--yesil-bg)', bilgi: 'var(--mavi-bg)', uyari: 'var(--turuncu-bg)', kritik: 'var(--kirmizi-bg)' };
+    const ikon = { iyi: 'fa-circle-check', bilgi: 'fa-circle-info', uyari: 'fa-triangle-exclamation', kritik: 'fa-circle-exclamation' };
+
+    document.getElementById('analizNotlar').innerHTML = notlar.length
+        ? notlar.map(n => `<div style="display:flex; gap:12px; padding:12px 14px; border-radius:10px; margin-bottom:9px; background:${arka[n.tip] || '#f8fafc'}; border-left:3px solid ${renkler[n.tip]};">
+            <i class="fa-solid ${ikon[n.tip]}" style="color:${renkler[n.tip]}; margin-top:2px;"></i>
+            <div><div style="font-weight:700; font-size:13.5px; margin-bottom:2px;">${n.baslik}</div>
+            <div style="font-size:12.5px; color:var(--muted); line-height:1.55;">${n.metin}</div></div>
+        </div>`).join('')
+        : '<div class="empty">Analiz için yeterli veri yok.</div>';
+
+    // --- Grafikler ---
+    const etiketler = anahtarlar.map(k => aylar[k].kisa);
+    const girenler = anahtarlar.map(k => Math.round(aylar[k].g));
+    const cikanlar = anahtarlar.map(k => Math.round(aylar[k].ck));
+    const netler = anahtarlar.map(k => Math.round(aylar[k].g - aylar[k].ck));
+
+    if (typeof Chart !== 'undefined' && anahtarlar.length) {
+        // Trend
+        if (trendChart) trendChart.destroy();
+        trendChart = new Chart(document.getElementById('trendChart'), {
+            type: 'bar',
+            data: { labels: etiketler, datasets: [
+                { label: 'Giren', data: girenler, backgroundColor: '#16a34a', borderRadius: 5, order: 2 },
+                { label: 'Çıkan', data: cikanlar, backgroundColor: '#dc2626', borderRadius: 5, order: 2 },
+                { label: 'Net Akış', data: netler, type: 'line', borderColor: '#7c3aed', backgroundColor: '#7c3aed',
+                  borderWidth: 2.5, pointRadius: 4, pointBackgroundColor: '#7c3aed', tension: .25, order: 1, fill: false }
+            ]},
+            options: { responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom' },
+                    tooltip: { mode: 'index', intersect: false, callbacks: { label: (c) => c.dataset.label + ': ' + para(c.raw) } } },
+                scales: { y: { beginAtZero: true, ticks: { callback: (v) => paraKisa(v) }, grid: { color: '#f1f5f9' } },
+                          x: { grid: { display: false } } } }
+        });
+
+        // Bakiye seyri — dönem sonu kümülatif
+        let yurur = mevcutBakiye;
+        const sondanBasa = [];
+        for (let i = anahtarlar.length - 1; i >= 0; i--) {
+            sondanBasa.unshift(Math.round(yurur));
+            yurur -= (aylar[anahtarlar[i]].g - aylar[anahtarlar[i]].ck);
+        }
+        if (bakiyeChart) bakiyeChart.destroy();
+        bakiyeChart = new Chart(document.getElementById('bakiyeChart'), {
+            type: 'line',
+            data: { labels: etiketler, datasets: [{
+                label: 'Dönem Sonu Bakiye', data: sondanBasa,
+                borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,.10)',
+                borderWidth: 2.5, pointRadius: 3, tension: .3, fill: true }] },
+            options: { responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => para(c.raw) } } },
+                scales: { y: { ticks: { callback: (v) => paraKisa(v) }, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } } }
+        });
+
+        // Gelir/gider oranı
+        const oranlar = anahtarlar.map(k => {
+            const a = aylar[k];
+            return a.ck > 0 ? Math.round((a.g / a.ck) * 100) : (a.g > 0 ? 200 : 0);
+        });
+        if (oranChart) oranChart.destroy();
+        oranChart = new Chart(document.getElementById('oranChart'), {
+            type: 'bar',
+            data: { labels: etiketler, datasets: [{
+                label: 'Karşılama Oranı', data: oranlar,
+                backgroundColor: oranlar.map(o => o >= 100 ? '#16a34a' : (o >= 80 ? '#d97706' : '#dc2626')),
+                borderRadius: 5 }] },
+            options: { responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false },
+                    tooltip: { callbacks: { label: (c) => '%' + c.raw + (c.raw >= 100 ? ' — gelir gideri karşılıyor' : ' — açık var') } } },
+                scales: { y: { beginAtZero: true, ticks: { callback: (v) => '%' + v }, grid: { color: '#f1f5f9' } },
+                          x: { grid: { display: false } } } }
+        });
+    }
+
+    // --- Aylık tablo ---
+    const tersSirali = anahtarlar.slice().reverse();
     let tg = 0, tc = 0, ta = 0;
-    document.getElementById('aylikRapor').innerHTML = keys.length ? keys.map(k => {
-        const a = aylik[k]; const net = a.g - a.c;
-        tg += a.g; tc += a.c; ta += a.adet;
+    document.getElementById('aylikRapor').innerHTML = tersSirali.length ? tersSirali.map((k, i) => {
+        const a = aylar[k];
+        const n = a.g - a.ck;
+        tg += a.g; tc += a.ck; ta += a.adet;
+
+        // Bir önceki aya göre değişim
+        const oncekiKey = tersSirali[i + 1];
+        let degisim = '<span style="color:var(--muted);">—</span>';
+        if (oncekiKey) {
+            const oncekiNet = aylar[oncekiKey].g - aylar[oncekiKey].ck;
+            const fark = n - oncekiNet;
+            if (Math.abs(fark) > 0.01) {
+                degisim = `<span style="color:${fark > 0 ? 'var(--success)' : 'var(--danger)'}; font-weight:600;">${fark > 0 ? '▲' : '▼'} ${paraKisa(Math.abs(fark))}</span>`;
+            }
+        }
+
         return `<tr>
-            <td style="font-weight:600;">${a.etiket}</td>
+            <td><strong>${a.etiket}</strong></td>
             <td style="text-align:right; color:var(--success); font-weight:700;">${para(a.g)}</td>
-            <td style="text-align:right; color:var(--danger); font-weight:700;">${para(a.c)}</td>
-            <td style="text-align:right; font-weight:700; color:${net < 0 ? 'var(--danger)' : 'var(--success)'};">${net >= 0 ? '+' : ''}${para(net)}</td>
+            <td style="text-align:right; color:var(--danger); font-weight:700;">${para(a.ck)}</td>
+            <td style="text-align:right; font-weight:700; color:${n >= 0 ? 'var(--success)' : 'var(--danger)'};">${n >= 0 ? '+' : ''}${para(n)}</td>
+            <td style="text-align:right;">${degisim}</td>
             <td style="text-align:right; color:var(--muted);">${a.adet}</td>
         </tr>`;
-    }).join('') : '<tr><td colspan="5" class="empty">Henüz kayıt yok.</td></tr>';
+    }).join('') : '<tr><td colspan="6" class="empty">Henüz kayıt yok.</td></tr>';
 
-    document.getElementById('aylikRaporAlt').innerHTML = keys.length ? `<tr>
-        <th style="padding:14px;">GENEL TOPLAM</th>
-        <th style="text-align:right; background:var(--success-bg); color:var(--success); padding:14px;">${para(tg)}</th>
-        <th style="text-align:right; background:var(--danger-bg); color:var(--danger); padding:14px;">${para(tc)}</th>
-        <th style="text-align:right; padding:14px; color:${tg-tc < 0 ? 'var(--danger)' : 'var(--success)'};">${tg-tc >= 0 ? '+' : ''}${para(tg - tc)}</th>
-        <th style="text-align:right; padding:14px;">${ta}</th></tr>` : '';
+    const tn = tg - tc;
+    document.getElementById('aylikRaporAlt').innerHTML = tersSirali.length ? `<tr>
+        <th>TOPLAM</th>
+        <th style="text-align:right; color:var(--success);">${para(tg)}</th>
+        <th style="text-align:right; color:var(--danger);">${para(tc)}</th>
+        <th style="text-align:right; color:${tn >= 0 ? 'var(--success)' : 'var(--danger)'};">${tn >= 0 ? '+' : ''}${para(tn)}</th>
+        <th></th>
+        <th style="text-align:right;">${ta}</th>
+    </tr>` : '';
 
-    // Kategori — ana kategori altında alt kırılım
+    // --- Borç özeti ---
+    const borcKart = document.getElementById('raporBorcKart');
+    let borcAlinan = 0, borcOdenen = 0;
+    islemler.forEach(t => {
+        if (t.beklenen) return;
+        if (t.kategori === BORC_ALMA_KAT) borcAlinan += t.tutar;
+        if (t.kategori === BORC_ODEME_KAT) borcOdenen += t.tutar;
+    });
+    if (borcAlinan > 0 || borcOdenen > 0) {
+        borcKart.classList.remove('hidden');
+        document.getElementById('raporBorcMetrik').innerHTML = `
+            <div class="metrik m-turuncu"><div class="lbl">Toplam Alınan Borç</div><div class="val">${para(borcAlinan)}</div></div>
+            <div class="metrik m-yesil"><div class="lbl">Toplam Ödenen</div><div class="val">${para(borcOdenen)}</div></div>
+            <div class="metrik ${(borcAlinan - borcOdenen) > 0.01 ? 'm-kirmizi' : 'm-yesil'}"><div class="lbl">Kalan Borç</div><div class="val">${para(Math.max(borcAlinan - borcOdenen, 0))}</div></div>`;
+    } else {
+        borcKart.classList.add('hidden');
+    }
+
+    // --- Kategori tablosu ---
     const kat = {};
     islemler.forEach(t => {
         if (t.beklenen || t.tur === 'TRANSFER') return;
+        if (borcHareketiMi(t)) return;
         const k = t.kategori || 'Kategorisiz';
         if (!kat[k]) kat[k] = { tur: t.tur, top: 0, adet: 0, altlar: {} };
         kat[k].top += t.tutar; kat[k].adet++;
@@ -1395,7 +1755,6 @@ function raporYaz() {
         const d = kat[k]; const kt = katBul(k);
         const renk = kt ? kt.renk : '#94a3b8';
         const tutarRenk = d.tur === 'GIRIS' ? 'var(--success)' : 'var(--danger)';
-
         let satir = `<tr>
             <td><span style="display:inline-block; width:9px; height:9px; border-radius:50%; background:${renk}; margin-right:8px;"></span><strong>${k}</strong></td>
             <td><span class="badge ${d.tur === 'GIRIS' ? 'b-giris' : 'b-cikis'}">${d.tur === 'GIRIS' ? 'Gelir' : 'Gider'}</span></td>
@@ -1403,10 +1762,7 @@ function raporYaz() {
             <td style="text-align:right; color:var(--muted);">${d.adet}</td>
             <td style="text-align:right; color:var(--muted);">${para(d.top / d.adet)}</td>
         </tr>`;
-
-        // Alt kategori satırları
-        const altAdlar = Object.keys(d.altlar).sort((a, b) => d.altlar[b].top - d.altlar[a].top);
-        altAdlar.forEach(a => {
+        Object.keys(d.altlar).sort((a, b) => d.altlar[b].top - d.altlar[a].top).forEach(a => {
             const ad = d.altlar[a];
             const pay = d.top ? ((ad.top * 100) / d.top).toFixed(0) : 0;
             satir += `<tr style="background:#fafbfc;">
@@ -1417,22 +1773,10 @@ function raporYaz() {
                 <td style="text-align:right; color:var(--faint);">${para(ad.top / ad.adet)}</td>
             </tr>`;
         });
-
-        // Alt kategorisi olmayan kısım
-        const altToplam = altAdlar.reduce((s, a) => s + d.altlar[a].top, 0);
-        const kalan = d.top - altToplam;
-        if (altAdlar.length > 0 && kalan > 0.01) {
-            satir += `<tr style="background:#fafbfc;">
-                <td style="padding-left:32px; color:var(--faint); border-left:3px solid ${renk}; font-style:italic;">› Alt kategorisiz</td>
-                <td></td>
-                <td style="text-align:right; color:var(--faint);">${para(kalan)}</td>
-                <td colspan="2"></td>
-            </tr>`;
-        }
         return satir;
     }).join('') : '<tr><td colspan="5" class="empty">Henüz kayıt yok.</td></tr>';
 
-    // Cari
+    // --- Cari tablosu ---
     const cr = cariler.map(c => {
         const ler = islemler.filter(t => t.cariId == c.id && !t.beklenen);
         let g = 0, ck = 0;
@@ -1674,17 +2018,39 @@ function islemModalAc(tur) {
     modalAc('modalIslem');
 }
 
+// Borç türlerini gerçek hareket türüne çevirir
+const BORC_ALMA_KAT = 'Borç Alma';
+const BORC_ODEME_KAT = 'Borç Ödeme';
+
 function formGuncelle() {
-    const tur = document.getElementById('fmTur').value;
-    const transfer = (tur === 'TRANSFER');
+    const secim = document.getElementById('fmTur').value;
+    const transfer = (secim === 'TRANSFER');
+    const borcMu = (secim === 'BORC_AL' || secim === 'BORC_ODE');
+
     document.getElementById('fmHedefDiv').classList.toggle('hidden', !transfer);
-    document.getElementById('fmKatDiv').classList.toggle('hidden', transfer);
+    document.getElementById('fmKatDiv').classList.toggle('hidden', transfer || borcMu);
     document.getElementById('fmCariDiv').classList.toggle('hidden', transfer);
     document.getElementById('fmBeklenenDiv').classList.toggle('hidden', transfer);
-    document.getElementById('fmHesapLabel').innerText = transfer ? 'Kaynak Hesap' : 'Hesap';
+    document.getElementById('fmHesapLabel').innerText = transfer
+        ? 'Kaynak Hesap'
+        : (secim === 'BORC_AL' ? 'Paranın Gireceği Hesap' : (secim === 'BORC_ODE' ? 'Paranın Çıkacağı Hesap' : 'Hesap'));
+
+    // Borç işlemlerinde kategori yok, cari zorunlu
+    if (borcMu) {
+        const not = document.getElementById('fmCariNot');
+        if (secim === 'BORC_AL') {
+            document.getElementById('fmCari').innerHTML = '<option value="">— Kimden borç alındı? —</option>' +
+                cariler.map(c => `<option value="${c.id}">${c.ad}</option>`).join('');
+            not.innerHTML = '💡 Bu tutar seçtiğiniz hesaba eklenecek ve borç olarak takip edilecek.';
+            not.style.display = '';
+        } else {
+            borcCariFiltrele();
+        }
+        return;
+    }
 
     if (!transfer) {
-        const uygun = kategoriler.filter(k => k.tur === tur || k.tur === 'HER');
+        const uygun = kategoriler.filter(k => k.tur === secim || k.tur === 'HER');
         const uygunAna = uygun.filter(k => !k.ustId);
         document.getElementById('fmKategori').innerHTML = uygunAna.length
             ? uygunAna.map(k => `<option value="${k.ad}">${k.ad}</option>`).join('')
@@ -1713,7 +2079,7 @@ function altKategoriGuncelle() {
 }
 
 async function islemKaydet() {
-    const tur = document.getElementById('fmTur').value;
+    const secim = document.getElementById('fmTur').value;
     const hesap = document.getElementById('fmHesap').value;
     const tutar = sayiOku(document.getElementById('fmTutar').value);
     const tarih = document.getElementById('fmTarih').value;
@@ -1722,12 +2088,29 @@ async function islemKaydet() {
     if (!tutar || tutar <= 0) return alert('Geçerli bir tutar giriniz.');
     if (!tarih) return alert('Tarih seçiniz.');
 
-    let kategori = null, altKategori = null, cariId = null, hedef = null, beklenen = false;
+    let tur = secim, kategori = null, altKategori = null, cariId = null, hedef = null, beklenen = false;
 
-    if (tur === 'TRANSFER') {
+    if (secim === 'TRANSFER') {
         hedef = document.getElementById('fmHedef').value;
         if (hesap === hedef) return alert('Kaynak ve hedef hesap aynı olamaz.');
         kategori = 'Transfer';
+    } else if (secim === 'BORC_AL' || secim === 'BORC_ODE') {
+        // Borç işlemleri kategorisizdir; tür otomatik belirlenir
+        tur = (secim === 'BORC_AL') ? 'GIRIS' : 'CIKIS';
+        kategori = (secim === 'BORC_AL') ? BORC_ALMA_KAT : BORC_ODEME_KAT;
+        const cd = document.getElementById('fmCari').value;
+        if (!cd) return alert(secim === 'BORC_AL' ? 'Kimden borç aldığınızı seçiniz.' : 'Borcunu ödeyeceğiniz cariyi seçiniz.');
+        cariId = parseInt(cd);
+        beklenen = document.getElementById('fmBeklenen').checked;
+
+        // Ödemede borcu aşmayı engelle
+        if (secim === 'BORC_ODE' && !beklenen) {
+            const d = borcDurumu()[cariId];
+            const kalan = d ? d.kalan : 0;
+            if (tutar > kalan + 0.01) {
+                if (!confirm(`Girdiğiniz tutar kalan borçtan fazla.\n\nKalan borç: ${para(kalan)}\nÖdeme: ${para(tutar)}\n\nYine de kaydedilsin mi?`)) return;
+            }
+        }
     } else {
         kategori = document.getElementById('fmKategori').value;
         if (!kategori) return alert('Kategori seçmelisiniz.\n\nKategori tanımlı değilse yöneticinize başvurun.');
@@ -1769,10 +2152,22 @@ function islemDuzenle(id) {
     duzenlenenId = id;
     document.getElementById('islemBaslik').innerText = 'İşlemi Düzenle';
     document.getElementById('btnKaydet').innerText = 'Güncelle';
-    document.getElementById('fmTur').value = t.tur;
+    // Borç kaydıysa ilgili borç türünü seç
+    const borcAlma = (t.tur === 'GIRIS' && t.kategori === BORC_ALMA_KAT);
+    const borcOdeme = (t.tur === 'CIKIS' && t.kategori === BORC_ODEME_KAT);
+    document.getElementById('fmTur').value = borcAlma ? 'BORC_AL' : (borcOdeme ? 'BORC_ODE' : t.tur);
     formGuncelle();
     document.getElementById('fmHesap').value = t.hesap;
-    if (t.tur === 'TRANSFER') { if (t.hedefHesap) document.getElementById('fmHedef').value = t.hedefHesap; }
+
+    if (borcAlma || borcOdeme) {
+        const cs = document.getElementById('fmCari');
+        if (t.cariId && !Array.from(cs.options).some(o => o.value == t.cariId)) {
+            cs.innerHTML += `<option value="${t.cariId}">${cariAdi(t.cariId) || 'Cari'}</option>`;
+        }
+        cs.value = t.cariId || '';
+        document.getElementById('fmBeklenen').checked = t.beklenen;
+    }
+    else if (t.tur === 'TRANSFER') { if (t.hedefHesap) document.getElementById('fmHedef').value = t.hedefHesap; }
     else {
         document.getElementById('fmKategori').value = t.kategori;
         altKategoriGuncelle();
