@@ -284,6 +284,7 @@
         <div class="side-etiket">Çek İşlemleri</div>
         <button class="btn-menu btn-giris" onclick="openModal('modalCekGiris')"><i class="fa-solid fa-arrow-down-to-bracket"></i> Çek Girişi</button>
         <button class="btn-menu btn-cikis" onclick="openModal('modalCekCikis')"><i class="fa-solid fa-arrow-up-from-bracket"></i> Çek Çıkışı</button>
+        <button class="btn-menu" onclick="iadeModalAc()"><i class="fa-solid fa-rotate-left"></i> İade / Değişim</button>
 
         <div class="side-ayrac"></div>
 
@@ -446,6 +447,40 @@
 <div id="modalCekGiris" class="modal-overlay"><div class="cek-modal"><h2><i class="fa-solid fa-arrow-down-to-bracket" style="color:var(--success);"></i> Çek Girişi</h2><div class="form-group"><label>Cari</label><select class="form-control" id="girisCariSecim"></select></div><div class="form-group"><label>Banka</label><select class="form-control" id="girisBankaSecim"><optgroup label="Kamu Bankaları"><option value="T.C. Ziraat Bankası">T.C. Ziraat Bankası</option><option value="Türkiye Halk Bankası">Türkiye Halk Bankası</option><option value="Türkiye Vakıflar Bankası">Türkiye Vakıflar Bankası</option></optgroup><optgroup label="Özel Bankalar"><option value="Türkiye İş Bankası">Türkiye İş Bankası</option><option value="Garanti BBVA">Garanti BBVA</option><option value="Akbank">Akbank</option><option value="Yapı Kredi">Yapı Kredi</option><option value="QNB Finansbank">QNB Finansbank</option><option value="DenizBank">DenizBank</option><option value="Türk Ekonomi Bankası (TEB)">Türk Ekonomi Bankası (TEB)</option><option value="İNG Bank">İNG Bank</option><option value="Şekerbank">Şekerbank</option><option value="Anadolubank">Anadolubank</option><option value="Odea Bank">Odea Bank</option><option value="Fibabanka">Fibabanka</option><option value="Burgan Bank">Burgan Bank</option><option value="Alternatif Bank">Alternatif Bank</option><option value="ICBC Turkey Bank">ICBC Turkey Bank</option><option value="HSBC Bank">HSBC Bank</option></optgroup><optgroup label="Katılım Bankaları"><option value="Kuveyt Türk Katılım Bankası">Kuveyt Türk Katılım Bankası</option><option value="Albaraka Türk Katılım Bankası">Albaraka Türk Katılım Bankası</option><option value="Türkiye Finans Katılım Bankası">Türkiye Finans Katılım Bankası</option><option value="Vakıf Katılım Bankası">Vakıf Katılım Bankası</option><option value="Ziraat Katılım Bankası">Ziraat Katılım Bankası</option><option value="Emlak Katılım Bankası">Emlak Katılım Bankası</option><option value="T.O.M. Katılım Bankası">T.O.M. Katılım Bankası</option><option value="Hayat Finans Katılım Bankası">Hayat Finans Katılım Bankası</option></optgroup></select></div><div class="form-group"><label>Çek No</label><input type="text" class="form-control" id="girisCekNo"></div><div class="form-group"><label>Tutar</label><input type="number" class="form-control" id="girisTutar"></div><div class="form-group"><label>Vade</label><input type="date" class="form-control" id="girisVade"></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalCekGiris')">İptal</button><button class="btn btn-success" onclick="dbCekGirisKaydet()">Kaydet</button></div></div></div>
 <div id="modalCekCikis" class="modal-overlay"><div class="cek-modal"><h2><i class="fa-solid fa-arrow-up-from-bracket" style="color:var(--danger);"></i> Çek Çıkışı</h2><div class="form-group"><label>Tür</label><select class="form-control" id="cekTuruSelect" onchange="handleCekTuruChange()"><option value="kendi">Kendi Çekimiz</option><option value="kasa">Kasadan Seç</option></select></div><div class="form-group hidden" id="kasadanSecimDiv"><label>Portföy <span style="font-weight:400; color:var(--muted); font-size:11.5px;">(vadesi yakın olan üstte)</span></label><select class="form-control" id="kasaCekListesi" onchange="autoFillCekNo()"></select></div><div class="form-group"><label>Çek No</label><input type="text" class="form-control" id="cikisCekNo"></div><div class="form-group"><label>Tutar</label><input type="number" class="form-control" id="cikisTutar"></div><div class="form-group"><label>Vade</label><input type="date" class="form-control" id="cikisVade"></div><div class="form-group"><label>Hedef</label><select class="form-control" id="cikisHedefi" onchange="handleCikisHedefi()"><option value="tedarikci">Cari</option><option value="banka_tahsil">Tahsil</option></select></div><div class="form-group hidden" id="cikisCariDiv"><label>Cari</label><select class="form-control" id="cikisCariSecim"></select></div><div class="form-group hidden" id="bankaListesiDiv"><label>İlgili Bankayı Seçiniz</label><select class="form-control" id="cikisBankaSecim"><optgroup label="Kamu Bankaları"><option value="T.C. Ziraat Bankası">T.C. Ziraat Bankası</option><option value="Türkiye Halk Bankası">Türkiye Halk Bankası</option><option value="Türkiye Vakıflar Bankası">Türkiye Vakıflar Bankası</option></optgroup><optgroup label="Özel Bankalar"><option value="Türkiye İş Bankası">Türkiye İş Bankası</option><option value="Garanti BBVA">Garanti BBVA</option><option value="Akbank">Akbank</option><option value="Yapı Kredi">Yapı Kredi</option><option value="QNB Finansbank">QNB Finansbank</option><option value="DenizBank">DenizBank</option><option value="Türk Ekonomi Bankası (TEB)">Türk Ekonomi Bankası (TEB)</option><option value="İNG Bank">İNG Bank</option><option value="Şekerbank">Şekerbank</option><option value="Anadolubank">Anadolubank</option><option value="Odea Bank">Odea Bank</option><option value="Fibabanka">Fibabanka</option><option value="Burgan Bank">Burgan Bank</option><option value="Alternatif Bank">Alternatif Bank</option><option value="ICBC Turkey Bank">ICBC Turkey Bank</option><option value="HSBC Bank">HSBC Bank</option></optgroup><optgroup label="Katılım Bankaları"><option value="Kuveyt Türk Katılım Bankası">Kuveyt Türk Katılım Bankası</option><option value="Albaraka Türk Katılım Bankası">Albaraka Türk Katılım Bankası</option><option value="Türkiye Finans Katılım Bankası">Türkiye Finans Katılım Bankası</option><option value="Vakıf Katılım Bankası">Vakıf Katılım Bankası</option><option value="Ziraat Katılım Bankası">Ziraat Katılım Bankası</option><option value="Emlak Katılım Bankası">Emlak Katılım Bankası</option><option value="T.O.M. Katılım Bankası">T.O.M. Katılım Bankası</option><option value="Hayat Finans Katılım Bankası">Hayat Finans Katılım Bankası</option></optgroup></select></div><div class="form-group" id="kendiBankaDiv"><label>Kendi Çekimizin Bankası</label><select class="form-control" id="kendiBankaSecim"><optgroup label="Kamu Bankaları"><option value="T.C. Ziraat Bankası">T.C. Ziraat Bankası</option><option value="Türkiye Halk Bankası">Türkiye Halk Bankası</option><option value="Türkiye Vakıflar Bankası">Türkiye Vakıflar Bankası</option></optgroup><optgroup label="Özel Bankalar"><option value="Türkiye İş Bankası">Türkiye İş Bankası</option><option value="Garanti BBVA">Garanti BBVA</option><option value="Akbank">Akbank</option><option value="Yapı Kredi">Yapı Kredi</option><option value="QNB Finansbank">QNB Finansbank</option><option value="DenizBank">DenizBank</option><option value="Türk Ekonomi Bankası (TEB)">Türk Ekonomi Bankası (TEB)</option><option value="İNG Bank">İNG Bank</option><option value="Şekerbank">Şekerbank</option><option value="Anadolubank">Anadolubank</option><option value="Odea Bank">Odea Bank</option><option value="Fibabanka">Fibabanka</option><option value="Burgan Bank">Burgan Bank</option><option value="Alternatif Bank">Alternatif Bank</option><option value="ICBC Turkey Bank">ICBC Turkey Bank</option><option value="HSBC Bank">HSBC Bank</option></optgroup><optgroup label="Katılım Bankaları"><option value="Kuveyt Türk Katılım Bankası">Kuveyt Türk Katılım Bankası</option><option value="Albaraka Türk Katılım Bankası">Albaraka Türk Katılım Bankası</option><option value="Türkiye Finans Katılım Bankası">Türkiye Finans Katılım Bankası</option><option value="Vakıf Katılım Bankası">Vakıf Katılım Bankası</option><option value="Ziraat Katılım Bankası">Ziraat Katılım Bankası</option><option value="Emlak Katılım Bankası">Emlak Katılım Bankası</option><option value="T.O.M. Katılım Bankası">T.O.M. Katılım Bankası</option><option value="Hayat Finans Katılım Bankası">Hayat Finans Katılım Bankası</option></optgroup></select></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalCekCikis')">İptal</button><button class="btn btn-danger" onclick="dbCekCikisKaydet()">Kaydet</button></div></div></div>
 <div id="modalCekDuzenle" class="modal-overlay"><div class="cek-modal"><h2><i class="fa-solid fa-pen" style="color:var(--warning);"></i> Çeki Düzenle</h2><input type="hidden" id="duzenleId"><div class="form-group"><label>Çek No</label><input type="text" class="form-control" id="duzenleCekNo"></div><div class="form-group"><label>Cari</label><input type="text" class="form-control" id="duzenleCari" readonly style="background:#f1f1f1;"></div><div class="form-group"><label>Banka</label><select class="form-control" id="duzenleBanka"><optgroup label="Kamu Bankaları"><option value="T.C. Ziraat Bankası">T.C. Ziraat Bankası</option><option value="Türkiye Halk Bankası">Türkiye Halk Bankası</option><option value="Türkiye Vakıflar Bankası">Türkiye Vakıflar Bankası</option></optgroup><optgroup label="Özel Bankalar"><option value="Türkiye İş Bankası">Türkiye İş Bankası</option><option value="Garanti BBVA">Garanti BBVA</option><option value="Akbank">Akbank</option><option value="Yapı Kredi">Yapı Kredi</option><option value="QNB Finansbank">QNB Finansbank</option><option value="DenizBank">DenizBank</option><option value="Türk Ekonomi Bankası (TEB)">Türk Ekonomi Bankası (TEB)</option><option value="İNG Bank">İNG Bank</option><option value="Şekerbank">Şekerbank</option><option value="Anadolubank">Anadolubank</option><option value="Odea Bank">Odea Bank</option><option value="Fibabanka">Fibabanka</option><option value="Burgan Bank">Burgan Bank</option><option value="Alternatif Bank">Alternatif Bank</option><option value="ICBC Turkey Bank">ICBC Turkey Bank</option><option value="HSBC Bank">HSBC Bank</option></optgroup><optgroup label="Katılım Bankaları"><option value="Kuveyt Türk Katılım Bankası">Kuveyt Türk Katılım Bankası</option><option value="Albaraka Türk Katılım Bankası">Albaraka Türk Katılım Bankası</option><option value="Türkiye Finans Katılım Bankası">Türkiye Finans Katılım Bankası</option><option value="Vakıf Katılım Bankası">Vakıf Katılım Bankası</option><option value="Ziraat Katılım Bankası">Ziraat Katılım Bankası</option><option value="Emlak Katılım Bankası">Emlak Katılım Bankası</option><option value="T.O.M. Katılım Bankası">T.O.M. Katılım Bankası</option><option value="Hayat Finans Katılım Bankası">Hayat Finans Katılım Bankası</option></optgroup></select></div><div class="form-group"><label>Tutar</label><input type="number" class="form-control" id="duzenleTutar"></div><div class="form-group"><label>Vade</label><input type="date" class="form-control" id="duzenleVade"></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalCekDuzenle')">İptal</button><button class="btn btn-primary" onclick="dbCekGuncelleKaydet()">Değişiklikleri Kaydet</button></div></div></div>
+<div id="modalCekIade" class="modal-overlay"><div class="cek-modal" style="width:520px;"><h2><i class="fa-solid fa-rotate-left" style="color:var(--warning);"></i> Çek İadesi / Değişimi</h2>
+
+<div class="form-group">
+    <label>İşlem Türü</label>
+    <select class="form-control" id="iadeTuru" onchange="iadeFormGuncelle()">
+        <option value="degisim">🔄 Değişim — çeki geri verip yerine yeni çek alıyorum</option>
+        <option value="iade">↩️ İade — çeki geri veriyorum, yerine çek almıyorum</option>
+    </select>
+</div>
+
+<div class="form-group">
+    <label>Kasadaki Çek <span style="font-weight:400; color:var(--muted); font-size:11.5px;">(iade edilecek)</span></label>
+    <select class="form-control" id="iadeCekSecim" onchange="iadeCekBilgiGoster()"></select>
+</div>
+
+<div id="iadeCekBilgi" style="display:none; background:#f8fafc; border:1px solid var(--border); border-radius:9px; padding:12px; margin-bottom:14px; font-size:12.5px;"></div>
+
+<div id="yeniCekAlani">
+    <div style="font-size:11.5px; font-weight:700; color:var(--success); text-transform:uppercase; letter-spacing:.05em; margin:16px 0 10px 0; padding-top:14px; border-top:1px dashed var(--border);">
+        <i class="fa-solid fa-plus"></i> Yerine Alınan Yeni Çek
+    </div>
+    <div class="form-group"><label>Çek No</label><input type="text" class="form-control" id="iadeYeniCekNo"></div>
+    <div style="display:flex; gap:12px;">
+        <div class="form-group" style="flex:1;"><label>Tutar</label><input type="number" class="form-control" id="iadeYeniTutar"></div>
+        <div class="form-group" style="flex:1;"><label>Vade</label><input type="date" class="form-control" id="iadeYeniVade"></div>
+    </div>
+    <div class="form-group"><label>Banka</label><select class="form-control" id="iadeYeniBanka"><optgroup label="Kamu Bankaları"><option value="T.C. Ziraat Bankası">T.C. Ziraat Bankası</option><option value="Türkiye Halk Bankası">Türkiye Halk Bankası</option><option value="Türkiye Vakıflar Bankası">Türkiye Vakıflar Bankası</option></optgroup><optgroup label="Özel Bankalar"><option value="Türkiye İş Bankası">Türkiye İş Bankası</option><option value="Garanti BBVA">Garanti BBVA</option><option value="Akbank">Akbank</option><option value="Yapı Kredi">Yapı Kredi</option><option value="QNB Finansbank">QNB Finansbank</option><option value="DenizBank">DenizBank</option><option value="Türk Ekonomi Bankası (TEB)">Türk Ekonomi Bankası (TEB)</option><option value="İNG Bank">İNG Bank</option><option value="Şekerbank">Şekerbank</option><option value="Anadolubank">Anadolubank</option><option value="Odea Bank">Odea Bank</option><option value="Fibabanka">Fibabanka</option><option value="Burgan Bank">Burgan Bank</option><option value="Alternatif Bank">Alternatif Bank</option><option value="ICBC Turkey Bank">ICBC Turkey Bank</option><option value="HSBC Bank">HSBC Bank</option></optgroup><optgroup label="Katılım Bankaları"><option value="Kuveyt Türk Katılım Bankası">Kuveyt Türk Katılım Bankası</option><option value="Albaraka Türk Katılım Bankası">Albaraka Türk Katılım Bankası</option><option value="Türkiye Finans Katılım Bankası">Türkiye Finans Katılım Bankası</option><option value="Vakıf Katılım Bankası">Vakıf Katılım Bankası</option><option value="Ziraat Katılım Bankası">Ziraat Katılım Bankası</option><option value="Emlak Katılım Bankası">Emlak Katılım Bankası</option><option value="T.O.M. Katılım Bankası">T.O.M. Katılım Bankası</option><option value="Hayat Finans Katılım Bankası">Hayat Finans Katılım Bankası</option></optgroup></select></div>
+</div>
+
+<div class="form-group"><label>Açıklama <span style="font-weight:400; color:var(--muted); font-size:11.5px;">(isteğe bağlı)</span></label><input type="text" class="form-control" id="iadeNot" placeholder="Örn: tutar hatalı, vade değişikliği"></div>
+
+<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalCekIade')">İptal</button><button class="btn btn-primary" id="btnIadeKaydet" onclick="dbCekIadeKaydet()">Kaydet</button></div>
+</div></div>
+
 <div id="modalCikisListesi" class="modal-overlay"><div class="cek-modal modal-large"><h2><i class="fa-solid fa-list-check" style="color:var(--accent);"></i> Çıkış Yapılanlar</h2><table class="cek-table"><thead><tr><th>Çek No</th><th>Sahibi</th><th>Yeri</th><th>Çıkış Tarihi</th><th style="text-align:center;">Çıkıştan Vade</th><th>Vade</th><th style="text-align:right;">Tutar</th><th style="text-align:right;">İşlem</th></tr></thead><tbody id="tbodyCikis"></tbody></table><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalCikisListesi')">Kapat</button></div></div></div>
 <div id="modalVadeHesapla" class="modal-overlay"><div class="cek-modal modal-large"><h2><i class="fa-solid fa-clock" style="color:var(--accent);"></i> Vade Hesapla</h2><div style="display:flex; gap:10px; margin-bottom:20px; background:#f8f9fa; padding:15px; border-radius:8px;"><div style="flex:1;"><label>Tutar (TL)</label><input type="number" id="hesaplaTutar" class="form-control"></div><div style="flex:1;"><label>Vade</label><input type="date" id="hesaplaVade" class="form-control"></div><div style="display:flex; align-items:flex-end;"><button class="btn btn-primary" onclick="geciciCekEkle()">+ Ekle</button></div></div><table class="cek-table"><thead><tr><th>Sıra</th><th style="text-align:right;">Tutar</th><th style="text-align:right;">Vade Tarihi</th><th style="text-align:right;">Kalan Gün</th></tr></thead><tbody id="vadeTablosu"></tbody></table><div style="margin-top:20px; padding:15px; background:#eafaf1; border-radius:8px; border:1px solid var(--success);"><p><strong>Toplam Tutar:</strong> <span id="toplamTutarMetni">0 TL</span></p><p><strong>Ortalama Vade:</strong> <span id="ortalamaVadeMetni" style="color:var(--danger); font-weight:bold; font-size:18px;">0 Gün</span></p></div><div class="modal-actions"><button class="btn btn-outline" onclick="geciciCekleriTemizle()">Temizle</button><button class="btn btn-outline" onclick="closeModal('modalVadeHesapla')">Kapat</button></div></div></div>
 
@@ -1196,12 +1231,17 @@
         let aktifTop = 0, aktifAdet = 0;
         let vadeAgirlik = 0, vadeTutarTop = 0, vadeliAdet = 0;
 
+        let iadeTop = 0, iadeAdet = 0;
+
         cekler.forEach(c => {
             const tutar = Number(c.tutar) || 0;
             // Bu cariye verilmiş mi (ciro veya kendi çekimiz), yoksa ondan mı alınmış?
             const verilen = cariyeVerilenMi(c, cari.unvan);
             const alinan = !verilen;
             const bekliyor = (c.durum === 'Kasada' || c.durum === 'Tahsilde' || c.durum === 'Ödenecek');
+
+            // İade edilen çekler toplamlara girmez, ayrı sayılır
+            if (c.durum === 'İade Edildi') { iadeTop += tutar; iadeAdet++; return; }
 
             if (alinan) {
                 alinanTop += tutar; alinanAdet++;
@@ -1316,6 +1356,11 @@
                 <div class="deger" style="font-size:15px;">${sonCikisMetni}</div>
                 <div class="alt">${sonCikisAlt}</div>
             </div>
+            ${iadeAdet ? `<div class="ozet-kutu" style="background:var(--warning-bg); border-color:var(--warning-line);">
+                <div class="baslik">İade / Değişim</div>
+                <div class="deger" style="color:var(--warning);">${formatMoney(iadeTop)}</div>
+                <div class="alt">${iadeAdet} çek iade edildi</div>
+            </div>` : ''}
         </div>
 
         ${cikisAyKeys.length ? `
@@ -1337,7 +1382,7 @@
         tbody.innerHTML = cekler.map(c => {
             const alinan = !cariyeVerilenMi(c, cari.unvan);
             const renk = alinan ? 'var(--success)' : 'var(--danger)';
-            const tamamlandi = (c.durum === 'Ödendi');
+            const tamamlandi = (c.durum === 'Ödendi' || c.durum === 'İade Edildi');
             const gt = girisTarihi(c);
             const vadeGun = gunFarki(gt, c.vade_tarihi);
             const ct = cikisTarihi(c);
@@ -1356,6 +1401,7 @@
             else if (c.durum === 'Kasada') durumBadge = '<span class="badge badge-kasa">Kasada</span>';
             else if (c.durum === 'Tahsilde') durumBadge = '<span class="badge badge-tahsil">Tahsilde</span>';
             else if (c.durum === 'Ödenecek') durumBadge = '<span class="badge badge-kendi">Ödenecek</span>';
+            else if (c.durum === 'İade Edildi') durumBadge = '<span class="badge" style="background:var(--warning-bg); color:var(--warning); border:1px solid var(--warning-line);">İade Edildi</span>';
             else durumBadge = `<span class="badge badge-gri">${c.durum}</span>`;
 
             return `<tr${tamamlandi ? ' style="opacity:.55;"' : ''}>
@@ -1401,6 +1447,7 @@
         cekler.forEach(c => {
             const tutar = Number(c.tutar) || 0;
             const alinan = !cariyeVerilenMi(c, cari.unvan);
+            if (c.durum === 'İade Edildi') return;   // iade edilenler toplamlara girmez
             if (alinan) { alinanTop += tutar; alinanAdet++; } else { verilenTop += tutar; verilenAdet++; }
             if (c.durum === 'Kasada' || c.durum === 'Tahsilde' || c.durum === 'Ödenecek') { aktifTop += tutar; aktifAdet++; }
             if (alinan && c.islem_turu === 'Alınan Çek') {
@@ -1534,6 +1581,129 @@
           .catch((e) => { kapsayici.remove(); alert('PDF oluşturulamadı: ' + e.message); });
     }
 
+    // ================= ÇEK İADESİ / DEĞİŞİMİ =================
+    function iadeModalAc() {
+        const kasadakiler = g_cekler.filter(c => c.durum === 'Kasada')
+            .slice().sort((a, b) => new Date(a.vade_tarihi) - new Date(b.vade_tarihi));
+
+        if (kasadakiler.length === 0) return alert('Kasada iade edilebilecek çek bulunmuyor.');
+
+        let ops = '<option value="">Çek Seçiniz...</option>';
+        kasadakiler.forEach(c => {
+            const gun = calcDays(c.vade_tarihi);
+            const gunMetni = gun < 0 ? 'gecikti' : (gun === 0 ? 'bugün' : gun + ' gün');
+            ops += `<option value="${c.id}">${formatDate(c.vade_tarihi)} (${gunMetni}) · ${formatMoney(c.tutar)} · No: ${c.cek_no} · ${c.cari_unvan}</option>`;
+        });
+        document.getElementById('iadeCekSecim').innerHTML = ops;
+
+        document.getElementById('iadeTuru').value = 'degisim';
+        ['iadeYeniCekNo', 'iadeYeniTutar', 'iadeYeniVade', 'iadeNot'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('iadeCekBilgi').style.display = 'none';
+        iadeFormGuncelle();
+        openModal('modalCekIade');
+    }
+
+    function iadeFormGuncelle() {
+        const tur = document.getElementById('iadeTuru').value;
+        document.getElementById('yeniCekAlani').style.display = (tur === 'degisim') ? 'block' : 'none';
+        document.getElementById('btnIadeKaydet').innerHTML = (tur === 'degisim')
+            ? '<i class="fa-solid fa-right-left"></i> Değişimi Kaydet'
+            : '<i class="fa-solid fa-rotate-left"></i> İadeyi Kaydet';
+    }
+
+    // Seçilen çekin bilgilerini gösterir ve yeni çek alanlarını ön doldurur
+    function iadeCekBilgiGoster() {
+        const id = document.getElementById('iadeCekSecim').value;
+        const kutu = document.getElementById('iadeCekBilgi');
+        if (!id) { kutu.style.display = 'none'; return; }
+
+        const c = g_cekler.find(x => x.id == id);
+        if (!c) { kutu.style.display = 'none'; return; }
+
+        kutu.style.display = 'block';
+        kutu.innerHTML = `<div style="font-weight:700; color:var(--primary); margin-bottom:6px;">İade edilecek çek</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px 14px; color:var(--secondary);">
+                <div>Çek No: <strong>${c.cek_no}</strong></div>
+                <div>Cari: <strong>${c.cari_unvan}</strong></div>
+                <div>Tutar: <strong>${formatMoney(c.tutar)}</strong></div>
+                <div>Vade: <strong>${formatDate(c.vade_tarihi)}</strong></div>
+                <div style="grid-column:1/-1;">Banka: ${c.banka_adi || '-'}</div>
+            </div>`;
+
+        // Değişimde yeni çek alanlarını aynı bilgilerle başlat
+        if (document.getElementById('iadeTuru').value === 'degisim') {
+            if (!document.getElementById('iadeYeniTutar').value) document.getElementById('iadeYeniTutar').value = c.tutar;
+            if (!document.getElementById('iadeYeniVade').value) document.getElementById('iadeYeniVade').value = c.vade_tarihi;
+            if (c.banka_adi) document.getElementById('iadeYeniBanka').value = c.banka_adi;
+        }
+    }
+
+    async function dbCekIadeKaydet() {
+        const seciliId = document.getElementById('iadeCekSecim').value;
+        if (!seciliId) return alert('İade edilecek çeki seçiniz.');
+
+        const eski = g_cekler.find(x => x.id == seciliId);
+        if (!eski) return alert('Çek bulunamadı.');
+
+        const tur = document.getElementById('iadeTuru').value;
+        const not = document.getElementById('iadeNot').value.trim();
+        const btn = document.getElementById('btnIadeKaydet');
+
+        let yeniCek = null;
+        if (tur === 'degisim') {
+            const cekNo = document.getElementById('iadeYeniCekNo').value.trim();
+            const tutar = parseFloat(document.getElementById('iadeYeniTutar').value);
+            const vade = document.getElementById('iadeYeniVade').value;
+            const banka = document.getElementById('iadeYeniBanka').value;
+            if (!cekNo || !tutar || !vade) return alert('Yeni çekin numarası, tutarı ve vadesini giriniz.');
+
+            yeniCek = {
+                cek_no: cekNo, cari_unvan: eski.cari_unvan, tutar: tutar, vade_tarihi: vade,
+                durum: 'Kasada', islem_turu: 'Alınan Çek', banka_adi: banka,
+                giris_tarihi: bugunTarih(),
+                ekleyen_kullanici: `${aktifKullanici} (${eski.cek_no} değişimi)`
+            };
+
+            const onay = `DEĞİŞİM ONAYI\n\n` +
+                `İade edilen: ${eski.cek_no} · ${formatMoney(eski.tutar)} · ${formatDate(eski.vade_tarihi)}\n` +
+                `Yerine alınan: ${cekNo} · ${formatMoney(tutar)} · ${formatDate(vade)}\n\n` +
+                `Cari: ${eski.cari_unvan}\n\nOnaylıyor musunuz?`;
+            if (!confirm(onay)) return;
+        } else {
+            const onay = `İADE ONAYI\n\n${eski.cek_no} · ${formatMoney(eski.tutar)} · ${formatDate(eski.vade_tarihi)}\n` +
+                `Cari: ${eski.cari_unvan}\n\nBu çek ${eski.cari_unvan} firmasına iade edilecek ve kasadan düşecek.\n\nOnaylıyor musunuz?`;
+            if (!confirm(onay)) return;
+        }
+
+        btn.disabled = true;
+
+        try {
+            // Eski çeki iade olarak işaretle
+            const { error: e1 } = await db.from('cekler').update({
+                durum: 'İade Edildi',
+                cikis_tarihi: bugunTarih(),
+                banka_bilgisi: eski.cari_unvan + (not ? ' — ' + not : ''),
+                son_duzenleyen_kullanici: aktifKullanici,
+                guncelleme_tarihi: new Date()
+            }).eq('id', seciliId);
+            if (e1) throw e1;
+
+            // Değişimse yeni çeki ekle
+            if (yeniCek) {
+                const { error: e2 } = await db.from('cekler').insert([yeniCek]);
+                if (e2) throw e2;
+            }
+
+            alert(tur === 'degisim' ? 'Değişim kaydedildi.' : 'İade kaydedildi.');
+            closeModal('modalCekIade');
+            loadData();
+        } catch (e) {
+            alert('Hata: ' + e.message);
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
     function renderDropdowns() {
         let cariOps = '<option value="">Cari Seçiniz...</option>'; g_cariler.forEach(c => { cariOps += `<option value="${c.unvan}">${c.unvan}</option>`; });
         document.getElementById('girisCariSecim').innerHTML = cariOps; document.getElementById('cikisCariSecim').innerHTML = cariOps;
@@ -1545,7 +1715,7 @@
             .forEach(c => {
                 const gun = calcDays(c.vade_tarihi);
                 const gunMetni = gun < 0 ? 'gecikti' : (gun === 0 ? 'bugün' : gun + ' gün');
-                kasaOps += `<option value="${c.id}" data-cekno="${c.cek_no}" data-tutar="${c.tutar}" data-vade="${c.vade_tarihi}">${formatDate(c.vade_tarihi)} (${gunMetni}) · ${formatMoney(c.tutar)} · ${c.cari_unvan}</option>`;
+                kasaOps += `<option value="${c.id}" data-cekno="${c.cek_no}" data-tutar="${c.tutar}" data-vade="${c.vade_tarihi}">${formatDate(c.vade_tarihi)} (${gunMetni}) · ${formatMoney(c.tutar)} · No: ${c.cek_no} · ${c.cari_unvan}</option>`;
             });
         document.getElementById('kasaCekListesi').innerHTML = kasaOps;
     }
@@ -1646,9 +1816,13 @@
             
             let islemHucre = islemButonu(c.id);
 
-            if(c.durum === 'Ödendi') {
+            if(c.durum === 'Ödendi' || c.durum === 'İade Edildi') {
+                const iade = (c.durum === 'İade Edildi');
                 let typeColor = c.islem_turu === 'Alınan Çek' ? 'color: var(--success);' : 'color: var(--danger);';
-                htmlOdendi += `<tr><td>${c.cek_no}</td><td>${c.cari_unvan}</td><td style="${typeColor} font-weight:bold;">${c.islem_turu}</td><td>${formatDate(c.vade_tarihi)}</td><td style="text-align:right; font-weight:bold;">${formatMoney(c.tutar)}</td><td style="text-align:right;"><span class="badge badge-gri">Tamamlandı</span></td><td style="text-align:right;">${islemButonu(c.id)}</td></tr>`;
+                const rozet = iade
+                    ? '<span class="badge" style="background:var(--warning-bg); color:var(--warning); border:1px solid var(--warning-line);">İade / Değişim</span>'
+                    : '<span class="badge badge-gri">Tamamlandı</span>';
+                htmlOdendi += `<tr><td>${c.cek_no}</td><td>${c.cari_unvan}</td><td style="${typeColor} font-weight:bold;">${c.islem_turu}</td><td>${formatDate(c.vade_tarihi)}</td><td style="text-align:right; font-weight:bold;">${formatMoney(c.tutar)}</td><td style="text-align:right;">${rozet}</td><td style="text-align:right;">${islemButonu(c.id)}</td></tr>`;
             }
 
             if(c.durum === 'Kasada' || c.durum === 'Tahsilde') {
