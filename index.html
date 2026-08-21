@@ -458,7 +458,16 @@
 </div>
 
 <div class="form-group">
-    <label>Kasadaki Çek <span style="font-weight:400; color:var(--muted); font-size:11.5px;">(iade edilecek)</span></label>
+    <label>Çek Nerede?</label>
+    <select class="form-control" id="iadeKaynak" onchange="iadeCekListesiDoldur()">
+        <option value="kasa">💼 Kasadaki Çekler (portföy)</option>
+        <option value="cikis">📤 Çıkış Yapılan Çekler (tahsilde / ciro edilen)</option>
+        <option value="tumu">📋 Tümü</option>
+    </select>
+</div>
+
+<div class="form-group">
+    <label>İade / Değişim Yapılacak Çek</label>
     <select class="form-control" id="iadeCekSecim" onchange="iadeCekBilgiGoster()"></select>
 </div>
 
@@ -1583,24 +1592,49 @@
 
     // ================= ÇEK İADESİ / DEĞİŞİMİ =================
     function iadeModalAc() {
-        const kasadakiler = g_cekler.filter(c => c.durum === 'Kasada')
-            .slice().sort((a, b) => new Date(a.vade_tarihi) - new Date(b.vade_tarihi));
-
-        if (kasadakiler.length === 0) return alert('Kasada iade edilebilecek çek bulunmuyor.');
-
-        let ops = '<option value="">Çek Seçiniz...</option>';
-        kasadakiler.forEach(c => {
-            const gun = calcDays(c.vade_tarihi);
-            const gunMetni = gun < 0 ? 'gecikti' : (gun === 0 ? 'bugün' : gun + ' gün');
-            ops += `<option value="${c.id}">${formatDate(c.vade_tarihi)} (${gunMetni}) · ${formatMoney(c.tutar)} · No: ${c.cek_no} · ${c.cari_unvan}</option>`;
-        });
-        document.getElementById('iadeCekSecim').innerHTML = ops;
-
+        document.getElementById('iadeKaynak').value = 'kasa';
         document.getElementById('iadeTuru').value = 'degisim';
         ['iadeYeniCekNo', 'iadeYeniTutar', 'iadeYeniVade', 'iadeNot'].forEach(id => document.getElementById(id).value = '');
         document.getElementById('iadeCekBilgi').style.display = 'none';
+        iadeCekListesiDoldur();
         iadeFormGuncelle();
         openModal('modalCekIade');
+    }
+
+    // Seçilen kaynağa göre çek listesini doldurur
+    function iadeCekListesiDoldur() {
+        const kaynak = document.getElementById('iadeKaynak').value;
+
+        // Hangi durumlar hangi kaynağa ait
+        const kasaDurum = ['Kasada'];
+        const cikisDurum = ['Tahsilde', 'Ciro Edildi', 'Kredi Ödemesi', 'Ödenecek'];
+
+        let liste = g_cekler.filter(c => {
+            if (kaynak === 'kasa') return kasaDurum.includes(c.durum);
+            if (kaynak === 'cikis') return cikisDurum.includes(c.durum);
+            return kasaDurum.includes(c.durum) || cikisDurum.includes(c.durum);
+        }).slice().sort((a, b) => new Date(a.vade_tarihi) - new Date(b.vade_tarihi));
+
+        const sec = document.getElementById('iadeCekSecim');
+
+        if (liste.length === 0) {
+            sec.innerHTML = '<option value="">— Bu grupta çek yok —</option>';
+            document.getElementById('iadeCekBilgi').style.display = 'none';
+            return;
+        }
+
+        // Durum bilgisini kısa etiketle göster
+        const durumKisa = { 'Kasada': 'Kasa', 'Tahsilde': 'Tahsilde', 'Ciro Edildi': 'Ciro', 'Kredi Ödemesi': 'Kredi', 'Ödenecek': 'Kendi Çekimiz' };
+
+        let ops = '<option value="">Çek Seçiniz...</option>';
+        liste.forEach(c => {
+            const gun = calcDays(c.vade_tarihi);
+            const gunMetni = gun < 0 ? 'gecikti' : (gun === 0 ? 'bugün' : gun + ' gün');
+            const nerede = durumKisa[c.durum] || c.durum;
+            ops += `<option value="${c.id}">[${nerede}] ${formatDate(c.vade_tarihi)} (${gunMetni}) · ${formatMoney(c.tutar)} · No: ${c.cek_no} · ${c.cari_unvan}</option>`;
+        });
+        sec.innerHTML = ops;
+        document.getElementById('iadeCekBilgi').style.display = 'none';
     }
 
     function iadeFormGuncelle() {
@@ -1621,14 +1655,30 @@
         if (!c) { kutu.style.display = 'none'; return; }
 
         kutu.style.display = 'block';
+
+        // Çek nerede? — çıkış yapılmışsa nereye gittiğini de göster
+        let konum = '';
+        if (c.durum === 'Kasada') konum = 'Kasada (portföyde)';
+        else if (c.durum === 'Tahsilde') konum = `Tahsilde — ${c.banka_bilgisi || 'banka'}`;
+        else if (c.durum === 'Ciro Edildi') konum = `Ciro edildi — ${c.banka_bilgisi || 'cari'}`;
+        else if (c.durum === 'Kredi Ödemesi') konum = `Kredi ödemesi — ${c.banka_bilgisi || 'banka'}`;
+        else if (c.durum === 'Ödenecek') konum = 'Kendi çekimiz (ödenecek)';
+        else konum = c.durum;
+
+        const cikisMi = (c.durum !== 'Kasada');
+
         kutu.innerHTML = `<div style="font-weight:700; color:var(--primary); margin-bottom:6px;">İade edilecek çek</div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px 14px; color:var(--secondary);">
                 <div>Çek No: <strong>${c.cek_no}</strong></div>
                 <div>Cari: <strong>${c.cari_unvan}</strong></div>
                 <div>Tutar: <strong>${formatMoney(c.tutar)}</strong></div>
                 <div>Vade: <strong>${formatDate(c.vade_tarihi)}</strong></div>
-                <div style="grid-column:1/-1;">Banka: ${c.banka_adi || '-'}</div>
-            </div>`;
+                <div>Banka: ${c.banka_adi || '-'}</div>
+                <div>Durum: <strong>${konum}</strong></div>
+            </div>
+            ${cikisMi ? `<div style="margin-top:9px; padding:8px 10px; background:var(--warning-bg); border:1px solid var(--warning-line); border-radius:7px; font-size:11.5px; color:var(--warning);">
+                <i class="fa-solid fa-triangle-exclamation"></i> Bu çek çıkış yapılmış durumda. İade işlemi öncesi ilgili yerden geri aldığınızdan emin olun.
+            </div>` : ''}`;
 
         // Değişimde yeni çek alanlarını aynı bilgilerle başlat
         if (document.getElementById('iadeTuru').value === 'degisim') {
@@ -1664,14 +1714,19 @@
                 ekleyen_kullanici: `${aktifKullanici} (${eski.cek_no} değişimi)`
             };
 
+            const nerede = eski.durum === 'Kasada' ? 'Kasadan' : `"${eski.durum}" durumundan`;
             const onay = `DEĞİŞİM ONAYI\n\n` +
                 `İade edilen: ${eski.cek_no} · ${formatMoney(eski.tutar)} · ${formatDate(eski.vade_tarihi)}\n` +
+                `Çekin yeri: ${eski.durum}${eski.banka_bilgisi ? ' (' + eski.banka_bilgisi + ')' : ''}\n\n` +
                 `Yerine alınan: ${cekNo} · ${formatMoney(tutar)} · ${formatDate(vade)}\n\n` +
-                `Cari: ${eski.cari_unvan}\n\nOnaylıyor musunuz?`;
+                `Cari: ${eski.cari_unvan}\n\n` +
+                `${nerede} düşecek, yeni çek kasaya girecek.\n\nOnaylıyor musunuz?`;
             if (!confirm(onay)) return;
         } else {
             const onay = `İADE ONAYI\n\n${eski.cek_no} · ${formatMoney(eski.tutar)} · ${formatDate(eski.vade_tarihi)}\n` +
-                `Cari: ${eski.cari_unvan}\n\nBu çek ${eski.cari_unvan} firmasına iade edilecek ve kasadan düşecek.\n\nOnaylıyor musunuz?`;
+                `Çekin yeri: ${eski.durum}${eski.banka_bilgisi ? ' (' + eski.banka_bilgisi + ')' : ''}\n` +
+                `Cari: ${eski.cari_unvan}\n\n` +
+                `Bu çek ${eski.cari_unvan} firmasına iade edilecek ve varlıklardan düşecek.\n\nOnaylıyor musunuz?`;
             if (!confirm(onay)) return;
         }
 
@@ -1696,7 +1751,7 @@
 
             alert(tur === 'degisim' ? 'Değişim kaydedildi.' : 'İade kaydedildi.');
             closeModal('modalCekIade');
-            loadData();
+            await loadData();
         } catch (e) {
             alert('Hata: ' + e.message);
         } finally {
