@@ -109,10 +109,16 @@
         .hk-alt { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--border); font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; }
 
         /* METRİK */
-        .metrik { border-radius: 11px; padding: 15px; border: 1px solid var(--border); background: #f8fafc; }
-        .metrik .lbl { font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
-        .metrik .val { font-size: 19px; font-weight: 700; letter-spacing: -.02em; }
-        .metrik .alt { font-size: 11px; color: var(--faint); margin-top: 2px; }
+        .metrik { border-radius: 11px; padding: 15px; border: 1px solid var(--border); background: #f8fafc;
+            display: flex; flex-direction: column; justify-content: flex-start; min-height: 92px; }
+        .metrik .lbl { font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; min-height: 15px; }
+        .metrik .val { font-size: 19px; font-weight: 700; letter-spacing: -.02em; line-height: 1.3; }
+        .metrik .alt { font-size: 11px; color: var(--faint); margin-top: auto; padding-top: 3px; min-height: 15px; }
+
+        /* Yan yana duran kartların hizası bozulmasın */
+        .esit-kart { display: flex; flex-direction: column; }
+        .esit-kart > .grid-3, .esit-kart > .grid-2, .esit-kart > .grid-4 { flex-grow: 1; }
+        .esit-kart h2 { min-height: 26px; }
         .m-yesil { background: var(--success-bg); border-color: var(--success-line); } .m-yesil .val { color: var(--success); }
         .m-kirmizi { background: var(--danger-bg); border-color: var(--danger-line); } .m-kirmizi .val { color: var(--danger); }
         .m-mavi { background: var(--accent-soft); border-color: #bfdbfe; } .m-mavi .val { color: var(--accent); }
@@ -269,15 +275,15 @@
 
             <!-- AKIŞ ÖZETİ -->
             <div class="grid-2" style="margin-bottom:18px;">
-                <div class="card" style="margin-bottom:0;">
+                <div class="card esit-kart" style="margin-bottom:0;">
                     <h2><span class="sol"><i class="fa-solid fa-calendar-day" style="color:var(--accent);"></i> Bu Ay</span><span class="sub" id="buAyEtiket"></span></h2>
                     <div class="grid-3">
                         <div class="metrik m-yesil"><div class="lbl">Giren</div><div class="val" id="tbGiren">₺0,00</div><div class="alt" id="ayGirenAdet"></div></div>
                         <div class="metrik m-kirmizi"><div class="lbl">Çıkan</div><div class="val" id="tbCikan">₺0,00</div><div class="alt" id="ayCikanAdet"></div></div>
-                        <div class="metrik m-mavi"><div class="lbl">Net</div><div class="val" id="ayNet">₺0,00</div><div class="alt">bu ayın farkı</div></div>
+                        <div class="metrik m-mavi"><div class="lbl">Net</div><div class="val" id="ayNet">₺0,00</div><div class="alt" id="ayNetAlt">bu ayın farkı</div></div>
                     </div>
                 </div>
-                <div class="card" style="margin-bottom:0;">
+                <div class="card esit-kart" style="margin-bottom:0;">
                     <h2><span class="sol"><i class="fa-solid fa-forward" style="color:var(--warning);"></i> Önümüzdeki 30 Gün</span><span class="sub">planlanan hareketler</span></h2>
                     <div class="grid-3">
                         <div class="metrik m-yesil"><div class="lbl">Girecek</div><div class="val" id="planGirecek">₺0,00</div><div class="alt" id="planGirecekAdet"></div></div>
@@ -654,8 +660,19 @@ function anaKatBul(ad) {
 // Kategori + alt kategori metnini birleştirir
 function katMetin(t) {
     if (t.tur === 'TRANSFER') return 'Transfer';
+    // Borç hareketlerinin kategorisi yoktur, sade etiket gösterilir
+    if (t.kategori === BORC_ALMA_KAT) return 'Borç Alındı';
+    if (t.kategori === BORC_ODEME_KAT) return 'Borç Ödendi';
     if (!t.kategori) return '—';
     return t.altKategori ? `${t.kategori} › ${t.altKategori}` : t.kategori;
+}
+
+// Borç etiketleri için özel rozet rengi
+function katRozetStil(t) {
+    if (t.kategori === BORC_ALMA_KAT || t.kategori === BORC_ODEME_KAT)
+        return 'border-color:#fbbf2455; color:#b45309; background:#fffbeb;';
+    const k = katBul(t.kategori);
+    return k ? `border-color:${k.renk}55; color:${k.renk};` : '';
 }
 const gunFark = (a, b) => { const x = new Date(a); x.setHours(0,0,0,0); const y = new Date(b); y.setHours(0,0,0,0); return Math.round((y - x) / 86400000); };
 
@@ -839,6 +856,7 @@ function panelYaz() {
     document.getElementById('tbCikan').innerText = para(ayCikan);
     document.getElementById('ayGirenAdet').innerText = ayGirenAdet + ' işlem';
     document.getElementById('ayCikanAdet').innerText = ayCikanAdet + ' işlem';
+    document.getElementById('ayNetAlt').innerText = (ayGirenAdet + ayCikanAdet) + ' işlem';
     const ayNet = ayGiren - ayCikan;
     const ayNetEl = document.getElementById('ayNet');
     ayNetEl.innerText = (ayNet >= 0 ? '+' : '') + para(ayNet);
@@ -847,8 +865,8 @@ function panelYaz() {
     // 30 gün kutuları
     document.getElementById('planGirecek').innerText = para(planGirecek);
     document.getElementById('planCikacak').innerText = para(planCikacak);
-    document.getElementById('planGirecekAdet').innerText = planGirAdet ? planGirAdet + ' planlı tahsilat' : 'plan yok';
-    document.getElementById('planCikacakAdet').innerText = planCikAdet ? planCikAdet + ' planlı ödeme' : 'plan yok';
+    document.getElementById('planGirecekAdet').innerText = planGirAdet + ' plan';
+    document.getElementById('planCikacakAdet').innerText = planCikAdet + ' plan';
 
     const tahmin = toplam + planGirecek - planCikacak;
     const tahminEl = document.getElementById('tahminBakiye');
@@ -868,13 +886,14 @@ function panelYaz() {
             const v = bak[h.id] || 0;
             const adet = islemler.filter(t => !t.beklenen && (t.hesap === h.id || t.hedefHesap === h.id)).length;
             const son = islemler.filter(t => !t.beklenen && (t.hesap === h.id || t.hedefHesap === h.id))[0];
-            return `<div class="hesap-kart" onclick="hesapDetayAc('${h.id}')">
+            const r = hesapRengi(h);
+            return `<div class="hesap-kart" onclick="hesapDetayAc('${h.id}')" style="background:${r.zemin}; border-color:${r.kenar};">
                 <div class="hk-ust">
-                    <div class="hk-ikon ${h.tur === 'kasa' ? 'hk-kasa' : 'hk-banka'}"><i class="fa-solid ${h.tur === 'kasa' ? 'fa-vault' : 'fa-building-columns'}"></i></div>
-                    <div><div class="hk-ad">${h.ad}</div><div class="hk-tur">${h.tur === 'kasa' ? 'Nakit Kasa' : 'Banka Hesabı'}</div></div>
+                    <div class="hk-ikon" style="background:#ffffffcc; color:${r.ikon}; border:1px solid ${r.kenar};"><i class="fa-solid ${h.tur === 'kasa' ? 'fa-vault' : 'fa-building-columns'}"></i></div>
+                    <div><div class="hk-ad" style="color:${r.yazi};">${h.ad}</div><div class="hk-tur" style="color:${r.yazi}; opacity:.7;">${h.tur === 'kasa' ? 'Nakit Kasa' : 'Banka Hesabı'}</div></div>
                 </div>
-                <div class="hk-bakiye" style="color:${v < 0 ? 'var(--danger)' : 'var(--text)'};">${para(v)}</div>
-                <div class="hk-alt"><span>${adet} hareket</span><span>${son ? 'Son: ' + tarihYaz(son.tarih) : 'Hareket yok'}</span></div>
+                <div class="hk-bakiye" style="color:${v < 0 ? 'var(--danger)' : r.yazi};">${para(v)}</div>
+                <div class="hk-alt" style="border-top-color:${r.kenar}; color:${r.yazi}; opacity:.75;"><span>${adet} hareket</span><span>${son ? 'Son: ' + tarihYaz(son.tarih) : 'Hareket yok'}</span></div>
             </div>`;
         }).join('');
     }
@@ -953,7 +972,7 @@ function beklenenYaz() {
             <td>${kalanHtml}</td>
             <td><span class="badge ${t.tur === 'GIRIS' ? 'b-giris' : 'b-cikis'}">${t.tur === 'GIRIS' ? 'GİRİŞ' : 'ÇIKIŞ'}</span></td>
             <td>${cariAdi(t.cariId) ? '<strong>' + cariAdi(t.cariId) + '</strong> — ' : ''}${t.aciklama}</td>
-            <td><span class="badge b-kat" style="${k ? 'border-color:' + k.renk + '55; color:' + k.renk : ''}">${katMetin(t)}</span></td>
+            <td><span class="badge b-kat" style="${katRozetStil(t)}">${katMetin(t)}</span></td>
             <td style="text-align:right; font-weight:700; color:${t.tur === 'GIRIS' ? 'var(--success)' : 'var(--danger)'};">${para(t.tutar)}</td>
             <td style="text-align:center;">${durumHtml}</td>
             <td style="text-align:right; white-space:nowrap;">
@@ -1004,6 +1023,57 @@ function borcYaz() {
     }).join('');
 }
 
+
+
+// ================= BANKA RENKLERİ =================
+// Hesap adına göre kurumsal pastel renk eşleşmesi
+const BANKA_RENKLERI = [
+    { anahtar: ['garanti'],                       zemin: '#e8f5e9', kenar: '#a5d6a7', yazi: '#2e7d32', ikon: '#43a047' },
+    { anahtar: ['vakıf', 'vakif'],                zemin: '#fff3e0', kenar: '#ffcc80', yazi: '#e65100', ikon: '#fb8c00' },
+    { anahtar: ['ziraat'],                        zemin: '#fffde7', kenar: '#fff59d', yazi: '#f57f17', ikon: '#fbc02d' },
+    { anahtar: ['iş bankası', 'is bankasi', 'isbank'], zemin: '#e8eaf6', kenar: '#9fa8da', yazi: '#283593', ikon: '#3949ab' },
+    { anahtar: ['akbank'],                        zemin: '#ffebee', kenar: '#ef9a9a', yazi: '#c62828', ikon: '#e53935' },
+    { anahtar: ['yapı kredi', 'yapi kredi', 'yapıkredi'], zemin: '#e3f2fd', kenar: '#90caf9', yazi: '#1565c0', ikon: '#1e88e5' },
+    { anahtar: ['halkbank', 'halk bank'],         zemin: '#e0f2f1', kenar: '#80cbc4', yazi: '#00695c', ikon: '#00897b' },
+    { anahtar: ['qnb', 'finansbank'],             zemin: '#f3e5f5', kenar: '#ce93d8', yazi: '#6a1b9a', ikon: '#8e24aa' },
+    { anahtar: ['deniz'],                         zemin: '#e1f5fe', kenar: '#81d4fa', yazi: '#01579b', ikon: '#039be5' },
+    { anahtar: ['teb', 'ekonomi'],                zemin: '#e8f5e9', kenar: '#a5d6a7', yazi: '#1b5e20', ikon: '#388e3c' },
+    { anahtar: ['ing'],                           zemin: '#fff3e0', kenar: '#ffb74d', yazi: '#e65100', ikon: '#f57c00' },
+    { anahtar: ['şeker', 'seker'],                zemin: '#fce4ec', kenar: '#f48fb1', yazi: '#ad1457', ikon: '#d81b60' },
+    { anahtar: ['kuveyt'],                        zemin: '#e8f5e9', kenar: '#a5d6a7', yazi: '#33691e', ikon: '#689f38' },
+    { anahtar: ['albaraka'],                      zemin: '#e0f7fa', kenar: '#80deea', yazi: '#006064', ikon: '#00acc1' },
+    { anahtar: ['türkiye finans', 'turkiye finans'], zemin: '#e8eaf6', kenar: '#9fa8da', yazi: '#1a237e', ikon: '#3f51b5' },
+    { anahtar: ['emlak'],                         zemin: '#efebe9', kenar: '#bcaaa4', yazi: '#4e342e', ikon: '#6d4c41' },
+    { anahtar: ['anadolu'],                       zemin: '#fbe9e7', kenar: '#ffab91', yazi: '#bf360c', ikon: '#e64a19' },
+    { anahtar: ['fiba'],                          zemin: '#e8f5e9', kenar: '#a5d6a7', yazi: '#2e7d32', ikon: '#43a047' },
+    { anahtar: ['odea'],                          zemin: '#ede7f6', kenar: '#b39ddb', yazi: '#4527a0', ikon: '#5e35b1' },
+    { anahtar: ['hsbc'],                          zemin: '#ffebee', kenar: '#ef9a9a', yazi: '#b71c1c', ikon: '#d32f2f' },
+    { anahtar: ['burgan'],                        zemin: '#e3f2fd', kenar: '#90caf9', yazi: '#0d47a1', ikon: '#1976d2' },
+    { anahtar: ['alternatif'],                    zemin: '#fce4ec', kenar: '#f48fb1', yazi: '#880e4f', ikon: '#c2185b' },
+    { anahtar: ['icbc'],                          zemin: '#ffebee', kenar: '#ef9a9a', yazi: '#c62828', ikon: '#e53935' }
+];
+
+// Eşleşme yoksa kullanılacak yedek pastel tonlar
+const YEDEK_RENKLER = [
+    { zemin: '#eef2ff', kenar: '#c7d2fe', yazi: '#3730a3', ikon: '#4f46e5' },
+    { zemin: '#f0fdf4', kenar: '#bbf7d0', yazi: '#166534', ikon: '#16a34a' },
+    { zemin: '#fef3c7', kenar: '#fde68a', yazi: '#92400e', ikon: '#d97706' },
+    { zemin: '#fae8ff', kenar: '#f5d0fe', yazi: '#86198f', ikon: '#c026d3' },
+    { zemin: '#ecfeff', kenar: '#a5f3fc', yazi: '#155e75', ikon: '#0891b2' }
+];
+
+const KASA_RENK = { zemin: '#f0fdf4', kenar: '#bbf7d0', yazi: '#166534', ikon: '#16a34a' };
+
+function hesapRengi(hesap) {
+    if (hesap.tur === 'kasa') return KASA_RENK;
+    const ad = (hesap.ad || '').toLocaleLowerCase('tr');
+    const bulunan = BANKA_RENKLERI.find(b => b.anahtar.some(a => ad.includes(a)));
+    if (bulunan) return bulunan;
+    // Eşleşme yoksa ada göre sabit bir yedek renk seç
+    let toplam = 0;
+    for (let i = 0; i < ad.length; i++) toplam += ad.charCodeAt(i);
+    return YEDEK_RENKLER[toplam % YEDEK_RENKLER.length];
+}
 
 // ================= BORÇ TAKİBİ =================
 // Adında "borç" geçen kategoriler borç hareketi sayılır
@@ -1129,7 +1199,7 @@ function satirYaz(t) {
         <td>${tarihYaz(t.tarih)}${t.beklenen ? ' <span class="badge b-bekleyen">beklenen</span>' : ''}</td>
         <td><strong>${hesapAdi(t.hesap)}</strong></td>
         <td><span class="badge ${sinif}">${etiket}</span></td>
-        <td>${t.tur === 'TRANSFER' ? '<span class="badge b-kat">Transfer</span>' : `<span class="badge b-kat" style="${k ? 'border-color:' + k.renk + '55; color:' + k.renk : ''}">${katMetin(t)}</span>`}</td>
+        <td>${t.tur === 'TRANSFER' ? '<span class="badge b-kat">Transfer</span>' : `<span class="badge b-kat" style="${katRozetStil(t)}">${katMetin(t)}</span>`}</td>
         <td>${karsi ? '<strong>' + karsi + '</strong> — ' : ''}${t.aciklama}</td>
         <td style="text-align:right; font-weight:700; color:${renk};">${t.tur === 'CIKIS' ? '-' : ''}${para(t.tutar)}</td>
         <td style="text-align:right;">${islemButonu(t.id)}</td>
@@ -1388,7 +1458,7 @@ function cariDetayYaz() {
             <td>${tarihYaz(t.tarih)}${t.beklenen ? ' <span class="badge b-bekleyen">beklenen</span>' : ''}</td>
             <td>${hesapAdi(t.hesap)}</td>
             <td><span class="badge ${sinif}">${etiket}</span></td>
-            <td><span class="badge b-kat">${katMetin(t)}</span></td>
+            <td><span class="badge b-kat" style="${katRozetStil(t)}">${katMetin(t)}</span></td>
             <td>${t.aciklama}</td>
             <td style="text-align:right; font-weight:700; color:${renk};">${para(t.tutar)}</td>
             <td style="text-align:right;">${islemButonu(t.id)}</td>
@@ -1406,11 +1476,15 @@ function hesapDetayYaz() {
     document.getElementById('hdBaslik').innerText = h.ad;
     document.getElementById('hdAlt').innerText = (h.tur === 'kasa' ? 'Nakit Kasa' : 'Banka Hesabı') + ' · hareket dökümü';
 
-    // Hesap kodu — sadece tanımlıysa göster
+    // Hesap kodu — sadece tanımlıysa göster, banka rengiyle
+    const r = hesapRengi(h);
     const kodKart = document.getElementById('hdKodKart');
     if (h.kod) {
         kodKart.style.display = '';
+        kodKart.style.background = r.zemin;
+        kodKart.style.borderColor = r.kenar;
         document.getElementById('hdKod').innerText = h.kod;
+        document.getElementById('hdKod').style.color = r.yazi;
     } else {
         kodKart.style.display = 'none';
     }
@@ -1438,7 +1512,7 @@ function hesapDetayYaz() {
         return `<tr${t.beklenen ? ' style="background:var(--warning-bg);"' : ''}>
             <td>${tarihYaz(t.tarih)}${t.beklenen ? ' <span class="badge b-bekleyen">beklenen</span>' : ''}</td>
             <td><span class="badge ${giren ? 'b-giris' : 'b-cikis'}">${etiket}</span></td>
-            <td><span class="badge b-kat">${katMetin(t)}</span></td>
+            <td><span class="badge b-kat" style="${katRozetStil(t)}">${katMetin(t)}</span></td>
             <td>${karsi ? '<strong>' + karsi + '</strong> — ' : ''}${t.aciklama}</td>
             <td style="text-align:right; color:var(--success); font-weight:700;">${giren ? para(t.tutar) : '—'}</td>
             <td style="text-align:right; color:var(--danger); font-weight:700;">${!giren ? para(t.tutar) : '—'}</td>
@@ -2279,8 +2353,6 @@ async function hesapKaydet() {
     let kod = null;
     if (kodHam) {
         if (!/^[0-9]{6}$/.test(kodHam)) return alert('Hesap kodu 6 haneli sayı olmalıdır.\n\nÖrnek: 123456');
-        const cakisma = hesaplar.find(x => x.kod === kodHam && x.id !== duzenlenenHesapId);
-        if (cakisma) return alert(`Bu kod zaten "${cakisma.ad}" hesabında kullanılıyor.`);
         kod = kodHam;
     }
 
