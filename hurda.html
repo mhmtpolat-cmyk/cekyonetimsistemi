@@ -176,7 +176,9 @@
 
         <div class="side-etiket">Görünüm</div>
         <button class="btn-menu aktif" id="mnAnaSayfa" onclick="gorunum('anaSayfa')"><i class="fa-solid fa-gauge-high"></i> Ana Sayfa</button>
-        <button class="btn-menu" id="mnPlastik" onclick="gorunum('plastik')"><i class="fa-solid fa-recycle"></i> Plastik Hurda</button>
+        <button class="btn-menu" id="mnKalip" onclick="hurdaDetayAc('kalip')" style="padding-left:26px;"><i class="fa-solid fa-industry"></i> Hurda Kalıp</button>
+        <button class="btn-menu" id="mnKagit" onclick="hurdaDetayAc('kagit')" style="padding-left:26px;"><i class="fa-solid fa-recycle"></i> Hurda Kağıt</button>
+        <button class="btn-menu" id="mnPlastik" onclick="gorunum('plastik')" style="padding-left:26px;"><i class="fa-solid fa-flask"></i> Hurda Plastik</button>
         <button class="btn-menu" id="mnAyarlar" onclick="gorunum('ayarlar')"><i class="fa-solid fa-gear"></i> Hurda Ayarları</button>
 
         <div class="side-ayrac"></div>
@@ -197,6 +199,29 @@
             <div class="header"><div><h1>Hurda Takip</h1><div class="alt">Kalıp ve kağıt hurdası — ön ödemeli cari takibi</div></div></div>
 
             <div class="grid-2" id="hurdaKartlari"></div>
+
+            <!-- DÖNEMSEL ÖZET -->
+            <div class="card">
+                <h2><i class="fa-solid fa-calendar-week" style="color:var(--accent);"></i> Dönemsel Teslimat Özeti</h2>
+                <div class="tablo-sarmal">
+                    <table>
+                        <thead><tr><th>Dönem</th><th style="text-align:right;">Kalıp KG</th><th style="text-align:right;">Kalıp Tutar</th><th style="text-align:right;">Kağıt KG</th><th style="text-align:right;">Kağıt Tutar</th><th style="text-align:right;">Toplam</th></tr></thead>
+                        <tbody id="donemselTablo"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TOPLAM GELİR DAĞILIMI -->
+            <div class="grid-2">
+                <div class="card">
+                    <h2><i class="fa-solid fa-sack-dollar" style="color:var(--accent);"></i> Toplam Hurda Geliri</h2>
+                    <div class="grid-4" id="gelirOzet"></div>
+                </div>
+                <div class="card">
+                    <h2><i class="fa-solid fa-chart-pie" style="color:var(--accent);"></i> Gelir Dağılımı</h2>
+                    <div class="chart-wrap"><canvas id="gelirDagilimChart"></canvas></div>
+                </div>
+            </div>
 
             <div class="grid-2">
                 <div class="card">
@@ -251,6 +276,11 @@
                     <div class="metrik m-yesil"><div class="lbl">Ön Ödeme Alınan</div><div class="val" id="ayOdeme">₺0</div></div>
                     <div class="metrik"><div class="lbl">İşlem Sayısı</div><div class="val" id="ayAdet">0</div></div>
                 </div>
+            </div>
+
+            <div class="card hidden" id="hdTasimaKart">
+                <h2><i class="fa-solid fa-truck-front" style="color:var(--accent);"></i> Taşıma Şekli Dağılımı <span class="sub">tüm zamanlar</span></h2>
+                <div class="grid-2" id="hdTasimaOzet"></div>
             </div>
 
             <div class="card">
@@ -530,6 +560,11 @@ async function verileriYukle() {
             db.from('hurda_plastik').select('*').order('tarih', { ascending: false })
         ]);
 
+        // Supabase hataları exception fırlatmaz, .error alanında döner — açıkça kontrol ediyoruz
+        if (hesapR.error) throw new Error('hurda_hesaplar: ' + hesapR.error.message);
+        if (hareketR.error) throw new Error('hurda_hareketler: ' + hareketR.error.message);
+        if (plastikR.error) throw new Error('hurda_plastik: ' + plastikR.error.message);
+
         // İki sabit hesap: kalip ve kagit — yoksa varsayılan oluştur
         const hesapListe = hesapR.data || [];
         hesaplar.kalip = hesapListe.find(h => h.tur === 'kalip') || { tur: 'kalip', firma: 'Firma belirtilmedi', anlasma_fiyat: 0 };
@@ -552,18 +587,24 @@ async function verileriYukle() {
             aciklama: p.aciklama || '', kullanici: p.kullanici
         }));
 
-        anaSayfaYaz();
+        // Aktif ekran neyse onu tazele — sadece ana sayfayı değil
+        if (!document.getElementById('v-anaSayfa').classList.contains('hidden')) anaSayfaYaz();
+        else if (!document.getElementById('v-hurdaDetay').classList.contains('hidden')) hurdaDetayYaz();
+        else if (!document.getElementById('v-plastik').classList.contains('hidden')) plastikYaz();
+        else if (!document.getElementById('v-ayarlar').classList.contains('hidden')) ayarlarYaz();
     } catch (e) {
-        alert('Veri yüklenemedi: ' + e.message + '\n\nhurda_hesaplar, hurda_hareketler ve hurda_plastik tablolarının oluşturulduğundan emin olun.');
+        alert('Veri yüklenemedi: ' + e.message + '\n\nhurda_hesaplar, hurda_hareketler ve hurda_plastik tablolarının oluşturulduğundan, RLS politikalarının tanımlandığından emin olun.');
     }
 }
 
 // Bir hurda türünün bakiyesini hesaplar (kronolojik sırayla yürüterek)
+// İşaret kuralı: POZİTİF = alacaklıyız (teslimat fazlası, onlar bize borçlu)
+//                NEGATİF = borçluyuz (ön ödeme fazlası, biz onlara hurda borçluyuz)
 function bakiyeHesapla(tur) {
     const liste = hareketler[tur].slice().sort((a, b) => new Date(a.tarih) - new Date(b.tarih) || a.id - b.id);
     let bakiye = 0;
     const bakiyeliListe = liste.map(h => {
-        if (h.tur === 'ON_ODEME') bakiye += h.tutar; else bakiye -= h.tutar;
+        if (h.tur === 'ON_ODEME') bakiye -= h.tutar; else bakiye += h.tutar;
         return { ...h, bakiyeSonrasi: bakiye };
     });
     return { bakiye, liste: bakiyeliListe.reverse() };  // en yeni en üstte
@@ -587,6 +628,8 @@ function gorunum(ad) {
 function hurdaDetayAc(tur) {
     aktifHurdaTuru = tur;
     gorunum('hurdaDetay');
+    document.querySelectorAll('.btn-menu.aktif').forEach(b => b.classList.remove('aktif'));
+    document.getElementById(tur === 'kalip' ? 'mnKalip' : 'mnKagit').classList.add('aktif');
     document.getElementById('hdFiltreTur').value = 'ALL';
     hurdaDetayYaz();
 }
@@ -598,10 +641,10 @@ function anaSayfaYaz() {
 
     const kartYaz = (tur, baslik, ikon, b) => {
         const h = hesaplar[tur];
-        const pozitif = b.bakiye >= 0;
-        const renk = b.bakiye === 0 ? 'var(--muted)' : (pozitif ? 'var(--warning)' : 'var(--danger)');
+        const alacakliMi = b.bakiye > 0;
+        const renk = b.bakiye === 0 ? 'var(--muted)' : (alacakliMi ? 'var(--success)' : 'var(--danger)');
         const etiket = b.bakiye === 0 ? '✓ Hesap kapalı — bakiye sıfır'
-                     : (pozitif ? 'Bize hurda borçları var (ön ödeme fazlası)' : 'Onlara borçluyuz (teslimat fazlası)');
+                     : (alacakliMi ? 'Alacaklıyız (teslimat fazlası — onlar bize borçlu)' : 'Borçluyuz (ön ödeme fazlası — onlara hurda borçluyuz)');
         const sonHareket = b.liste[0];
         return `<div class="hurda-kart" onclick="hurdaDetayAc('${tur}')">
             <div class="hk-ikon"><i class="fa-solid ${ikon}"></i></div>
@@ -620,7 +663,97 @@ function anaSayfaYaz() {
         kartYaz('kalip', 'Kalıp Hurdası', 'fa-industry', kalipB) +
         kartYaz('kagit', 'Kağıt Hurdası', 'fa-recycle', kagitB);
 
+    donemselYaz();
+    gelirDagilimYaz();
     grafikleriCiz();
+}
+
+// ================= DÖNEMSEL ÖZET (Hafta / Ay / Yıl) =================
+function haftaBaslangic(d) {
+    const x = new Date(d); const gun = x.getDay(); const fark = (gun === 0 ? 6 : gun - 1);
+    x.setDate(x.getDate() - fark); x.setHours(0, 0, 0, 0); return x;
+}
+function ayBaslangic(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
+function yilBaslangic(d) { return new Date(d.getFullYear(), 0, 1); }
+
+function donemTeslimatToplam(tur, baslangic) {
+    let toplamKg = 0, toplamTutar = 0, adet = 0;
+    hareketler[tur].forEach(h => {
+        if (h.tur !== 'TESLIMAT') return;
+        const d = new Date(h.tarih);
+        if (d >= baslangic) { toplamKg += (h.netKg || h.kg || 0); toplamTutar += h.tutar; adet++; }
+    });
+    return { kg: toplamKg, tutar: toplamTutar, adet };
+}
+
+function donemselYaz() {
+    const bg = new Date();
+    const donemler = [
+        { ad: 'Bu Hafta', baslangic: haftaBaslangic(bg) },
+        { ad: 'Bu Ay', baslangic: ayBaslangic(bg) },
+        { ad: 'Bu Yıl', baslangic: yilBaslangic(bg) }
+    ];
+    document.getElementById('donemselTablo').innerHTML = donemler.map(don => {
+        const k = donemTeslimatToplam('kalip', don.baslangic);
+        const g = donemTeslimatToplam('kagit', don.baslangic);
+        const toplamTutar = k.tutar + g.tutar;
+        return `<tr>
+            <td><strong>${don.ad}</strong></td>
+            <td style="text-align:right;">${kg(k.kg)}</td>
+            <td style="text-align:right; color:#16803f; font-weight:600;">${para(k.tutar)}</td>
+            <td style="text-align:right;">${kg(g.kg)}</td>
+            <td style="text-align:right; color:#b45309; font-weight:600;">${para(g.tutar)}</td>
+            <td style="text-align:right; font-weight:700; color:var(--accent);">${para(toplamTutar)}</td>
+        </tr>`;
+    }).join('');
+}
+
+// ================= TOPLAM GELİR DAĞILIMI =================
+let gelirDagilimChart = null;
+
+function gelirDagilimYaz() {
+    let kalipToplam = 0, kagitToplam = 0;
+    hareketler.kalip.forEach(h => { if (h.tur === 'TESLIMAT') kalipToplam += h.tutar; });
+    hareketler.kagit.forEach(h => { if (h.tur === 'TESLIMAT') kagitToplam += h.tutar; });
+    const plastikToplam = plastikler.reduce((s, p) => s + p.tutar, 0);
+    const genelToplam = kalipToplam + kagitToplam + plastikToplam;
+    const pay = (v) => genelToplam ? ((v * 100) / genelToplam).toFixed(1) : '0.0';
+
+    document.getElementById('gelirOzet').innerHTML = `
+        <div class="metrik m-yesilkoyu"><div class="lbl">Kalıp Hurdası</div><div class="val">${para(kalipToplam)}</div><div class="alt">%${pay(kalipToplam)} pay</div></div>
+        <div class="metrik" style="background:#fff7ed; border-color:#fed7aa;"><div class="lbl" style="color:#92400e;">Kağıt Hurdası</div><div class="val" style="color:#b45309;">${para(kagitToplam)}</div><div class="alt">%${pay(kagitToplam)} pay</div></div>
+        <div class="metrik" style="background:#eff6ff; border-color:#bfdbfe;"><div class="lbl" style="color:#1e40af;">Plastik Hurda</div><div class="val" style="color:#2563eb;">${para(plastikToplam)}</div><div class="alt">%${pay(plastikToplam)} pay</div></div>
+        <div class="metrik" style="background:var(--primary); border-color:var(--primary);"><div class="lbl" style="color:#a8c9b5;">Genel Toplam</div><div class="val" style="color:#fff;">${para(genelToplam)}</div><div class="alt" style="color:#a8c9b5;">tüm zamanlar</div></div>`;
+
+    if (typeof Chart === 'undefined') return;
+    if (gelirDagilimChart) gelirDagilimChart.destroy();
+
+    const canvas = document.getElementById('gelirDagilimChart');
+    if (genelToplam === 0) {
+        canvas.style.display = 'none';
+        let bos = canvas.parentElement.querySelector('.bos-not');
+        if (!bos) { bos = document.createElement('div'); bos.className = 'empty bos-not'; canvas.parentElement.appendChild(bos); }
+        bos.innerText = 'Henüz gelir kaydı yok.';
+        return;
+    }
+    canvas.style.display = 'block';
+    const bosNot = canvas.parentElement.querySelector('.bos-not');
+    if (bosNot) bosNot.remove();
+
+    gelirDagilimChart = new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+            labels: ['Kalıp Hurdası', 'Kağıt Hurdası', 'Plastik Hurda'],
+            datasets: [{ data: [kalipToplam, kagitToplam, plastikToplam], backgroundColor: ['#16803f', '#b45309', '#2563eb'], borderWidth: 2, borderColor: '#fff' }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: { callbacks: { label: (c) => c.label + ': ' + para(c.raw) + ' (%' + pay(c.raw) + ')' } }
+            }
+        }
+    });
 }
 
 // ================= GRAFİKLER =================
@@ -660,7 +793,7 @@ function grafikleriCiz() {
             let gerial = 0;
             b.liste.forEach(h => {
                 const hd = new Date(h.tarih);
-                if (hd > ayBitis) gerial += (h.tur === 'ON_ODEME' ? h.tutar : -h.tutar);
+                if (hd > ayBitis) gerial += (h.tur === 'ON_ODEME' ? -h.tutar : h.tutar);
             });
             aySonlari.unshift(Math.round(b.bakiye - gerial));
         }
@@ -705,13 +838,13 @@ function hurdaDetayYaz() {
     document.getElementById('hdAlt').innerText = h.firma;
     document.getElementById('hdFirmaAdi').innerText = h.firma;
 
-    const pozitif = b.bakiye >= 0;
-    const renk = b.bakiye === 0 ? '#a8c9b5' : (pozitif ? '#fbbf24' : '#fca5a5');
+    const alacakliMi = b.bakiye > 0;
+    const renk = b.bakiye === 0 ? '#a8c9b5' : (alacakliMi ? '#6ee7b7' : '#fca5a5');
     document.getElementById('hdBakiye').innerText = para(Math.abs(b.bakiye));
     document.getElementById('hdBakiye').style.color = renk;
     document.getElementById('hdBakiyeAciklama').innerText = b.bakiye === 0
         ? '✓ Hesap kapalı — bakiye sıfır'
-        : (pozitif ? 'Bize hurda borçları var (aldığımız ön ödeme henüz karşılanmadı)' : 'Onlara borçluyuz (teslimatımız ön ödemeyi aştı)');
+        : (alacakliMi ? 'Alacaklıyız — teslimatımız aldığımız ön ödemeyi aştı, onlar bize borçlu' : 'Borçluyuz — aldığımız ön ödemenin karşılığını henüz tam teslim etmedik');
 
     let toplamOdeme = 0, toplamTeslimat = 0;
     hareketler[tur].forEach(x => { if (x.tur === 'ON_ODEME') toplamOdeme += x.tutar; else toplamTeslimat += x.tutar; });
@@ -735,7 +868,34 @@ function hurdaDetayYaz() {
     document.getElementById('ayOdeme').innerText = para(ayOdeme);
     document.getElementById('ayAdet').innerText = ayAdet;
 
+    tasimaOzetYaz(kagitMi);
     hareketleriYaz();
+}
+
+// Kağıt hurdasına özel: Konteyner ile mi Kamyon ile mi teslim edildiği dağılımı
+function tasimaOzetYaz(kagitMi) {
+    const kart = document.getElementById('hdTasimaKart');
+    if (!kagitMi) { kart.classList.add('hidden'); return; }
+    kart.classList.remove('hidden');
+
+    const gruplar = { konteyner: { kg: 0, tutar: 0, adet: 0 }, kamyon: { kg: 0, tutar: 0, adet: 0 } };
+    hareketler.kagit.forEach(h => {
+        if (h.tur !== 'TESLIMAT') return;
+        const grup = h.konteyner ? 'konteyner' : 'kamyon';
+        gruplar[grup].kg += (h.netKg || 0);
+        gruplar[grup].tutar += h.tutar;
+        gruplar[grup].adet++;
+    });
+
+    const kutu = (baslik, ikon, g, renk, zemin) => `<div class="metrik" style="border-color:${renk}; background:${zemin};">
+        <div class="lbl" style="color:${renk};"><i class="fa-solid ${ikon}"></i> ${baslik}</div>
+        <div class="val" style="color:${renk};">${kg(g.kg)}</div>
+        <div class="alt">${para(g.tutar)} · ${g.adet} teslimat${g.adet ? ' · ort. ' + kg(g.kg / g.adet) : ''}</div>
+    </div>`;
+
+    document.getElementById('hdTasimaOzet').innerHTML =
+        kutu('Konteyner', 'fa-box', gruplar.konteyner, '#16803f', '#e8f7ee') +
+        kutu('Kamyon', 'fa-truck', gruplar.kamyon, '#b45309', '#fff7ed');
 }
 
 function hareketleriYaz() {
