@@ -59,6 +59,8 @@
         .btn-finans:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
         .btn-euromat { background: rgba(124,58,237,.15); color: #c4b5fd; border-color: rgba(124,58,237,.28); }
         .btn-euromat:hover { background: #7c3aed; color: #fff; border-color: #7c3aed; }
+        .btn-kagit { background: rgba(180,83,9,.16); color: #fbbf7d; border-color: rgba(180,83,9,.3); }
+        .btn-kagit:hover { background: #b45309; color: #fff; border-color: #b45309; }
         .btn-logout { color: #fca5a5; margin-top: 6px; }
         .btn-logout:hover { background: rgba(220,38,38,.18); color: #fff; }
 
@@ -304,6 +306,7 @@
         <div class="side-etiket">Diğer Sistemler</div>
         <button class="btn-menu btn-finans" onclick="window.location.href='varlik.html'" id="btnMenuFinans"><i class="fa-solid fa-wallet"></i> Varlık & Harcama</button>
         <button class="btn-menu btn-euromat" onclick="window.location.href='euromat.html'" id="btnMenuEuromat" style="display:none;"><i class="fa-solid fa-euro-sign"></i> Euromat Nakit</button>
+        <button class="btn-menu btn-kagit" onclick="window.location.href='kagit.html'" id="btnMenuKagit" style="display:none;"><i class="fa-solid fa-box"></i> Kağıt Takip</button>
 
         <div class="side-ayrac"></div>
 
@@ -525,6 +528,7 @@
 
     // Euromat Nakit sayfasını görebilecek kullanıcılar
     const EUROMAT_YETKISI = ['mehmet', 'erhan'];
+    const KAGIT_YETKISI = ['mehmet', 'erhan'];
 
     const monthNames = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
     const monthNamesShort = ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
@@ -637,7 +641,9 @@
         const kAdi = (aktifKullaniciAdi || '').toLocaleLowerCase('tr');
         const euromatYetkili = EUROMAT_YETKISI.some(y => kAdi.includes(y));
         document.getElementById('btnMenuEuromat').style.display = euromatYetkili ? 'block' : 'none';
-        console.log('[Yetki] kullanıcı adı:', aktifKullaniciAdi, '| euromat:', euromatYetkili);
+        const kagitYetkili = KAGIT_YETKISI.some(y => kAdi.includes(y));
+        document.getElementById('btnMenuKagit').style.display = kagitYetkili ? 'block' : 'none';
+        console.log('[Yetki] kullanıcı adı:', aktifKullaniciAdi, '| euromat:', euromatYetkili, '| kağıt:', kagitYetkili);
 
         // Kullanıcı yönetimi sadece Mehmet'te görünür
         const userAdi = (aktifKullaniciAdi || "").toLocaleLowerCase('tr');
