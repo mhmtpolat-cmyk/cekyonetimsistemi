@@ -198,14 +198,20 @@
         <div id="v-anaSayfa">
             <div class="header"><div><h1>Hurda Takip</h1><div class="alt">Kalıp ve kağıt hurdası — ön ödemeli cari takibi</div></div></div>
 
+            <!-- GENEL HURDA GELİRİ (ayrım yapılmadan, tüm türler birleşik) -->
+            <div class="card" style="background:linear-gradient(135deg, var(--primary) 0%, #2d4638 100%); border:none;">
+                <h2 style="color:#fff; border:none; margin-bottom:16px;"><i class="fa-solid fa-coins" style="color:#fbbf24;"></i> Genel Hurda Geliri <span style="font-size:12px; font-weight:400; color:#a8c9b5;">— kalıp + kağıt + plastik birleşik</span></h2>
+                <div class="grid-3" id="genelGelirOzet"></div>
+            </div>
+
             <div class="grid-2" id="hurdaKartlari"></div>
 
             <!-- DÖNEMSEL ÖZET -->
             <div class="card">
-                <h2><i class="fa-solid fa-calendar-week" style="color:var(--accent);"></i> Dönemsel Teslimat Özeti</h2>
+                <h2><i class="fa-solid fa-calendar-week" style="color:var(--accent);"></i> Dönemsel Teslimat Özeti <span class="sub">kalıp / kağıt / plastik ayrı ayrı</span></h2>
                 <div class="tablo-sarmal">
                     <table>
-                        <thead><tr><th>Dönem</th><th style="text-align:right;">Kalıp KG</th><th style="text-align:right;">Kalıp Tutar</th><th style="text-align:right;">Kağıt KG</th><th style="text-align:right;">Kağıt Tutar</th><th style="text-align:right;">Toplam</th></tr></thead>
+                        <thead><tr><th>Dönem</th><th style="text-align:right;">Kalıp KG</th><th style="text-align:right;">Kalıp Tutar</th><th style="text-align:right;">Kağıt KG</th><th style="text-align:right;">Kağıt Tutar</th><th style="text-align:right;">Plastik Tutar</th><th style="text-align:right;">Genel Toplam</th></tr></thead>
                         <tbody id="donemselTablo"></tbody>
                     </table>
                 </div>
@@ -241,6 +247,7 @@
                 <div><h1 id="hdBaslik">Hurda</h1><div class="alt" id="hdAlt"></div></div>
                 <div style="display:flex; gap:9px;">
                     <button class="btn btn-outline" onclick="disaAktarModalAc()"><i class="fa-solid fa-file-import"></i> Excel'den İçe Aktar</button>
+                    <button class="btn btn-outline" style="color:var(--danger); border-color:var(--danger-line);" onclick="tumHareketleriSil()"><i class="fa-solid fa-broom"></i> Tümünü Sil</button>
                     <button class="btn btn-outline" onclick="gorunum('anaSayfa')">← Geri</button>
                 </div>
             </div>
@@ -281,6 +288,22 @@
             <div class="card hidden" id="hdTasimaKart">
                 <h2><i class="fa-solid fa-truck-front" style="color:var(--accent);"></i> Taşıma Şekli Dağılımı <span class="sub">tüm zamanlar</span></h2>
                 <div class="grid-2" id="hdTasimaOzet"></div>
+            </div>
+
+            <div class="card">
+                <h2><i class="fa-solid fa-chart-simple" style="color:var(--accent);"></i> Haftalık Teslimat <span class="sub">son 16 hafta</span></h2>
+                <div class="chart-wrap"><canvas id="hdHaftalikChart"></canvas></div>
+            </div>
+
+            <div class="card">
+                <h2><i class="fa-solid fa-calendar" style="color:var(--accent);"></i> Aylık Rapor <span class="sub">hangi ay ne kadar hurda verildi — tüm geçmiş</span></h2>
+                <div class="tablo-sarmal">
+                    <table>
+                        <thead><tr><th>Ay</th><th style="text-align:right;">Teslim KG</th><th style="text-align:right;">Teslimat Tutarı</th><th style="text-align:right;">Ön Ödeme</th><th style="text-align:right;">İşlem Sayısı</th></tr></thead>
+                        <tbody id="hdAylikRaporTablo"></tbody>
+                        <tfoot id="hdAylikRaporAlt"></tfoot>
+                    </table>
+                </div>
             </div>
 
             <div class="card">
@@ -440,7 +463,8 @@
             <strong>Nasıl kullanılır:</strong> Excel'de sütunları şu sırada hazırlayın ve satırları kopyalayıp aşağıya yapıştırın:<br>
             <strong>Ön ödeme satırı:</strong> Tarih | ÖDEME | Tutar | Açıklama<br>
             <strong>Teslimat satırı (Kalıp):</strong> Tarih | TESLIMAT | KG | Fiyat | Açıklama | GerçekTutar*<br>
-            <strong>Teslimat satırı (Kağıt):</strong> Tarih | TESLIMAT | ToplamKG | Dara | Fiyat | Açıklama | Plaka | GerçekTutar*<br>
+            <strong>Teslimat satırı (Kağıt):</strong> Tarih | TESLIMAT | ToplamKG | Dara | Fiyat | Açıklama | Plaka | GerçekTutar* | Konteyner**<br>
+            <span style="font-size:11px;">** Konteyner sütununa "KONTEYNER" veya "EVET" yazılırsa konteyner sayılır, boş bırakılırsa kamyon sayılır.</span><br>
             <span style="font-size:11px;">* GerçekTutar isteğe bağlıdır — boş bırakılırsa KG×Fiyat otomatik hesaplanır. Kayıtlı tutar hesaplanandan farklıysa (elle yapılmış düzeltme vb.) bu sütuna girin.</span><br>
             Tarih formatı: GG.AA.YYYY veya YYYY-AA-GG. Sütunlar TAB veya noktalı virgülle ayrılmış olabilir (Excel'den kopyalayınca otomatik TAB gelir).
         </div>
@@ -686,6 +710,16 @@ function donemTeslimatToplam(tur, baslangic) {
     return { kg: toplamKg, tutar: toplamTutar, adet };
 }
 
+// Plastik satışlarının bir tarihten sonraki toplamı
+function donemPlastikToplam(baslangic) {
+    let toplamTutar = 0, adet = 0;
+    plastikler.forEach(p => {
+        const d = new Date(p.tarih);
+        if (d >= baslangic) { toplamTutar += p.tutar; adet++; }
+    });
+    return { tutar: toplamTutar, adet };
+}
+
 function donemselYaz() {
     const bg = new Date();
     const donemler = [
@@ -693,18 +727,36 @@ function donemselYaz() {
         { ad: 'Bu Ay', baslangic: ayBaslangic(bg) },
         { ad: 'Bu Yıl', baslangic: yilBaslangic(bg) }
     ];
+
     document.getElementById('donemselTablo').innerHTML = donemler.map(don => {
         const k = donemTeslimatToplam('kalip', don.baslangic);
         const g = donemTeslimatToplam('kagit', don.baslangic);
-        const toplamTutar = k.tutar + g.tutar;
+        const p = donemPlastikToplam(don.baslangic);
+        const toplamTutar = k.tutar + g.tutar + p.tutar;
         return `<tr>
             <td><strong>${don.ad}</strong></td>
             <td style="text-align:right;">${kg(k.kg)}</td>
             <td style="text-align:right; color:#16803f; font-weight:600;">${para(k.tutar)}</td>
             <td style="text-align:right;">${kg(g.kg)}</td>
             <td style="text-align:right; color:#b45309; font-weight:600;">${para(g.tutar)}</td>
+            <td style="text-align:right; color:#2563eb; font-weight:600;">${para(p.tutar)}</td>
             <td style="text-align:right; font-weight:700; color:var(--accent);">${para(toplamTutar)}</td>
         </tr>`;
+    }).join('');
+
+    // Genel gelir barı — türlere göre ayrım yapılmadan, birleşik
+    document.getElementById('genelGelirOzet').innerHTML = donemler.map(don => {
+        const k = donemTeslimatToplam('kalip', don.baslangic);
+        const g = donemTeslimatToplam('kagit', don.baslangic);
+        const p = donemPlastikToplam(don.baslangic);
+        const toplamTutar = k.tutar + g.tutar + p.tutar;
+        const toplamKg = k.kg + g.kg;
+        const toplamAdet = k.adet + g.adet + p.adet;
+        return `<div style="background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); border-radius:11px; padding:16px;">
+            <div style="font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#a8c9b5; margin-bottom:6px;">${don.ad}</div>
+            <div style="font-size:24px; font-weight:800; color:#fff; letter-spacing:-.02em;">${para(toplamTutar)}</div>
+            <div style="font-size:12px; color:#a8c9b5; margin-top:5px;">${kg(toplamKg)} hurda · ${toplamAdet} işlem</div>
+        </div>`;
     }).join('');
 }
 
@@ -869,6 +921,8 @@ function hurdaDetayYaz() {
     document.getElementById('ayAdet').innerText = ayAdet;
 
     tasimaOzetYaz(kagitMi);
+    hdAylikRaporYaz(tur);
+    hdHaftalikGrafikCiz(tur);
     hareketleriYaz();
 }
 
@@ -896,6 +950,98 @@ function tasimaOzetYaz(kagitMi) {
     document.getElementById('hdTasimaOzet').innerHTML =
         kutu('Konteyner', 'fa-box', gruplar.konteyner, '#16803f', '#e8f7ee') +
         kutu('Kamyon', 'fa-truck', gruplar.kamyon, '#b45309', '#fff7ed');
+}
+
+// ================= AYLIK RAPOR (tüm geçmiş, hangi ay ne kadar verildi) =================
+function hdAylikRaporYaz(tur) {
+    const aylar = {};
+    hareketler[tur].forEach(h => {
+        const d = new Date(h.tarih);
+        if (isNaN(d)) return;
+        const anahtar = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        if (!aylar[anahtar]) aylar[anahtar] = { etiket: `${AYLAR[d.getMonth()]} ${d.getFullYear()}`, kg: 0, teslimatTutar: 0, odemeTutar: 0, adet: 0 };
+        aylar[anahtar].adet++;
+        if (h.tur === 'TESLIMAT') { aylar[anahtar].kg += (h.netKg || h.kg || 0); aylar[anahtar].teslimatTutar += h.tutar; }
+        else aylar[anahtar].odemeTutar += h.tutar;
+    });
+
+    const sirali = Object.keys(aylar).sort().reverse();
+    const tb = document.getElementById('hdAylikRaporTablo');
+
+    if (sirali.length === 0) {
+        tb.innerHTML = '<tr><td colspan="5" class="empty">Henüz kayıt yok.</td></tr>';
+        document.getElementById('hdAylikRaporAlt').innerHTML = '';
+        return;
+    }
+
+    let tKg = 0, tTeslimat = 0, tOdeme = 0, tAdet = 0;
+    tb.innerHTML = sirali.map(k => {
+        const a = aylar[k];
+        tKg += a.kg; tTeslimat += a.teslimatTutar; tOdeme += a.odemeTutar; tAdet += a.adet;
+        return `<tr>
+            <td><strong>${a.etiket}</strong></td>
+            <td style="text-align:right;">${a.kg ? kg(a.kg) : '—'}</td>
+            <td style="text-align:right; color:var(--danger); font-weight:600;">${a.teslimatTutar ? para(a.teslimatTutar) : '—'}</td>
+            <td style="text-align:right; color:var(--success); font-weight:600;">${a.odemeTutar ? para(a.odemeTutar) : '—'}</td>
+            <td style="text-align:right; color:var(--muted);">${a.adet}</td>
+        </tr>`;
+    }).join('');
+
+    document.getElementById('hdAylikRaporAlt').innerHTML = `<tr>
+        <th>TOPLAM (${sirali.length} ay)</th>
+        <th style="text-align:right;">${kg(tKg)}</th>
+        <th style="text-align:right; color:var(--danger);">${para(tTeslimat)}</th>
+        <th style="text-align:right; color:var(--success);">${para(tOdeme)}</th>
+        <th style="text-align:right;">${tAdet}</th>
+    </tr>`;
+}
+
+// ================= HAFTALIK GRAFİK (son 16 hafta) =================
+let hdHaftalikChart = null;
+
+function hdHaftalikGrafikCiz(tur) {
+    if (typeof Chart === 'undefined') return;
+
+    const bg = new Date();
+    const etiketler = [], kgDegerler = [], tutarDegerler = [];
+
+    for (let i = 15; i >= 0; i--) {
+        const haftaBasi = haftaBaslangic(bg);
+        haftaBasi.setDate(haftaBasi.getDate() - i * 7);
+        const haftaSonu = new Date(haftaBasi); haftaSonu.setDate(haftaBasi.getDate() + 6);
+
+        etiketler.push(`${haftaBasi.getDate()}.${String(haftaBasi.getMonth() + 1).padStart(2, '0')}`);
+
+        let toplamKg = 0, toplamTutar = 0;
+        hareketler[tur].forEach(h => {
+            if (h.tur !== 'TESLIMAT') return;
+            const d = new Date(h.tarih);
+            if (d >= haftaBasi && d <= haftaSonu) { toplamKg += (h.netKg || h.kg || 0); toplamTutar += h.tutar; }
+        });
+        kgDegerler.push(Math.round(toplamKg));
+        tutarDegerler.push(Math.round(toplamTutar));
+    }
+
+    const renk = (tur === 'kagit') ? '#b45309' : '#16803f';
+
+    if (hdHaftalikChart) hdHaftalikChart.destroy();
+    hdHaftalikChart = new Chart(document.getElementById('hdHaftalikChart'), {
+        type: 'bar',
+        data: { labels: etiketler, datasets: [{ label: 'Teslim Edilen KG', data: kgDegerler, backgroundColor: renk, borderRadius: 4 }] },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (c) => kg(c.raw),
+                        afterLabel: (c) => para(tutarDegerler[c.dataIndex])
+                    }
+                }
+            },
+            scales: { y: { beginAtZero: true, grid: { color: '#eef4f0' } }, x: { grid: { display: false }, title: { display: true, text: 'Hafta başlangıcı', font: { size: 10 } } } }
+        }
+    });
 }
 
 function hareketleriYaz() {
@@ -1341,6 +1487,33 @@ async function ayarKaydet(tur) {
 // ================= EXCEL'DEN İÇE AKTAR =================
 let iceAktarOnizlemeVerisi = [];
 
+// Bir hurda türünün TÜM hareketlerini siler — yanlış içe aktarımı düzeltip yeniden yüklemek için
+async function tumHareketleriSil() {
+    const tur = aktifHurdaTuru;
+    const ad = (tur === 'kagit') ? 'Kağıt Hurdası' : 'Kalıp Hurdası';
+    const adet = hareketler[tur].length;
+
+    if (adet === 0) return alert('Silinecek hareket yok.');
+
+    const dogrulama = prompt(
+        `⚠️ DİKKAT: Bu işlem "${ad}" için kayıtlı ${adet} hareketin TAMAMINI kalıcı olarak silecek.\n\n` +
+        `Bu genellikle yanlış bir içe aktarımı düzeltip yeniden yüklemek için kullanılır.\n\n` +
+        `Onaylamak için "${ad}" yazınız:`
+    );
+    if (dogrulama === null) return;
+    if (dogrulama.trim() !== ad) return alert('Yazdığınız metin eşleşmedi. İşlem iptal edildi.');
+
+    try {
+        const { error } = await db.from('hurda_hareketler').delete().eq('hurda_turu', tur);
+        if (error) throw error;
+        alert(`${adet} hareket silindi. Şimdi "Excel'den İçe Aktar" ile temiz veriyi yükleyebilirsiniz.`);
+        await verileriYukle();
+        hurdaDetayYaz();
+    } catch (e) {
+        alert('Silinemedi: ' + e.message);
+    }
+}
+
 function disaAktarModalAc() {
     document.getElementById('iceAktarMetin').value = '';
     document.getElementById('iceAktarOnizleme').innerHTML = '';
@@ -1394,9 +1567,11 @@ function iceAktarOnizle() {
             // 8. sütun isteğe bağlı: kayıtlı gerçek tutar (kg×fiyattan farklıysa öncelik alır)
             const tutarOverride = sayiNormallestir(parcalar[7]);
             const tutar = !isNaN(tutarOverride) ? tutarOverride : netKg * fiyat;
+            // 9. sütun isteğe bağlı: KONTEYNER yazıyorsa konteyner, aksi halde kamyon sayılır
+            const konteyner = (parcalar[8] || '').toUpperCase().includes('KONTEYNER') || (parcalar[8] || '').toUpperCase() === 'EVET';
             sonuc.push({
                 tarih, tur: 'TESLIMAT', toplamKg, dara, netKg, fiyat, tutar,
-                aciklama: parcalar[5] || 'KAĞIT', plaka: parcalar[6] || null
+                aciklama: parcalar[5] || 'KAĞIT', plaka: parcalar[6] || null, konteyner
             });
         } else {
             const kgDeger = sayiNormallestir(parcalar[2]);
@@ -1447,7 +1622,7 @@ async function iceAktarKaydet() {
             fiyat: s.fiyat || null,
             tutar: s.tutar,
             plaka: s.plaka || null,
-            konteyner: false,
+            konteyner: s.konteyner === true,
             aciklama: s.aciklama,
             kullanici: aktifKullaniciAdi + ' (içe aktarım)'
         }));
