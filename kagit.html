@@ -47,6 +47,8 @@
         .btn-varlik { background: rgba(5,150,105,.15); color: #6ee7b7; border-color: rgba(5,150,105,.28); }
         .btn-varlik:hover { background: #059669; color: #fff; border-color: #059669; }
         .btn-euromat { background: rgba(124,58,237,.15); color: #c4b5fd; border-color: rgba(124,58,237,.28); }
+        .btn-hurda { background: rgba(22,128,63,.16); color: #7dd8a0; border-color: rgba(22,128,63,.3); }
+        .btn-hurda:hover { background: #16803f; color: #fff; border-color: #16803f; }
         .btn-euromat:hover { background: #7c3aed; color: #fff; border-color: #7c3aed; }
         .btn-logout { color: #fca5a5; margin-top: 6px; }
         .btn-logout:hover { background: rgba(220,38,38,.18); color: #fff; }
@@ -196,6 +198,7 @@
         <button class="btn-menu btn-donus" onclick="window.location.href='index.html'"><i class="fa-solid fa-money-check"></i> Çek Paneli</button>
         <button class="btn-menu btn-varlik" onclick="window.location.href='varlik.html'"><i class="fa-solid fa-wallet"></i> Varlık & Harcama</button>
         <button class="btn-menu btn-euromat" onclick="window.location.href='euromat.html'"><i class="fa-solid fa-euro-sign"></i> Euromat Nakit</button>
+        <button class="btn-menu btn-hurda" onclick="window.location.href='hurda.html'"><i class="fa-solid fa-recycle"></i> Hurda Takip</button>
 
         <div class="side-ayrac"></div>
         <button class="btn-menu btn-logout" onclick="cikisYap()"><i class="fa-solid fa-right-from-bracket"></i> Çıkış Yap</button>
@@ -284,7 +287,7 @@
 
         <!-- ============ CARİLER ============ -->
         <div id="v-cariler" class="hidden">
-            <div class="header"><div><h1>Cariler</h1><div class="alt">Aldığınız ve sattığınız firmalar — çek sistemiyle ortak</div></div>
+            <div class="header"><div><h1>Cariler</h1><div class="alt">Aldığınız ve sattığınız firmalar — kağıt takip sistemine özel</div></div>
                 <button class="btn btn-primary" onclick="cariModalAc()"><i class="fa-solid fa-user-plus"></i> Yeni Cari</button></div>
             <div class="card"><div class="grid-3" id="cariListesi"></div></div>
         </div>
@@ -521,7 +524,7 @@ async function cikisYap() { await db.auth.signOut(); localStorage.clear(); windo
 async function verileriYukle() {
     try {
         const [cR, iR, cekR, hesapR] = await Promise.all([
-            db.from('cariler').select('*').order('unvan'),
+            db.from('kagit_cariler').select('*').order('unvan'),
             db.from('kagit_islemler').select('*').order('tarih', { ascending: false }),
             db.from('cekler').select('*').eq('durum', 'Kasada'),
             db.from('euromat_hesaplar').select('*').order('ad')
@@ -1236,7 +1239,7 @@ window.addEventListener('scroll', menuKapat, true);
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { menuKapat(); document.querySelectorAll('.modal-overlay').forEach(m => { if (m.id !== 'acilisEkrani') m.style.display = 'none'; }); } });
 
 // ================= CARİ EKLE =================
-// Not: Bu tablo çek sistemiyle ortak kullanılıyor — burada eklenen cari çek panelinde de görünür.
+// Not: Bu tablo (kagit_cariler) sadece kağıt takip sistemine özeldir — çek panelini etkilemez.
 function cariModalAc() { document.getElementById('cariAd').value = ''; modalAc('modalCari'); }
 
 async function cariKaydet() {
@@ -1244,7 +1247,7 @@ async function cariKaydet() {
     if (!ad) return alert('Ünvan giriniz.');
     if (cariler.some(c => c.unvan.toLocaleLowerCase('tr') === ad.toLocaleLowerCase('tr'))) return alert('Bu cari zaten kayıtlı.');
     try {
-        const { error } = await db.from('cariler').insert([{ unvan: ad }]);
+        const { error } = await db.from('kagit_cariler').insert([{ id: Date.now(), unvan: ad, kullanici: aktifKullaniciAdi }]);
         if (error) throw error;
         modalKapat('modalCari');
         await verileriYukle();
