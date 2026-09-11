@@ -453,35 +453,61 @@
 <div id="modalCariYonetim" class="modal-overlay"><div class="cek-modal modal-xl modal-resize" style="width:1180px;"><h2><i class="fa-solid fa-users" style="color:var(--accent);"></i> Cari Yönetimi</h2><div style="display:flex; gap:10px; margin-bottom:10px;"><input type="text" id="yeniCariInput" class="form-control" placeholder="Firma Ünvanı"><button class="btn btn-success" onclick="dbYeniCariEkle()"><i class="fa-solid fa-plus"></i> Kaydet</button></div><div class="cari-layout"><div class="cari-list" id="cariListContainer"></div><div class="cari-details"><div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;"><h3 id="seciliCariBaslik" style="margin:0; font-size:16px; font-weight:700;">Soldan bir cari seçiniz</h3><button class="btn btn-outline hidden" id="btnEkstrePdf" onclick="cariEkstrePdf()"><i class="fa-solid fa-file-pdf"></i> Ekstre PDF İndir</button></div><div id="cariOzetKutu"></div><div class="tablo-sarmal hidden" id="cariTabloSarmal"><table class="cek-table" id="cariHareketTablosu" style="min-width:1060px;"><thead><tr><th>Çek No</th><th>Tür</th><th>Giriş Tarihi</th><th style="text-align:center;">Vade Günü</th><th>Çıkış Tarihi</th><th style="text-align:center;">Çıkıştan Vade</th><th>Vade Tarihi</th><th style="text-align:center;">Kalan Gün</th><th style="text-align:right;">Tutar</th><th>Durum</th><th style="text-align:right;">İşlem</th></tr></thead><tbody id="cariHareketGövde"></tbody></table></div></div></div><div class="resize-ipucu">↘ Pencereyi büyütmek için sağ alt köşeden çekebilirsiniz</div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalCariYonetim')">Kapat</button></div></div></div>
 
 <div id="modalCekGiris" class="modal-overlay"><div class="cek-modal"><h2><i class="fa-solid fa-arrow-down-to-bracket" style="color:var(--success);"></i> Çek Girişi</h2><div class="form-group"><label>Cari</label><select class="form-control" id="girisCariSecim"></select></div><div class="form-group"><label>Banka</label><select class="form-control" id="girisBankaSecim"><optgroup label="Kamu Bankaları"><option value="T.C. Ziraat Bankası">T.C. Ziraat Bankası</option><option value="Türkiye Halk Bankası">Türkiye Halk Bankası</option><option value="Türkiye Vakıflar Bankası">Türkiye Vakıflar Bankası</option></optgroup><optgroup label="Özel Bankalar"><option value="Türkiye İş Bankası">Türkiye İş Bankası</option><option value="Garanti BBVA">Garanti BBVA</option><option value="Akbank">Akbank</option><option value="Yapı Kredi">Yapı Kredi</option><option value="QNB Finansbank">QNB Finansbank</option><option value="DenizBank">DenizBank</option><option value="Türk Ekonomi Bankası (TEB)">Türk Ekonomi Bankası (TEB)</option><option value="İNG Bank">İNG Bank</option><option value="Şekerbank">Şekerbank</option><option value="Anadolubank">Anadolubank</option><option value="Odea Bank">Odea Bank</option><option value="Fibabanka">Fibabanka</option><option value="Burgan Bank">Burgan Bank</option><option value="Alternatif Bank">Alternatif Bank</option><option value="ICBC Turkey Bank">ICBC Turkey Bank</option><option value="HSBC Bank">HSBC Bank</option></optgroup><optgroup label="Katılım Bankaları"><option value="Kuveyt Türk Katılım Bankası">Kuveyt Türk Katılım Bankası</option><option value="Albaraka Türk Katılım Bankası">Albaraka Türk Katılım Bankası</option><option value="Türkiye Finans Katılım Bankası">Türkiye Finans Katılım Bankası</option><option value="Vakıf Katılım Bankası">Vakıf Katılım Bankası</option><option value="Ziraat Katılım Bankası">Ziraat Katılım Bankası</option><option value="Emlak Katılım Bankası">Emlak Katılım Bankası</option><option value="T.O.M. Katılım Bankası">T.O.M. Katılım Bankası</option><option value="Hayat Finans Katılım Bankası">Hayat Finans Katılım Bankası</option></optgroup></select></div><div class="form-group"><label>Çek No</label><input type="text" class="form-control" id="girisCekNo"></div><div class="form-group"><label>Tutar</label><input type="text" class="form-control" id="girisTutar" inputmode="decimal" placeholder="0,00" oninput="tutarBicimle(this)"></div><div class="form-group"><label>Vade</label><input type="date" class="form-control" id="girisVade"></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalCekGiris')">İptal</button><button class="btn btn-success" onclick="dbCekGirisKaydet()">Kaydet</button></div></div></div>
-<div id="modalTaslakCikis" class="modal-overlay"><div class="cek-modal"><h2><i class="fa-solid fa-file-circle-check" style="color:var(--accent);"></i> Taslak Çıkış <span style="font-weight:400; font-size:12px; color:var(--muted);">(onay için)</span></h2>
+<div id="modalTaslakCikis" class="modal-overlay"><div class="cek-modal modal-large"><h2><i class="fa-solid fa-file-circle-check" style="color:var(--accent);"></i> Taslak Çıkış <span style="font-weight:400; font-size:12px; color:var(--muted);">(onay için — birden çok çek eklenebilir)</span></h2>
 
 <div style="background:var(--accent-soft); border:1px solid #bfdbfe; border-radius:9px; padding:11px 13px; margin-bottom:16px; font-size:12px; color:#1e40af; line-height:1.6;">
     <i class="fa-solid fa-circle-info"></i> Bu bir <strong>önizleme belgesidir</strong> — PDF oluşturulur, sistemde <strong>hiçbir şey değişmez</strong>. Tedarikçiden onay aldıktan sonra normal "Çek Çıkışı" işlemini yapmanız gerekir.
 </div>
 
-<div class="form-group">
-    <label>Tür</label>
-    <select class="form-control" id="taslakTuruSelect" onchange="handleTaslakTuruChange()">
-        <option value="kasa">Kasadan Seç</option>
-        <option value="kendi">Kendi Çekimiz</option>
-    </select>
-</div>
-
-<div class="form-group hidden" id="taslakKasadanSecimDiv">
-    <label>Portföy <span style="font-weight:400; color:var(--muted); font-size:11.5px;">(vadesi yakın olan üstte)</span></label>
-    <select class="form-control" id="taslakKasaCekListesi" onchange="taslakAutoFillCekNo()"></select>
-</div>
-
-<div class="form-group"><label>Çek No</label><input type="text" class="form-control" id="taslakCekNo"></div>
-<div class="form-group"><label>Tutar</label><input type="text" class="form-control" id="taslakTutar" inputmode="decimal" placeholder="0,00" oninput="tutarBicimle(this)"></div>
-<div class="form-group"><label>Vade</label><input type="date" class="form-control" id="taslakVade"></div>
-
-<div class="form-group" id="taslakBankaDiv"><label>Banka</label><select class="form-control" id="taslakBankaSecim"><optgroup label="Kamu Bankaları"><option value="T.C. Ziraat Bankası">T.C. Ziraat Bankası</option><option value="Türkiye Halk Bankası">Türkiye Halk Bankası</option><option value="Türkiye Vakıflar Bankası">Türkiye Vakıflar Bankası</option></optgroup><optgroup label="Özel Bankalar"><option value="Türkiye İş Bankası">Türkiye İş Bankası</option><option value="Garanti BBVA">Garanti BBVA</option><option value="Akbank">Akbank</option><option value="Yapı Kredi">Yapı Kredi</option><option value="QNB Finansbank">QNB Finansbank</option><option value="DenizBank">DenizBank</option><option value="Türk Ekonomi Bankası (TEB)">Türk Ekonomi Bankası (TEB)</option><option value="İNG Bank">İNG Bank</option><option value="Şekerbank">Şekerbank</option><option value="Anadolubank">Anadolubank</option><option value="Odea Bank">Odea Bank</option><option value="Fibabanka">Fibabanka</option><option value="Burgan Bank">Burgan Bank</option><option value="Alternatif Bank">Alternatif Bank</option><option value="ICBC Turkey Bank">ICBC Turkey Bank</option><option value="HSBC Bank">HSBC Bank</option></optgroup><optgroup label="Katılım Bankaları"><option value="Kuveyt Türk Katılım Bankası">Kuveyt Türk Katılım Bankası</option><option value="Albaraka Türk Katılım Bankası">Albaraka Türk Katılım Bankası</option><option value="Türkiye Finans Katılım Bankası">Türkiye Finans Katılım Bankası</option><option value="Vakıf Katılım Bankası">Vakıf Katılım Bankası</option><option value="Ziraat Katılım Bankası">Ziraat Katılım Bankası</option><option value="Emlak Katılım Bankası">Emlak Katılım Bankası</option><option value="T.O.M. Katılım Bankası">T.O.M. Katılım Bankası</option><option value="Hayat Finans Katılım Bankası">Hayat Finans Katılım Bankası</option></optgroup></select></div>
-
 <div class="form-group"><label>Gönderilecek Cari / Tedarikçi</label><select class="form-control" id="taslakCariSecim"></select></div>
-<div class="form-group"><label>Not <span style="font-weight:400; color:var(--muted); font-size:11.5px;">(isteğe bağlı, PDF'de görünür)</span></label><textarea class="form-control" id="taslakNot" rows="2" placeholder="Örn: Onayınızı rica ederiz."></textarea></div>
 
-<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalTaslakCikis')">İptal</button><button class="btn btn-primary" id="btnTaslakPdf" onclick="taslakPdfOlustur()"><i class="fa-solid fa-file-pdf"></i> Taslak PDF Oluştur</button></div>
+<div style="display:flex; gap:10px; align-items:flex-end; margin-bottom:16px; background:#f8f9fa; padding:14px; border-radius:9px; flex-wrap:wrap;">
+    <div style="flex:1.3; min-width:160px;">
+        <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Kaynak</label>
+        <select class="form-control" id="taslakEkleTuru" onchange="taslakEkleTuruDegisti()">
+            <option value="kasa">Kasadan Seç</option>
+            <option value="manuel">Elle Gir</option>
+        </select>
+    </div>
+    <div style="flex:2; min-width:180px;" id="taslakKasaSecimDiv">
+        <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Portföy</label>
+        <select class="form-control" id="taslakKasaCekListesi"></select>
+    </div>
+    <div class="hidden" style="flex:1; min-width:110px;" id="taslakManuelCekNoDiv">
+        <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Çek No</label>
+        <input type="text" class="form-control" id="taslakManuelCekNo">
+    </div>
+    <div class="hidden" style="flex:1; min-width:110px;" id="taslakManuelTutarDiv">
+        <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Tutar</label>
+        <input type="text" class="form-control" id="taslakManuelTutar" inputmode="decimal" placeholder="0,00" oninput="tutarBicimle(this)">
+    </div>
+    <div class="hidden" style="flex:1; min-width:130px;" id="taslakManuelVadeDiv">
+        <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Vade</label>
+        <input type="date" class="form-control" id="taslakManuelVade">
+    </div>
+    <div><button class="btn btn-primary" onclick="taslakCekEkle()"><i class="fa-solid fa-plus"></i> Ekle</button></div>
+</div>
+
+<div class="tablo-sarmal" style="max-height:220px; overflow-y:auto;">
+    <table class="cek-table">
+        <thead><tr><th>Çek No</th><th style="text-align:right;">Tutar</th><th>Vade</th><th style="text-align:right;">Kalan Gün</th><th style="text-align:right;">İşlem</th></tr></thead>
+        <tbody id="taslakCekTablosu"><tr><td colspan="5" style="text-align:center; color:#94a3b8; padding:16px;">Henüz çek eklenmedi.</td></tr></tbody>
+    </table>
+</div>
+
+<div style="margin-top:14px; padding:14px; background:var(--success-bg); border:1px solid var(--success-line); border-radius:9px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+    <div><strong>Toplam Tutar:</strong> <span id="taslakToplamTutar" style="font-weight:700; font-size:16px;">₺0,00</span></div>
+    <div><strong>Ortalama Vade:</strong> <span id="taslakOrtalamaVade" style="color:var(--danger); font-weight:700; font-size:16px;">0 gün</span></div>
+    <div><strong>Çek Sayısı:</strong> <span id="taslakCekSayisi" style="font-weight:700; font-size:16px;">0</span></div>
+</div>
+
+<div class="form-group" style="margin-top:16px;"><label>Not <span style="font-weight:400; color:var(--muted); font-size:11.5px;">(isteğe bağlı, PDF'de görünür)</span></label><textarea class="form-control" id="taslakNot" rows="2" placeholder="Örn: Onayınızı rica ederiz."></textarea></div>
+
+<div class="modal-actions">
+    <button class="btn btn-outline" onclick="taslakListesiTemizle()">Listeyi Temizle</button>
+    <button class="btn btn-outline" onclick="closeModal('modalTaslakCikis')">İptal</button>
+    <button class="btn btn-primary" id="btnTaslakPdf" onclick="taslakPdfOlustur()"><i class="fa-solid fa-file-pdf"></i> Taslak PDF Oluştur</button>
+</div>
 </div></div>
 
 <div id="modalCekCikis" class="modal-overlay"><div class="cek-modal"><h2><i class="fa-solid fa-arrow-up-from-bracket" style="color:var(--danger);"></i> Çek Çıkışı</h2><div class="form-group"><label>Tür</label><select class="form-control" id="cekTuruSelect" onchange="handleCekTuruChange()"><option value="kendi">Kendi Çekimiz</option><option value="kasa">Kasadan Seç</option></select></div><div class="form-group hidden" id="kasadanSecimDiv"><label>Portföy <span style="font-weight:400; color:var(--muted); font-size:11.5px;">(vadesi yakın olan üstte)</span></label><select class="form-control" id="kasaCekListesi" onchange="autoFillCekNo()"></select></div><div class="form-group"><label>Çek No</label><input type="text" class="form-control" id="cikisCekNo"></div><div class="form-group"><label>Tutar</label><input type="text" class="form-control" id="cikisTutar" inputmode="decimal" placeholder="0,00" oninput="tutarBicimle(this)"></div><div class="form-group"><label>Vade</label><input type="date" class="form-control" id="cikisVade"></div><div class="form-group"><label>Hedef</label><select class="form-control" id="cikisHedefi" onchange="handleCikisHedefi()"><option value="tedarikci">Cari</option><option value="banka_tahsil">Tahsil</option></select></div><div class="form-group hidden" id="cikisCariDiv"><label>Cari</label><select class="form-control" id="cikisCariSecim"></select></div><div class="form-group hidden" id="bankaListesiDiv"><label>İlgili Bankayı Seçiniz</label><select class="form-control" id="cikisBankaSecim"><optgroup label="Kamu Bankaları"><option value="T.C. Ziraat Bankası">T.C. Ziraat Bankası</option><option value="Türkiye Halk Bankası">Türkiye Halk Bankası</option><option value="Türkiye Vakıflar Bankası">Türkiye Vakıflar Bankası</option></optgroup><optgroup label="Özel Bankalar"><option value="Türkiye İş Bankası">Türkiye İş Bankası</option><option value="Garanti BBVA">Garanti BBVA</option><option value="Akbank">Akbank</option><option value="Yapı Kredi">Yapı Kredi</option><option value="QNB Finansbank">QNB Finansbank</option><option value="DenizBank">DenizBank</option><option value="Türk Ekonomi Bankası (TEB)">Türk Ekonomi Bankası (TEB)</option><option value="İNG Bank">İNG Bank</option><option value="Şekerbank">Şekerbank</option><option value="Anadolubank">Anadolubank</option><option value="Odea Bank">Odea Bank</option><option value="Fibabanka">Fibabanka</option><option value="Burgan Bank">Burgan Bank</option><option value="Alternatif Bank">Alternatif Bank</option><option value="ICBC Turkey Bank">ICBC Turkey Bank</option><option value="HSBC Bank">HSBC Bank</option></optgroup><optgroup label="Katılım Bankaları"><option value="Kuveyt Türk Katılım Bankası">Kuveyt Türk Katılım Bankası</option><option value="Albaraka Türk Katılım Bankası">Albaraka Türk Katılım Bankası</option><option value="Türkiye Finans Katılım Bankası">Türkiye Finans Katılım Bankası</option><option value="Vakıf Katılım Bankası">Vakıf Katılım Bankası</option><option value="Ziraat Katılım Bankası">Ziraat Katılım Bankası</option><option value="Emlak Katılım Bankası">Emlak Katılım Bankası</option><option value="T.O.M. Katılım Bankası">T.O.M. Katılım Bankası</option><option value="Hayat Finans Katılım Bankası">Hayat Finans Katılım Bankası</option></optgroup></select></div><div class="form-group" id="kendiBankaDiv"><label>Kendi Çekimizin Bankası</label><select class="form-control" id="kendiBankaSecim"><optgroup label="Kamu Bankaları"><option value="T.C. Ziraat Bankası">T.C. Ziraat Bankası</option><option value="Türkiye Halk Bankası">Türkiye Halk Bankası</option><option value="Türkiye Vakıflar Bankası">Türkiye Vakıflar Bankası</option></optgroup><optgroup label="Özel Bankalar"><option value="Türkiye İş Bankası">Türkiye İş Bankası</option><option value="Garanti BBVA">Garanti BBVA</option><option value="Akbank">Akbank</option><option value="Yapı Kredi">Yapı Kredi</option><option value="QNB Finansbank">QNB Finansbank</option><option value="DenizBank">DenizBank</option><option value="Türk Ekonomi Bankası (TEB)">Türk Ekonomi Bankası (TEB)</option><option value="İNG Bank">İNG Bank</option><option value="Şekerbank">Şekerbank</option><option value="Anadolubank">Anadolubank</option><option value="Odea Bank">Odea Bank</option><option value="Fibabanka">Fibabanka</option><option value="Burgan Bank">Burgan Bank</option><option value="Alternatif Bank">Alternatif Bank</option><option value="ICBC Turkey Bank">ICBC Turkey Bank</option><option value="HSBC Bank">HSBC Bank</option></optgroup><optgroup label="Katılım Bankaları"><option value="Kuveyt Türk Katılım Bankası">Kuveyt Türk Katılım Bankası</option><option value="Albaraka Türk Katılım Bankası">Albaraka Türk Katılım Bankası</option><option value="Türkiye Finans Katılım Bankası">Türkiye Finans Katılım Bankası</option><option value="Vakıf Katılım Bankası">Vakıf Katılım Bankası</option><option value="Ziraat Katılım Bankası">Ziraat Katılım Bankası</option><option value="Emlak Katılım Bankası">Emlak Katılım Bankası</option><option value="T.O.M. Katılım Bankası">T.O.M. Katılım Bankası</option><option value="Hayat Finans Katılım Bankası">Hayat Finans Katılım Bankası</option></optgroup></select></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalCekCikis')">İptal</button><button class="btn btn-danger" onclick="dbCekCikisKaydet()">Kaydet</button></div></div></div>
@@ -1605,117 +1631,192 @@
 
     // ================= EKSTRE PDF =================
     // ================= TASLAK ÇIKIŞ (ONAY İÇİN — SİSTEMİ DEĞİŞTİRMEZ) =================
+    let taslakCekListesi = [];   // { cekNo, tutar, vadeStr }
+
     function taslakModalAc() {
-        document.getElementById('taslakTuruSelect').value = 'kasa';
-        document.getElementById('taslakCekNo').value = '';
-        document.getElementById('taslakTutar').value = '';
-        document.getElementById('taslakVade').value = '';
+        taslakCekListesi = [];
         document.getElementById('taslakCariSecim').value = '';
         document.getElementById('taslakNot').value = '';
-        handleTaslakTuruChange();
+        document.getElementById('taslakEkleTuru').value = 'kasa';
+        taslakEkleTuruDegisti();
+        taslakTabloYaz();
         openModal('modalTaslakCikis');
     }
 
-    function handleTaslakTuruChange() {
-        const tur = document.getElementById('taslakTuruSelect').value;
-        const kasaDiv = document.getElementById('taslakKasadanSecimDiv');
-        const bankaDiv = document.getElementById('taslakBankaDiv');
-        const ids = ['taslakCekNo', 'taslakTutar', 'taslakVade'];
-
-        if (tur === 'kasa') {
-            kasaDiv.classList.remove('hidden');
-            bankaDiv.classList.add('hidden');
-            ids.forEach(id => { document.getElementById(id).readOnly = true; document.getElementById(id).value = ''; });
-            document.getElementById('taslakKasaCekListesi').value = '';
-        } else {
-            kasaDiv.classList.add('hidden');
-            bankaDiv.classList.remove('hidden');
-            ids.forEach(id => { document.getElementById(id).readOnly = false; document.getElementById(id).value = ''; });
-        }
+    function taslakEkleTuruDegisti() {
+        const tur = document.getElementById('taslakEkleTuru').value;
+        const kasaMi = (tur === 'kasa');
+        document.getElementById('taslakKasaSecimDiv').classList.toggle('hidden', !kasaMi);
+        document.getElementById('taslakManuelCekNoDiv').classList.toggle('hidden', kasaMi);
+        document.getElementById('taslakManuelTutarDiv').classList.toggle('hidden', kasaMi);
+        document.getElementById('taslakManuelVadeDiv').classList.toggle('hidden', kasaMi);
     }
 
-    function taslakAutoFillCekNo() {
-        const select = document.getElementById('taslakKasaCekListesi');
-        const opt = select.options[select.selectedIndex];
-        if (!opt || opt.value === "") return;
-        document.getElementById('taslakCekNo').value = opt.getAttribute('data-cekno');
-        document.getElementById('taslakTutar').value = tutarYaz(opt.getAttribute('data-tutar'));
-        document.getElementById('taslakVade').value = opt.getAttribute('data-vade');
+    function taslakCekEkle() {
+        const tur = document.getElementById('taslakEkleTuru').value;
+        let cekNo, tutar, vadeStr;
+
+        if (tur === 'kasa') {
+            const select = document.getElementById('taslakKasaCekListesi');
+            const opt = select.options[select.selectedIndex];
+            if (!opt || !opt.value) return alert('Kasadan bir çek seçiniz.');
+            cekNo = opt.getAttribute('data-cekno');
+            tutar = parseFloat(opt.getAttribute('data-tutar'));
+            vadeStr = opt.getAttribute('data-vade');
+        } else {
+            cekNo = document.getElementById('taslakManuelCekNo').value.trim();
+            tutar = tutarOku(document.getElementById('taslakManuelTutar').value);
+            vadeStr = document.getElementById('taslakManuelVade').value;
+            if (!cekNo) return alert('Çek numarası giriniz.');
+            if (!tutar || tutar <= 0) return alert('Geçerli bir tutar giriniz.');
+            if (!vadeStr) return alert('Vade tarihi seçiniz.');
+        }
+
+        if (taslakCekListesi.some(c => c.cekNo === cekNo)) {
+            return alert(`"${cekNo}" numaralı çek zaten listede.`);
+        }
+
+        taslakCekListesi.push({ cekNo, tutar, vadeStr });
+
+        // Girdi alanlarını temizle
+        document.getElementById('taslakKasaCekListesi').value = '';
+        document.getElementById('taslakManuelCekNo').value = '';
+        document.getElementById('taslakManuelTutar').value = '';
+        document.getElementById('taslakManuelVade').value = '';
+
+        taslakTabloYaz();
+    }
+
+    function taslakCekCikar(index) {
+        taslakCekListesi.splice(index, 1);
+        taslakTabloYaz();
+    }
+
+    function taslakListesiTemizle() {
+        if (taslakCekListesi.length && !confirm('Listedeki tüm çekler kaldırılsın mı?')) return;
+        taslakCekListesi = [];
+        taslakTabloYaz();
+    }
+
+    function taslakTabloYaz() {
+        const tbody = document.getElementById('taslakCekTablosu');
+        const bugun = new Date(); bugun.setHours(0,0,0,0);
+
+        if (taslakCekListesi.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#94a3b8; padding:16px;">Henüz çek eklenmedi.</td></tr>';
+            document.getElementById('taslakToplamTutar').innerText = formatMoney(0);
+            document.getElementById('taslakOrtalamaVade').innerText = '0 gün';
+            document.getElementById('taslakCekSayisi').innerText = '0';
+            return;
+        }
+
+        let toplamTutar = 0, agirlikliToplam = 0;
+        tbody.innerHTML = taslakCekListesi.map((c, i) => {
+            const vadeTarihi = new Date(c.vadeStr); vadeTarihi.setHours(0,0,0,0);
+            const gunFarki = Math.round((vadeTarihi - bugun) / 86400000);
+            toplamTutar += c.tutar;
+            agirlikliToplam += c.tutar * gunFarki;
+            const gunRenk = gunFarki < 0 ? 'var(--danger)' : (gunFarki < 30 ? 'var(--warning)' : 'var(--success)');
+            return `<tr>
+                <td>${c.cekNo}</td>
+                <td style="text-align:right; font-weight:600;">${formatMoney(c.tutar)}</td>
+                <td>${formatDate(c.vadeStr)}</td>
+                <td style="text-align:right; color:${gunRenk}; font-weight:600;">${gunFarki < 0 ? 'Gecikti' : gunFarki + ' gün'}</td>
+                <td style="text-align:right;"><button class="btn btn-sil" style="padding:4px 9px;" onclick="taslakCekCikar(${i})"><i class="fa-solid fa-trash"></i></button></td>
+            </tr>`;
+        }).join('');
+
+        const ortalamaVade = Math.round(agirlikliToplam / toplamTutar);
+        document.getElementById('taslakToplamTutar').innerText = formatMoney(toplamTutar);
+        document.getElementById('taslakOrtalamaVade').innerText = ortalamaVade + ' gün';
+        document.getElementById('taslakCekSayisi').innerText = taslakCekListesi.length;
     }
 
     function taslakPdfOlustur() {
-        const tur = document.getElementById('taslakTuruSelect').value;
-        const cekNo = document.getElementById('taslakCekNo').value.trim();
-        const tutar = tutarOku(document.getElementById('taslakTutar').value);
-        const vade = document.getElementById('taslakVade').value;
         const cariAdi = document.getElementById('taslakCariSecim').value;
         const not = document.getElementById('taslakNot').value.trim();
-        const banka = (tur === 'kendi') ? document.getElementById('taslakBankaSecim').value : '';
 
-        if (!cekNo) return alert('Çek numarası giriniz (kasadan seçin veya elle yazın).');
-        if (!tutar || tutar <= 0) return alert('Geçerli bir tutar giriniz.');
-        if (!vade) return alert('Vade tarihi seçiniz.');
         if (!cariAdi) return alert('PDF gönderilecek cariyi seçiniz.');
+        if (taslakCekListesi.length === 0) return alert('Listeye en az bir çek ekleyiniz.');
 
-        const bugun = new Date();
+        const bugun = new Date(); bugun.setHours(0,0,0,0);
         const tarihStr = `${String(bugun.getDate()).padStart(2,'0')}.${String(bugun.getMonth()+1).padStart(2,'0')}.${bugun.getFullYear()}`;
-        const gun = calcDays(vade);
-        const gunMetni = gun < 0 ? 'Vadesi geçmiş' : (gun === 0 ? 'Bugün vadeli' : `${gun} gün sonra vadeli`);
 
-        const html = `<div style="font-family:Arial,Helvetica,sans-serif; padding:30px; color:#0f172a; font-size:12px;">
+        let toplamTutar = 0, agirlikliToplam = 0;
+        const satirlar = taslakCekListesi.map(c => {
+            const vadeTarihi = new Date(c.vadeStr); vadeTarihi.setHours(0,0,0,0);
+            const gunFarki = Math.round((vadeTarihi - bugun) / 86400000);
+            toplamTutar += c.tutar;
+            agirlikliToplam += c.tutar * gunFarki;
+            const gunMetin = gunFarki < 0 ? 'Gecikti' : gunFarki + ' gun';
+            return `<tr>
+                <td>${c.cekNo}</td>
+                <td style="text-align:right; font-weight:bold;">${formatMoney(c.tutar)}</td>
+                <td>${formatDate(c.vadeStr)}</td>
+                <td style="text-align:right;">${gunMetin}</td>
+            </tr>`;
+        }).join('');
+        const ortalamaVade = Math.round(agirlikliToplam / toplamTutar);
+
+        const html = `<div style="font-family:Arial,Helvetica,sans-serif; padding:30px; color:#0f172a; font-size:12px; background:#fff;">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #2563eb; padding-bottom:14px; margin-bottom:22px;">
                 <div>
-                    <div style="font-size:20px; font-weight:bold; color:#2563eb;">ÇEK ONAY TALEBİ</div>
-                    <div style="font-size:12px; color:#64748b; margin-top:4px;">Taslak belge — henüz işlenmemiştir</div>
+                    <div style="font-size:20px; font-weight:bold; color:#2563eb;">CEK ONAY TALEBI</div>
+                    <div style="font-size:12px; color:#64748b; margin-top:4px;">Taslak belge - henuz islenmemistir</div>
                 </div>
                 <div style="text-align:right; font-size:10.5px; color:#64748b;">
-                    Belge Tarihi: ${tarihStr}<br>Hazırlayan: ${aktifKullanici || '-'}
+                    Belge Tarihi: ${tarihStr}<br>Hazirlayan: ${aktifKullanici || '-'}
                 </div>
             </div>
 
             <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:14px 16px; margin-bottom:20px;">
-                <div style="font-size:11px; color:#1e40af; font-weight:bold; text-transform:uppercase; letter-spacing:.04em; margin-bottom:4px;">Sayın</div>
+                <div style="font-size:11px; color:#1e40af; font-weight:bold; text-transform:uppercase; letter-spacing:.04em; margin-bottom:4px;">Sayin</div>
                 <div style="font-size:16px; font-weight:bold; color:#0f172a;">${cariAdi}</div>
             </div>
 
             <div style="font-size:13px; color:#334155; margin-bottom:18px; line-height:1.7;">
-                Aşağıda bilgileri verilen çeki tarafınıza ${tur === 'kasa' ? 'ciro etmeyi' : 'düzenlemeyi'} planlıyoruz.
-                Onayınızı aldıktan sonra işlemi tamamlayacağız.
+                Asagida bilgileri verilen ${taslakCekListesi.length} adet cegi tarafiniza vermeyi planliyoruz.
+                Onayinizi aldiktan sonra islemi tamamlayacagiz.
             </div>
+
+            <table style="width:100%; border-collapse:collapse; margin-bottom:14px; font-size:11px;">
+                <thead>
+                    <tr style="background:#1e293b; color:#fff;">
+                        <th style="padding:8px; text-align:left;">Cek No</th>
+                        <th style="padding:8px; text-align:right;">Tutar</th>
+                        <th style="padding:8px; text-align:left;">Vade Tarihi</th>
+                        <th style="padding:8px; text-align:right;">Kalan Gun</th>
+                    </tr>
+                </thead>
+                <tbody>${satirlar}</tbody>
+            </table>
 
             <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
                 <tr>
-                    <td style="width:50%; padding:14px; background:#f8fafc; border:1px solid #e2e8f0;">
-                        <div style="font-size:10px; color:#64748b; font-weight:bold; text-transform:uppercase;">Çek Numarası</div>
-                        <div style="font-size:18px; font-weight:bold; margin-top:3px;">${cekNo}</div>
+                    <td style="width:33%; padding:12px; background:#eff6ff; border:1px solid #bfdbfe; text-align:center;">
+                        <div style="font-size:10px; color:#64748b; font-weight:bold; text-transform:uppercase;">Toplam Tutar</div>
+                        <div style="font-size:17px; font-weight:bold; color:#2563eb; margin-top:3px;">${formatMoney(toplamTutar)}</div>
                     </td>
-                    <td style="width:50%; padding:14px; background:#f8fafc; border:1px solid #e2e8f0;">
-                        <div style="font-size:10px; color:#64748b; font-weight:bold; text-transform:uppercase;">Tutar</div>
-                        <div style="font-size:18px; font-weight:bold; margin-top:3px; color:#2563eb;">${formatMoney(tutar)}</div>
+                    <td style="width:33%; padding:12px; background:#fef2f2; border:1px solid #fecaca; text-align:center;">
+                        <div style="font-size:10px; color:#64748b; font-weight:bold; text-transform:uppercase;">Ortalama Vade</div>
+                        <div style="font-size:17px; font-weight:bold; color:#dc2626; margin-top:3px;">${ortalamaVade} gun</div>
                     </td>
-                </tr>
-                <tr>
-                    <td style="padding:14px; background:#f8fafc; border:1px solid #e2e8f0;">
-                        <div style="font-size:10px; color:#64748b; font-weight:bold; text-transform:uppercase;">Vade Tarihi</div>
-                        <div style="font-size:15px; font-weight:bold; margin-top:3px;">${formatDate(vade)}</div>
-                        <div style="font-size:10.5px; color:${gun < 0 ? '#dc2626' : '#64748b'}; margin-top:2px;">${gunMetni}</div>
-                    </td>
-                    <td style="padding:14px; background:#f8fafc; border:1px solid #e2e8f0;">
-                        <div style="font-size:10px; color:#64748b; font-weight:bold; text-transform:uppercase;">Banka</div>
-                        <div style="font-size:15px; font-weight:bold; margin-top:3px;">${banka || '-'}</div>
+                    <td style="width:34%; padding:12px; background:#f8fafc; border:1px solid #e2e8f0; text-align:center;">
+                        <div style="font-size:10px; color:#64748b; font-weight:bold; text-transform:uppercase;">Cek Sayisi</div>
+                        <div style="font-size:17px; font-weight:bold; color:#0f172a; margin-top:3px;">${taslakCekListesi.length} adet</div>
                     </td>
                 </tr>
             </table>
 
             ${not ? `<div style="padding:12px 14px; background:#fffbeb; border-left:3px solid #f59e0b; margin-bottom:20px; font-size:12px; color:#78350f;"><strong>Not:</strong> ${not}</div>` : ''}
 
-            <div style="margin-top:36px; padding-top:20px; border-top:1px dashed #cbd5e1;">
+            <div style="margin-top:30px; padding-top:20px; border-top:1px dashed #cbd5e1;">
                 <div style="font-size:11px; color:#64748b; font-weight:bold; text-transform:uppercase; margin-bottom:24px;">Onay</div>
                 <table style="width:100%;">
                     <tr>
                         <td style="width:50%; padding-right:20px;">
                             <div style="border-bottom:1px solid #94a3b8; height:36px;"></div>
-                            <div style="font-size:10.5px; color:#64748b; margin-top:5px;">İmza / Onay</div>
+                            <div style="font-size:10.5px; color:#64748b; margin-top:5px;">Imza / Onay</div>
                         </td>
                         <td style="width:50%; padding-left:20px;">
                             <div style="border-bottom:1px solid #94a3b8; height:36px;"></div>
@@ -1725,35 +1826,50 @@
                 </table>
             </div>
 
-            <div style="margin-top:30px; padding-top:12px; border-top:1px solid #e2e8f0; font-size:9px; color:#94a3b8; text-align:center;">
-                Bu belge bir onay talebidir, resmi bir çek değildir. Sistem kaydına henüz işlenmemiştir.
+            <div style="margin-top:24px; padding-top:12px; border-top:1px solid #e2e8f0; font-size:9px; color:#94a3b8; text-align:center;">
+                Bu belge bir onay talebidir, resmi bir cek degildir. Sistem kaydina henuz islenmemistir.
             </div>
         </div>`;
 
         const kapsayici = document.createElement('div');
         kapsayici.innerHTML = html;
+        kapsayici.querySelectorAll('tbody tr').forEach((tr, i) => {
+            tr.style.background = i % 2 ? '#f8fafc' : '#fff';
+            tr.querySelectorAll('td').forEach(td => { td.style.padding = '7px 8px'; td.style.borderBottom = '1px solid #e2e8f0'; });
+        });
+
+        // html2pdf ekranda olmayan (görünmeyen) içeriği boş basar.
+        // Bu yüzden geçici olarak GÖRÜNÜR alana (ekran dışına kaydırarak) ekliyoruz.
         kapsayici.style.position = 'fixed';
-        kapsayici.style.left = '-10000px';
+        kapsayici.style.left = '0';
         kapsayici.style.top = '0';
         kapsayici.style.width = '850px';
+        kapsayici.style.zIndex = '-1';
+        kapsayici.style.opacity = '1';
         kapsayici.style.background = '#fff';
         document.body.appendChild(kapsayici);
 
-        const dosyaAdi = `Taslak_Onay_${cekNo}_${cariAdi.replace(/[^a-zA-Z0-9ğüşıöçĞÜŞİÖÇ ]/g,'').replace(/\s+/g,'_')}_${tarihStr.replace(/\./g,'-')}.pdf`;
+        const dosyaAdi = `Taslak_Onay_${cariAdi.replace(/[^a-zA-Z0-9ğüşıöçĞÜŞİÖÇ ]/g,'').replace(/\s+/g,'_')}_${tarihStr.replace(/\./g,'-')}.pdf`;
 
         const btn = document.getElementById('btnTaslakPdf');
         btn.disabled = true;
+        btn.innerText = 'Oluşturuluyor...';
 
-        html2pdf().set({
-            margin: 10,
-            filename: dosyaAdi,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, windowWidth: 850 },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        }).from(kapsayici).save()
-          .then(() => { kapsayici.remove(); closeModal('modalTaslakCikis'); })
-          .catch((e) => { kapsayici.remove(); alert('PDF oluşturulamadı: ' + e.message); })
-          .finally(() => { btn.disabled = false; });
+        // İçerik DOM'a eklendikten hemen sonra render'ın tamamlanması için bir sonraki frame'i bekliyoruz
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                html2pdf().set({
+                    margin: 10,
+                    filename: dosyaAdi,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true, windowWidth: 850, backgroundColor: '#ffffff' },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                }).from(kapsayici).save()
+                  .then(() => { kapsayici.remove(); closeModal('modalTaslakCikis'); })
+                  .catch((e) => { kapsayici.remove(); alert('PDF oluşturulamadı: ' + e.message); })
+                  .finally(() => { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-file-pdf"></i> Taslak PDF Oluştur'; });
+            });
+        });
     }
 
     function cariEkstrePdf() {
