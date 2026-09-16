@@ -187,6 +187,11 @@
         <button class="btn-menu btn-satim" onclick="islemModalAc('SATIM')"><i class="fa-solid fa-hand-holding-dollar"></i> Satım Ekle</button>
 
         <div class="side-ayrac"></div>
+        <div class="side-etiket">Ödemeler</div>
+        <button class="btn-menu btn-satim" onclick="odemeGenelModalAc('AL')"><i class="fa-solid fa-hand-holding-dollar"></i> Ödeme Al</button>
+        <button class="btn-menu btn-alim" onclick="odemeGenelModalAc('YAP')"><i class="fa-solid fa-money-bill-transfer"></i> Ödeme Yap</button>
+
+        <div class="side-ayrac"></div>
         <div class="side-etiket">Görünüm</div>
         <button class="btn-menu aktif" id="mnDashboard" onclick="gorunum('dashboard')"><i class="fa-solid fa-gauge-high"></i> Ana Panel</button>
         <button class="btn-menu" id="mnHareket" onclick="gorunum('hareketler')"><i class="fa-solid fa-list"></i> Tüm İşlemler</button>
@@ -432,6 +437,59 @@
         <div class="modal-actions">
             <button class="btn btn-outline" onclick="modalKapat('modalOdemeAl')">İptal</button>
             <button class="btn btn-success" id="btnOdemeAlKaydet" onclick="odemeAlKaydet()">Ödemeyi Kaydet</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============ GENEL ÖDEME AL / YAP (sol menüden, birden çok işlem seçilebilir) ============ -->
+<div id="modalOdemeGenel" class="modal-overlay">
+    <div class="modal" style="width:520px;">
+        <h2 id="odemeGenelBaslik"><i class="fa-solid fa-hand-holding-dollar" style="color:var(--success);"></i> Ödeme Al</h2>
+
+        <div class="form-group">
+            <label>Cari</label>
+            <select id="odemeGenelCariSecim" class="form-control" onchange="odemeGenelCariSecildi()"></select>
+        </div>
+        <div id="odemeGenelCariBosUyari" class="hidden empty">Bu cariye ait bekleyen işlem yok.</div>
+
+        <div id="odemeGenelIcerik" class="hidden">
+            <div class="form-group">
+                <label>Kapatılacak İşlemler <span style="font-weight:400; color:var(--muted); font-size:11.5px;">(birden çok seçilebilir)</span></label>
+                <div id="odemeGenelIslemListesi" style="max-height:180px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:6px;"></div>
+            </div>
+
+            <div class="form-group">
+                <label>Ödeme Şekli</label>
+                <select id="odemeGenelSekli" class="form-control" onchange="odemeGenelSekliDegisti()">
+                    <option value="NAKIT">💵 Nakit</option>
+                    <option value="CEK">📄 Çek</option>
+                </select>
+            </div>
+
+            <div id="odemeGenelNakitAlani">
+                <div class="form-group">
+                    <label>Tutar <span style="font-weight:400; color:var(--muted); font-size:11.5px;">(seçili işlemlerin toplamı önerilir, isterseniz değiştirin)</span></label>
+                    <input type="text" id="odemeGenelTutar" class="form-control" inputmode="decimal" placeholder="0,00" oninput="tutarBicimle(this)">
+                </div>
+            </div>
+
+            <div id="odemeGenelCekAlani" class="hidden">
+                <div style="background:var(--accent-soft); border:1px solid #b8e2c8; border-radius:9px; padding:11px 13px; margin-bottom:14px; font-size:12px; color:#0f5c2c; line-height:1.6;">
+                    <i class="fa-solid fa-circle-info"></i> Çek panelinde bu cariyle zaten kayıtlı bir çeki seçin.
+                </div>
+                <div class="form-group">
+                    <label>Çek Seçimi</label>
+                    <select id="odemeGenelCekSecim" class="form-control"></select>
+                </div>
+                <div id="odemeGenelCekBosUyari" class="hidden" style="background:var(--warning-bg); border:1px solid var(--warning-line); border-radius:9px; padding:11px 13px; font-size:12.5px; color:#92400e;">
+                    Çek panelinde bu cariyle eşleşen bir çek bulunamadı.
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn btn-outline" onclick="modalKapat('modalOdemeGenel')">İptal</button>
+            <button class="btn btn-success" id="btnOdemeGenelKaydet" onclick="odemeGenelKaydet()">Kaydet</button>
         </div>
     </div>
 </div>
@@ -1185,6 +1243,149 @@ async function odemeAlKaydet() {
         modalKapat('modalOdemeAl');
         await verileriYukle();
         gorunumTazele();
+    } catch (e) {
+        alert('Hata: ' + e.message);
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+// ================= GENEL ÖDEME AL / YAP (sol menüden — çoklu işlem seçilebilir) =================
+let odemeGenelTuru = null;   // 'AL' (SATIM tahsilatı) veya 'YAP' (ALIM ödemesi)
+
+function odemeGenelModalAc(tur) {
+    odemeGenelTuru = tur;
+    const islemTuru = (tur === 'AL') ? 'SATIM' : 'ALIM';
+
+    document.getElementById('odemeGenelBaslik').innerHTML = (tur === 'AL')
+        ? '<i class="fa-solid fa-hand-holding-dollar" style="color:var(--success);"></i> Ödeme Al'
+        : '<i class="fa-solid fa-money-bill-transfer" style="color:var(--danger);"></i> Ödeme Yap';
+    document.getElementById('btnOdemeGenelKaydet').className = (tur === 'AL') ? 'btn btn-success' : 'btn btn-danger';
+
+    // Bekleyen (ödenmemiş) işlemi olan carileri listele
+    const bekleyenCariler = cariler.filter(c =>
+        islemler.some(t => t.cariUnvan === c.unvan && t.tur === islemTuru && !t.odendi)
+    );
+
+    const sec = document.getElementById('odemeGenelCariSecim');
+    if (bekleyenCariler.length === 0) {
+        sec.innerHTML = '<option value="">— Bekleyen işlem yok —</option>';
+    } else {
+        sec.innerHTML = '<option value="">Cari Seçiniz...</option>' +
+            bekleyenCariler.map(c => `<option value="${c.unvan}">${c.unvan}</option>`).join('');
+    }
+
+    document.getElementById('odemeGenelIcerik').classList.add('hidden');
+    document.getElementById('odemeGenelCariBosUyari').classList.add('hidden');
+    modalAc('modalOdemeGenel');
+}
+
+function odemeGenelBekleyenListesi(cariUnvan) {
+    const islemTuru = (odemeGenelTuru === 'AL') ? 'SATIM' : 'ALIM';
+    return islemler.filter(t => t.cariUnvan === cariUnvan && t.tur === islemTuru && !t.odendi)
+        .sort((a, b) => new Date(a.tarih) - new Date(b.tarih));
+}
+
+function odemeGenelCariSecildi() {
+    const cariUnvan = document.getElementById('odemeGenelCariSecim').value;
+    const icerik = document.getElementById('odemeGenelIcerik');
+    const bosUyari = document.getElementById('odemeGenelCariBosUyari');
+
+    if (!cariUnvan) { icerik.classList.add('hidden'); bosUyari.classList.add('hidden'); return; }
+
+    const bekleyenler = odemeGenelBekleyenListesi(cariUnvan);
+    if (bekleyenler.length === 0) {
+        icerik.classList.add('hidden');
+        bosUyari.classList.remove('hidden');
+        return;
+    }
+
+    bosUyari.classList.add('hidden');
+    icerik.classList.remove('hidden');
+
+    document.getElementById('odemeGenelIslemListesi').innerHTML = bekleyenler.map(t => `
+        <label style="display:flex; align-items:center; gap:9px; padding:7px 6px; border-radius:6px; cursor:pointer; font-size:12.5px;" onmouseover="this.style.background='#faf7f2'" onmouseout="this.style.background='transparent'">
+            <input type="checkbox" class="odeme-genel-check" value="${t.id}" data-tutar="${t.tutar}" onchange="odemeGenelTutarOner()" checked>
+            <span style="flex-grow:1;">${tarihYaz(t.tarih)}${t.faturaNo ? ' · Fatura: ' + t.faturaNo : ''}</span>
+            <strong>${para(t.tutar)}</strong>
+        </label>`).join('');
+
+    document.getElementById('odemeGenelSekli').value = 'NAKIT';
+    odemeGenelSekliDegisti();
+    odemeGenelTutarOner();
+}
+
+// Seçili işlemlerin toplamını tutar alanına öneri olarak yazar (kullanıcı isterse değiştirebilir)
+function odemeGenelTutarOner() {
+    const secili = Array.from(document.querySelectorAll('.odeme-genel-check:checked'));
+    const toplam = secili.reduce((s, el) => s + parseFloat(el.getAttribute('data-tutar')), 0);
+    document.getElementById('odemeGenelTutar').value = tutarYaz(toplam);
+}
+
+function odemeGenelSekliDegisti() {
+    const sekil = document.getElementById('odemeGenelSekli').value;
+    const cekMi = (sekil === 'CEK');
+    document.getElementById('odemeGenelNakitAlani').classList.toggle('hidden', cekMi);
+    document.getElementById('odemeGenelCekAlani').classList.toggle('hidden', !cekMi);
+
+    if (cekMi) {
+        const cariUnvan = document.getElementById('odemeGenelCariSecim').value;
+        const cariAdi = (cariUnvan || '').trim().toLocaleLowerCase('tr');
+
+        // Ödeme Al -> bu cariden alınmış çekler; Ödeme Yap -> bu cariye verilmiş çekler
+        const eslesenler = tumCekler.filter(c => {
+            if (odemeGenelTuru === 'AL') {
+                return (c.cariUnvan || '').trim().toLocaleLowerCase('tr') === cariAdi && c.islemTuru === 'Alınan Çek';
+            } else {
+                const cekCari = (c.durum === 'Ciro Edildi' ? (c.bankaBilgisi || '') : (c.cariUnvan || '')).trim().toLocaleLowerCase('tr');
+                return cekCari === cariAdi && (c.durum === 'Ödenecek' || c.durum === 'Ciro Edildi' || c.durum === 'Ödendi');
+            }
+        });
+
+        const sec = document.getElementById('odemeGenelCekSecim');
+        const bosUyari = document.getElementById('odemeGenelCekBosUyari');
+        if (eslesenler.length === 0) {
+            sec.innerHTML = ''; sec.classList.add('hidden'); bosUyari.classList.remove('hidden');
+        } else {
+            sec.classList.remove('hidden'); bosUyari.classList.add('hidden');
+            sec.innerHTML = '<option value="">Çek Seçiniz...</option>' + eslesenler.map(c =>
+                `<option value="${c.id}">${tarihYaz(c.vade)} · ${para(c.tutar)} · No: ${c.cekNo} · ${c.banka || '-'} (${c.durum})</option>`
+            ).join('');
+        }
+    }
+}
+
+async function odemeGenelKaydet() {
+    const seciliKutular = Array.from(document.querySelectorAll('.odeme-genel-check:checked'));
+    if (seciliKutular.length === 0) return alert('En az bir işlem seçiniz.');
+
+    const sekil = document.getElementById('odemeGenelSekli').value;
+    let odemeNotu;
+
+    if (sekil === 'CEK') {
+        const cekId = document.getElementById('odemeGenelCekSecim').value;
+        if (!cekId) return alert('Bir çek seçiniz.');
+        const cek = tumCekler.find(c => c.id == cekId);
+        if (!cek) return alert('Seçilen çek bulunamadı.');
+        odemeNotu = `Çek: ${cek.cekNo} · ${para(cek.tutar)}`;
+    } else {
+        const tutar = tutarOku(document.getElementById('odemeGenelTutar').value);
+        if (!tutar || tutar <= 0) return alert('Geçerli bir tutar giriniz.');
+        odemeNotu = `Nakit: ${para(tutar)}`;
+    }
+
+    const idler = seciliKutular.map(el => parseInt(el.value));
+    const btn = document.getElementById('btnOdemeGenelKaydet');
+    btn.disabled = true;
+    try {
+        // Seçilen tüm işlemleri tek seferde "ödendi" olarak işaretle — çek/nakit sistemine hiçbir şey yazılmaz
+        const { error } = await db.from('kagit_islemler').update({ odendi: true, odeme_notu: odemeNotu }).in('id', idler);
+        if (error) throw error;
+
+        modalKapat('modalOdemeGenel');
+        await verileriYukle();
+        gorunumTazele();
+        alert(`${idler.length} işlem "ödendi" olarak işaretlendi.`);
     } catch (e) {
         alert('Hata: ' + e.message);
     } finally {
