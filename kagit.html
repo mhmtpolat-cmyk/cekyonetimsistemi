@@ -299,10 +299,14 @@
                 <button class="btn btn-outline" onclick="gorunum('cariler')">← Geri</button>
             </div>
             <div class="card">
-                <div class="grid-3" style="margin-bottom:18px;">
+                <div class="grid-3" style="margin-bottom:14px;">
                     <div class="metrik m-kirmizi"><div class="lbl">Toplam Alım</div><div class="val" id="cdAlim">₺0</div><div class="alt" id="cdAlimAdet"></div></div>
                     <div class="metrik m-yesil"><div class="lbl">Toplam Satım</div><div class="val" id="cdSatim">₺0</div><div class="alt" id="cdSatimAdet"></div></div>
                     <div class="metrik m-amber"><div class="lbl">Son İşlem</div><div class="val" id="cdSon" style="font-size:15px;">—</div><div class="alt" id="cdSonAlt"></div></div>
+                </div>
+                <div class="grid-2" style="margin-bottom:18px;">
+                    <div class="metrik" style="background:#fef2f2; border-color:#fecaca;"><div class="lbl" style="color:#991b1b;">Bekleyen Borcumuz <span style="font-weight:400;">(ödenmemiş alım)</span></div><div class="val" style="color:var(--danger);" id="cdBekleyenBorc">₺0</div><div class="alt" id="cdBekleyenBorcAdet"></div></div>
+                    <div class="metrik" style="background:#ecfdf5; border-color:#a7f3d0;"><div class="lbl" style="color:#065f46;">Bekleyen Alacağımız <span style="font-weight:400;">(tahsil edilmemiş satım)</span></div><div class="val" style="color:var(--success);" id="cdBekleyenAlacak">₺0</div><div class="alt" id="cdBekleyenAlacakAdet"></div></div>
                 </div>
                 <div class="masa-tablo tablo-sarmal">
                     <table>
@@ -367,32 +371,22 @@
     </div>
 </div>
 
-<!-- ============ ÇEKLE ÖDE (ALIM için) ============ -->
+<!-- ============ ÇEKLE ÖDE (ALIM için) — mevcut çek sisteminden referans seçilir, yeni çek oluşturulmaz ============ -->
 <div id="modalCekOde" class="modal-overlay">
     <div class="modal">
         <h2><i class="fa-solid fa-money-check" style="color:var(--accent);"></i> Çekle Öde</h2>
         <div id="cekOdeBilgi" style="background:#faf7f2; border:1px solid var(--border); border-radius:9px; padding:12px; margin-bottom:16px; font-size:12.5px;"></div>
 
+        <div style="background:var(--accent-soft); border:1px solid #b8e2c8; border-radius:9px; padding:11px 13px; margin-bottom:16px; font-size:12px; color:#0f5c2c; line-height:1.6;">
+            <i class="fa-solid fa-circle-info"></i> Bu firmaya <strong>çek panelinden zaten verdiğiniz</strong> bir çeki seçin. Burada yeni çek oluşturulmaz — sadece hangi çekle ödendiği not edilir.
+        </div>
+
         <div class="form-group">
-            <label>Ödeme Şekli</label>
-            <select id="cekOdeTuru" class="form-control" onchange="cekOdeFormGuncelle()">
-                <option value="kasa">💼 Kasadaki Çeklerden Seç (ciro et)</option>
-                <option value="kendi">✍️ Kendi Çekimizi Ver</option>
-            </select>
+            <label>Bu Firmaya Verilen Çekler <span style="font-weight:400; color:var(--muted); font-size:11.5px;">(çek panelinden)</span></label>
+            <select id="cekOdeSecim" class="form-control"></select>
         </div>
-
-        <div class="form-group" id="cekOdeKasaDiv">
-            <label>Kasadaki Çek</label>
-            <select id="cekOdeKasaSecim" class="form-control"></select>
-        </div>
-
-        <div id="cekOdeKendiAlani" class="hidden">
-            <div class="form-group"><label>Çek No</label><input type="text" id="cekOdeCekNo" class="form-control"></div>
-            <div class="form-row">
-                <div class="form-group"><label>Tutar</label><input type="text" id="cekOdeTutar" class="form-control" inputmode="decimal" oninput="tutarBicimle(this)"></div>
-                <div class="form-group"><label>Vade</label><input type="date" id="cekOdeVade" class="form-control"></div>
-            </div>
-            <div class="form-group"><label>Banka</label><select class="form-control" id="cekOdeBanka"><optgroup label="Kamu Bankaları"><option value="T.C. Ziraat Bankası">T.C. Ziraat Bankası</option><option value="Türkiye Halk Bankası">Türkiye Halk Bankası</option><option value="Türkiye Vakıflar Bankası">Türkiye Vakıflar Bankası</option></optgroup><optgroup label="Özel Bankalar"><option value="Türkiye İş Bankası">Türkiye İş Bankası</option><option value="Garanti BBVA">Garanti BBVA</option><option value="Akbank">Akbank</option><option value="Yapı Kredi">Yapı Kredi</option><option value="QNB Finansbank">QNB Finansbank</option><option value="DenizBank">DenizBank</option><option value="Türk Ekonomi Bankası (TEB)">Türk Ekonomi Bankası (TEB)</option><option value="İNG Bank">İNG Bank</option><option value="Şekerbank">Şekerbank</option><option value="Anadolubank">Anadolubank</option><option value="Odea Bank">Odea Bank</option><option value="Fibabanka">Fibabanka</option><option value="Burgan Bank">Burgan Bank</option><option value="Alternatif Bank">Alternatif Bank</option><option value="ICBC Turkey Bank">ICBC Turkey Bank</option><option value="HSBC Bank">HSBC Bank</option></optgroup><optgroup label="Katılım Bankaları"><option value="Kuveyt Türk Katılım Bankası">Kuveyt Türk Katılım Bankası</option><option value="Albaraka Türk Katılım Bankası">Albaraka Türk Katılım Bankası</option><option value="Türkiye Finans Katılım Bankası">Türkiye Finans Katılım Bankası</option><option value="Vakıf Katılım Bankası">Vakıf Katılım Bankası</option><option value="Ziraat Katılım Bankası">Ziraat Katılım Bankası</option><option value="Emlak Katılım Bankası">Emlak Katılım Bankası</option><option value="T.O.M. Katılım Bankası">T.O.M. Katılım Bankası</option><option value="Hayat Finans Katılım Bankası">Hayat Finans Katılım Bankası</option></optgroup></select></div>
+        <div id="cekOdeBosUyari" class="hidden" style="background:var(--warning-bg); border:1px solid var(--warning-line); border-radius:9px; padding:11px 13px; font-size:12.5px; color:#92400e;">
+            Bu firmaya çek panelinden henüz bir çek çıkışı yapılmamış. Önce <strong>Çek Paneli → Çek Çıkışı</strong> ile çeki verin, sonra buraya dönüp seçin.
         </div>
 
         <div class="modal-actions">
@@ -402,24 +396,42 @@
     </div>
 </div>
 
-<!-- ============ NAKİT TAHSİL ET (SATIM için) ============ -->
-<div id="modalNakitTahsil" class="modal-overlay">
+<!-- ============ ÖDEME AL (SATIM için) — nakit veya çek, başka sisteme yazmaz ============ -->
+<div id="modalOdemeAl" class="modal-overlay">
     <div class="modal">
-        <h2><i class="fa-solid fa-hand-holding-dollar" style="color:var(--success);"></i> Nakit Tahsil Et</h2>
-        <div id="nakitTahsilBilgi" style="background:#faf7f2; border:1px solid var(--border); border-radius:9px; padding:12px; margin-bottom:16px; font-size:12.5px;"></div>
+        <h2><i class="fa-solid fa-hand-holding-dollar" style="color:var(--success);"></i> Ödeme Al</h2>
+        <div id="odemeAlBilgi" style="background:#faf7f2; border:1px solid var(--border); border-radius:9px; padding:12px; margin-bottom:16px; font-size:12.5px;"></div>
 
         <div class="form-group">
-            <label>Hangi Hesaba / Kasaya Girecek?</label>
-            <select id="nakitTahsilHesap" class="form-control"></select>
+            <label>Ödeme Şekli</label>
+            <select id="odemeAlSekli" class="form-control" onchange="odemeAlSekliDegisti()">
+                <option value="NAKIT">💵 Nakit</option>
+                <option value="CEK">📄 Çek</option>
+            </select>
         </div>
-        <div class="form-row">
-            <div class="form-group"><label>Tutar</label><input type="text" id="nakitTahsilTutar" class="form-control" inputmode="decimal" oninput="tutarBicimle(this)"></div>
-            <div class="form-group" style="flex:0 0 160px;"><label>Tarih</label><input type="date" id="nakitTahsilTarih" class="form-control"></div>
+
+        <div id="odemeAlCekAlani" class="hidden">
+            <div style="background:var(--accent-soft); border:1px solid #b8e2c8; border-radius:9px; padding:11px 13px; margin-bottom:14px; font-size:12px; color:#0f5c2c; line-height:1.6;">
+                <i class="fa-solid fa-circle-info"></i> Bu müşteriden <strong>çek panelinde zaten aldığınız</strong> bir çeki seçin.
+            </div>
+            <div class="form-group">
+                <label>Bu Müşteriden Alınan Çekler <span style="font-weight:400; color:var(--muted); font-size:11.5px;">(çek panelinden)</span></label>
+                <select id="odemeAlCekSecim" class="form-control"></select>
+            </div>
+            <div id="odemeAlCekBosUyari" class="hidden" style="background:var(--warning-bg); border:1px solid var(--warning-line); border-radius:9px; padding:11px 13px; font-size:12.5px; color:#92400e;">
+                Bu müşteriden çek panelinde henüz bir çek girişi kaydedilmemiş. Önce <strong>Çek Paneli → Çek Girişi</strong> ile kaydedin, sonra buraya dönüp seçin.
+            </div>
+        </div>
+
+        <div id="odemeAlNakitAlani">
+            <div style="background:var(--accent-soft); border:1px solid #b8e2c8; border-radius:9px; padding:11px 13px; font-size:12px; color:#0f5c2c; line-height:1.6;">
+                <i class="fa-solid fa-circle-info"></i> Bu, yalnızca kağıt takip kaydını "ödendi" işaretler. Parayı Euromat Nakit sistemine <strong>ayrıca kendiniz</strong> girmeniz gerekir — iki sistem birbirine karışmaz.
+            </div>
         </div>
 
         <div class="modal-actions">
-            <button class="btn btn-outline" onclick="modalKapat('modalNakitTahsil')">İptal</button>
-            <button class="btn btn-success" id="btnNakitTahsilKaydet" onclick="nakitTahsilKaydet()">Tahsilatı Kaydet</button>
+            <button class="btn btn-outline" onclick="modalKapat('modalOdemeAl')">İptal</button>
+            <button class="btn btn-success" id="btnOdemeAlKaydet" onclick="odemeAlKaydet()">Ödemeyi Kaydet</button>
         </div>
     </div>
 </div>
@@ -441,8 +453,7 @@ const AYLAR_KISA = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki
 
 // ================= DURUM =================
 let cariler = [], islemler = [];
-let cekPortfoyu = [];      // Kasadaki çekler — ödeme için
-let euromatHesaplar = [];  // Banka/kasa hesapları — tahsilat için
+let tumCekler = [];   // Çek panelindeki TÜM çekler — ödeme referansı için (okuma amaçlı, hiç yazılmaz)
 let aktifKullanici = null, aktifKullaniciAdi = null;
 let duzenlenenId = null, seciliCariId = null;
 let aylikChart = null;
@@ -523,11 +534,10 @@ async function cikisYap() { await db.auth.signOut(); localStorage.clear(); windo
 // ================= VERİ =================
 async function verileriYukle() {
     try {
-        const [cR, iR, cekR, hesapR] = await Promise.all([
+        const [cR, iR, cekR] = await Promise.all([
             db.from('kagit_cariler').select('*').order('unvan'),
             db.from('kagit_islemler').select('*').order('tarih', { ascending: false }),
-            db.from('cekler').select('*').eq('durum', 'Kasada'),
-            db.from('euromat_hesaplar').select('*').order('ad')
+            db.from('cekler').select('*')
         ]);
 
         // Çek sistemiyle ortak `cariler` tablosu — sütun adı "unvan"
@@ -540,14 +550,12 @@ async function verileriYukle() {
             odendi: t.odendi === true, odemeNotu: t.odeme_notu || ''
         }));
 
-        // Ödeme için: kasadaki çekler (çek sistemi ile ortak)
-        cekPortfoyu = (cekR.data || []).map(c => ({
-            id: c.id, cekNo: c.cek_no, cariUnvan: c.cari_unvan,
-            tutar: parseFloat(c.tutar) || 0, vade: c.vade_tarihi, banka: c.banka_adi
+        // Ödeme referansı için: çek panelindeki TÜM çekler (sadece okuma — hiç yazılmaz)
+        tumCekler = (cekR.data || []).map(c => ({
+            id: c.id, cekNo: c.cek_no, cariUnvan: c.cari_unvan, islemTuru: c.islem_turu,
+            durum: c.durum, tutar: parseFloat(c.tutar) || 0, vade: c.vade_tarihi, banka: c.banka_adi,
+            bankaBilgisi: c.banka_bilgisi
         })).sort((a, b) => new Date(a.vade) - new Date(b.vade));
-
-        // Tahsilat için: Euromat hesapları
-        euromatHesaplar = (hesapR.data || []).map(h => ({ id: h.id, ad: h.ad, tur: h.tur }));
 
         listeleriDoldur();
         panelYaz();
@@ -799,9 +807,18 @@ function carileriYaz() {
     }
     el.innerHTML = cariler.map(c => {
         const kendi = islemler.filter(t => t.cariUnvan === c.unvan);
-        let a = 0, s = 0;
-        kendi.forEach(t => { if (t.tur === 'ALIM') a += t.tutar; else s += t.tutar; });
+        let a = 0, s = 0, bekleyenBorc = 0, bekleyenAlacak = 0;
+        kendi.forEach(t => {
+            if (t.tur === 'ALIM') { a += t.tutar; if (!t.odendi) bekleyenBorc += t.tutar; }
+            else { s += t.tutar; if (!t.odendi) bekleyenAlacak += t.tutar; }
+        });
         const son = kendi[0];
+        const bekleyenRozet = (bekleyenBorc > 0 || bekleyenAlacak > 0)
+            ? `<div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;">
+                ${bekleyenBorc > 0 ? `<span class="badge b-alim" style="font-size:10.5px;">Borç: ${para(bekleyenBorc)}</span>` : ''}
+                ${bekleyenAlacak > 0 ? `<span class="badge b-satim" style="font-size:10.5px;">Alacak: ${para(bekleyenAlacak)}</span>` : ''}
+               </div>`
+            : '';
         return `<div class="hesap-kart" onclick="cariDetayAc(${c.id})">
             <div class="hk-ust">
                 <div class="hk-ikon"><i class="fa-solid fa-user"></i></div>
@@ -811,6 +828,7 @@ function carileriYaz() {
                 <span style="color:var(--muted);">Alım</span><strong style="color:var(--danger);">${para(a)}</strong></div>
             <div style="display:flex; justify-content:space-between; font-size:13px; padding:7px 0;">
                 <span style="color:var(--muted);">Satım</span><strong style="color:var(--success);">${para(s)}</strong></div>
+            ${bekleyenRozet}
             <div style="margin-top:8px; padding-top:8px; border-top:1px dashed var(--border); font-size:11px; color:var(--faint); display:flex; justify-content:space-between;">
                 <span>${son ? 'Son: ' + tarihYaz(son.tarih) : 'İşlem yok'}</span><span style="color:var(--accent);">Detay →</span>
             </div>
@@ -834,6 +852,18 @@ function cariDetayYaz() {
     document.getElementById('cdSatim').innerText = para(s);
     document.getElementById('cdAlimAdet').innerText = liste.filter(t => t.tur === 'ALIM').length + ' işlem';
     document.getElementById('cdSatimAdet').innerText = liste.filter(t => t.tur === 'SATIM').length + ' işlem';
+
+    // Bekleyen (henüz ödenmemiş/tahsil edilmemiş) tutarlar
+    let bekleyenBorc = 0, bekleyenBorcAdet = 0, bekleyenAlacak = 0, bekleyenAlacakAdet = 0;
+    liste.forEach(t => {
+        if (t.odendi) return;
+        if (t.tur === 'ALIM') { bekleyenBorc += t.tutar; bekleyenBorcAdet++; }
+        else { bekleyenAlacak += t.tutar; bekleyenAlacakAdet++; }
+    });
+    document.getElementById('cdBekleyenBorc').innerText = para(bekleyenBorc);
+    document.getElementById('cdBekleyenBorcAdet').innerText = bekleyenBorcAdet ? bekleyenBorcAdet + ' işlem bekliyor' : 'hepsi ödendi';
+    document.getElementById('cdBekleyenAlacak').innerText = para(bekleyenAlacak);
+    document.getElementById('cdBekleyenAlacakAdet').innerText = bekleyenAlacakAdet ? bekleyenAlacakAdet + ' işlem bekliyor' : 'hepsi tahsil edildi';
 
     if (liste.length > 0) {
         const son = liste[0];
@@ -1022,83 +1052,49 @@ function cekOdeModalAc(islemId) {
         <div><strong>${t.cariUnvan}</strong> — ${para(t.tutar)}</div>
         <div style="color:var(--muted); margin-top:2px;">${tarihYaz(t.tarih)}${t.faturaNo ? ' · Fatura: ' + t.faturaNo : ''}</div>`;
 
-    // Kasadaki çekler listesi
-    const sec = document.getElementById('cekOdeKasaSecim');
-    if (cekPortfoyu.length === 0) {
-        sec.innerHTML = '<option value="">— Kasada çek yok —</option>';
+    // Bu firmaya çek panelinden verilmiş (veya verilecek) çekleri bul.
+    // Kapsam: "Ödenecek" (kendi çekimiz, henüz elden çıkmamış) ve "Ciro Edildi" (bu firmaya ciro edilmiş) durumları.
+    const cariAdi = (t.cariUnvan || '').trim().toLocaleLowerCase('tr');
+    const eslesenler = tumCekler.filter(c => {
+        const cekCari = (c.durum === 'Ciro Edildi' ? (c.bankaBilgisi || '') : (c.cariUnvan || '')).trim().toLocaleLowerCase('tr');
+        return cekCari === cariAdi && (c.durum === 'Ödenecek' || c.durum === 'Ciro Edildi' || c.durum === 'Ödendi');
+    });
+
+    const sec = document.getElementById('cekOdeSecim');
+    const bosUyari = document.getElementById('cekOdeBosUyari');
+
+    if (eslesenler.length === 0) {
+        sec.innerHTML = '';
+        sec.classList.add('hidden');
+        bosUyari.classList.remove('hidden');
     } else {
-        sec.innerHTML = '<option value="">Çek Seçiniz...</option>' + cekPortfoyu.map(c => {
-            const gun = Math.round((new Date(c.vade) - new Date()) / 86400000);
-            const gunMetni = gun < 0 ? 'gecikti' : (gun === 0 ? 'bugün' : gun + ' gün');
-            return `<option value="${c.id}">${tarihYaz(c.vade)} (${gunMetni}) · ${para(c.tutar)} · No: ${c.cekNo} · ${c.cariUnvan}</option>`;
-        }).join('');
+        sec.classList.remove('hidden');
+        bosUyari.classList.add('hidden');
+        sec.innerHTML = '<option value="">Çek Seçiniz...</option>' + eslesenler.map(c =>
+            `<option value="${c.id}">${tarihYaz(c.vade)} · ${para(c.tutar)} · No: ${c.cekNo} · ${c.banka || '-'} (${c.durum})</option>`
+        ).join('');
     }
 
-    document.getElementById('cekOdeTuru').value = cekPortfoyu.length ? 'kasa' : 'kendi';
-    document.getElementById('cekOdeCekNo').value = '';
-    document.getElementById('cekOdeTutar').value = tutarYaz(t.tutar);
-    document.getElementById('cekOdeVade').value = '';
-    cekOdeFormGuncelle();
     modalAc('modalCekOde');
-}
-
-function cekOdeFormGuncelle() {
-    const tur = document.getElementById('cekOdeTuru').value;
-    document.getElementById('cekOdeKasaDiv').classList.toggle('hidden', tur !== 'kasa');
-    document.getElementById('cekOdeKendiAlani').classList.toggle('hidden', tur !== 'kendi');
 }
 
 async function cekOdeKaydet() {
     const t = islemler.find(x => x.id === odemeYapilacakId);
     if (!t) return;
-    const tur = document.getElementById('cekOdeTuru').value;
+
+    const cekId = document.getElementById('cekOdeSecim').value;
+    if (!cekId) return alert('Bir çek seçiniz.');
+    const cek = tumCekler.find(c => c.id == cekId);
+    if (!cek) return alert('Seçilen çek bulunamadı.');
+
     const btn = document.getElementById('btnCekOdeKaydet');
-
+    btn.disabled = true;
     try {
-        let odemeNotu = '';
+        // Sadece kağıt takip kaydını işaretliyoruz — çek sistemine hiçbir şey yazılmaz.
+        const odemeNotu = `Çek: ${cek.cekNo} · ${para(cek.tutar)}`;
+        const { error } = await db.from('kagit_islemler').update({ odendi: true, odeme_notu: odemeNotu }).eq('id', odemeYapilacakId);
+        if (error) throw error;
 
-        if (tur === 'kasa') {
-            const cekId = document.getElementById('cekOdeKasaSecim').value;
-            if (!cekId) return alert('Bir çek seçiniz.');
-            const cek = cekPortfoyu.find(c => c.id == cekId);
-
-            if (!confirm(`"${cek.cekNo}" numaralı çek (${para(cek.tutar)}) ${t.cariUnvan} firmasına ciro edilecek.\n\nOnaylıyor musunuz?`)) return;
-
-            btn.disabled = true;
-            const { error } = await db.from('cekler').update({
-                durum: 'Ciro Edildi', banka_bilgisi: t.cariUnvan, cikis_tarihi: bugunStrKagit(),
-                son_duzenleyen_kullanici: aktifKullanici, guncelleme_tarihi: new Date()
-            }).eq('id', cekId);
-            if (error) throw error;
-
-            odemeNotu = `Çek: ${cek.cekNo} · ${para(cek.tutar)}`;
-        } else {
-            const cekNo = document.getElementById('cekOdeCekNo').value.trim();
-            const tutar = tutarOku(document.getElementById('cekOdeTutar').value);
-            const vade = document.getElementById('cekOdeVade').value;
-            const banka = document.getElementById('cekOdeBanka').value;
-            if (!cekNo || !tutar || !vade) return alert('Çek numarası, tutar ve vade giriniz.');
-
-            if (!confirm(`Yeni çek düzenlenecek:\n\n${cekNo} · ${para(tutar)} · Vade ${tarihYaz(vade)}\n${t.cariUnvan} firmasına verilecek.\n\nOnaylıyor musunuz?`)) return;
-
-            btn.disabled = true;
-            const { error } = await db.from('cekler').insert([{
-                cek_no: cekNo, cari_unvan: t.cariUnvan, tutar: tutar, vade_tarihi: vade,
-                durum: 'Ödenecek', islem_turu: 'Kendi Çekimiz', banka_adi: banka, banka_bilgisi: '',
-                giris_tarihi: bugunStrKagit(), cikis_tarihi: bugunStrKagit(), ekleyen_kullanici: aktifKullanici
-            }]);
-            if (error) throw error;
-
-            odemeNotu = `Çek: ${cekNo} · ${para(tutar)}`;
-        }
-
-        // Kağıt işlemini "ödendi" olarak işaretle
-        const { error: e2 } = await db.from('kagit_islemler').update({
-            odendi: true, odeme_notu: odemeNotu
-        }).eq('id', odemeYapilacakId);
-        if (e2) throw e2;
-
-        alert('Ödeme kaydedildi ve çek sistemine işlendi.');
         modalKapat('modalCekOde');
         await verileriYukle();
         gorunumTazele();
@@ -1109,63 +1105,84 @@ async function cekOdeKaydet() {
     }
 }
 
-// ================= NAKİT TAHSİL ET (SATIM için) =================
-function nakitTahsilModalAc(islemId) {
+// ================= ÖDEME AL (SATIM için) =================
+function odemeAlModalAc(islemId) {
     const t = islemler.find(x => x.id === islemId);
     if (!t) return;
-    if (t.tur !== 'SATIM') return alert('Nakit tahsilat sadece satım işlemleri için kullanılır.');
+    if (t.tur !== 'SATIM') return alert('Bu işlem satım değil.');
     if (t.odendi) return alert('Bu işlem zaten tahsil edilmiş olarak işaretli.');
 
     odemeYapilacakId = islemId;
 
-    document.getElementById('nakitTahsilBilgi').innerHTML = `
+    document.getElementById('odemeAlBilgi').innerHTML = `
         <div style="font-weight:700; color:var(--primary); margin-bottom:5px;">Tahsil Edilecek Satım</div>
         <div><strong>${t.cariUnvan}</strong> — ${para(t.tutar)}</div>
         <div style="color:var(--muted); margin-top:2px;">${tarihYaz(t.tarih)}${t.faturaNo ? ' · Fatura: ' + t.faturaNo : ''}</div>`;
 
-    const sec = document.getElementById('nakitTahsilHesap');
-    if (euromatHesaplar.length === 0) {
-        sec.innerHTML = '<option value="">— Önce Euromat Nakit sayfasından hesap ekleyin —</option>';
-    } else {
-        sec.innerHTML = euromatHesaplar.map(h => `<option value="${h.id}">${h.ad} ${h.tur === 'kasa' ? '(Kasa)' : '(Banka)'}</option>`).join('');
-    }
-
-    document.getElementById('nakitTahsilTutar').value = tutarYaz(t.tutar);
-    document.getElementById('nakitTahsilTarih').value = bugunStrKagit();
-    modalAc('modalNakitTahsil');
+    document.getElementById('odemeAlSekli').value = 'NAKIT';
+    odemeAlSekliDegisti();
+    modalAc('modalOdemeAl');
 }
 
-async function nakitTahsilKaydet() {
+function odemeAlSekliDegisti() {
+    const sekil = document.getElementById('odemeAlSekli').value;
+    const cekMi = (sekil === 'CEK');
+    document.getElementById('odemeAlCekAlani').classList.toggle('hidden', !cekMi);
+    document.getElementById('odemeAlNakitAlani').classList.toggle('hidden', cekMi);
+
+    if (cekMi) {
+        const t = islemler.find(x => x.id === odemeYapilacakId);
+        if (!t) return;
+
+        // Bu müşteriden çek panelinde ALINMIŞ çekleri bul (bize verdikleri çekler)
+        const cariAdi = (t.cariUnvan || '').trim().toLocaleLowerCase('tr');
+        const eslesenler = tumCekler.filter(c =>
+            (c.cariUnvan || '').trim().toLocaleLowerCase('tr') === cariAdi && c.islemTuru === 'Alınan Çek'
+        );
+
+        const sec = document.getElementById('odemeAlCekSecim');
+        const bosUyari = document.getElementById('odemeAlCekBosUyari');
+
+        if (eslesenler.length === 0) {
+            sec.innerHTML = '';
+            sec.classList.add('hidden');
+            bosUyari.classList.remove('hidden');
+        } else {
+            sec.classList.remove('hidden');
+            bosUyari.classList.add('hidden');
+            sec.innerHTML = '<option value="">Çek Seçiniz...</option>' + eslesenler.map(c =>
+                `<option value="${c.id}">${tarihYaz(c.vade)} · ${para(c.tutar)} · No: ${c.cekNo} · ${c.banka || '-'} (${c.durum})</option>`
+            ).join('');
+        }
+    }
+}
+
+async function odemeAlKaydet() {
     const t = islemler.find(x => x.id === odemeYapilacakId);
     if (!t) return;
 
-    const hesapId = document.getElementById('nakitTahsilHesap').value;
-    const tutar = tutarOku(document.getElementById('nakitTahsilTutar').value);
-    const tarih = document.getElementById('nakitTahsilTarih').value;
-    if (!hesapId) return alert('Bir hesap seçiniz.');
-    if (!tutar || tutar <= 0) return alert('Geçerli bir tutar giriniz.');
-    if (!tarih) return alert('Tarih seçiniz.');
+    const sekil = document.getElementById('odemeAlSekli').value;
+    let odemeNotu;
 
-    const hesap = euromatHesaplar.find(h => h.id === hesapId);
-    const btn = document.getElementById('btnNakitTahsilKaydet');
+    if (sekil === 'CEK') {
+        const cekId = document.getElementById('odemeAlCekSecim').value;
+        if (!cekId) return alert('Bir çek seçiniz.');
+        const cek = tumCekler.find(c => c.id == cekId);
+        if (!cek) return alert('Seçilen çek bulunamadı.');
+        odemeNotu = `Çek: ${cek.cekNo} · ${para(cek.tutar)}`;
+    } else {
+        odemeNotu = 'Nakit tahsilat';
+    }
+
+    const btn = document.getElementById('btnOdemeAlKaydet');
     btn.disabled = true;
-
     try {
-        // Euromat nakit sistemine giriş kaydı
-        const { error: e1 } = await db.from('euromat_islemler').insert([{
-            id: Date.now(), tarih, tur: 'GIRIS', hesap: hesapId, tutar,
-            kategori: 'Kağıt Satışı', aciklama: `${t.cariUnvan}${t.faturaNo ? ' - Fatura ' + t.faturaNo : ''} (Kağıt Takip)`,
-            kullanici: aktifKullaniciAdi
-        }]);
-        if (e1) throw e1;
+        // Sadece kağıt takip kaydını işaretliyoruz — Euromat'a hiçbir şey yazılmaz.
+        // Nakit girişi kullanıcı tarafından Euromat Nakit sistemine ayrıca elle yapılır.
+        const { error } = await db.from('kagit_islemler').update({ odendi: true, odeme_notu: odemeNotu }).eq('id', odemeYapilacakId);
+        if (error) throw error;
 
-        // Kağıt işlemini tahsil edildi olarak işaretle
-        const odemeNotu = `Nakit: ${hesap.ad} · ${para(tutar)}`;
-        const { error: e2 } = await db.from('kagit_islemler').update({ odendi: true, odeme_notu: odemeNotu }).eq('id', odemeYapilacakId);
-        if (e2) throw e2;
-
-        alert('Tahsilat kaydedildi ve Euromat Nakit sistemine işlendi.');
-        modalKapat('modalNakitTahsil');
+        modalKapat('modalOdemeAl');
         await verileriYukle();
         gorunumTazele();
     } catch (e) {
@@ -1175,7 +1192,7 @@ async function nakitTahsilKaydet() {
     }
 }
 
-// Yanlışlıkla işaretlenmiş ödeme durumunu geri alır (sadece etiketi kaldırır, ilgili kaydı silmez)
+// Yanlışlıkla işaretlenmiş ödeme durumunu geri alır (sadece etiketi kaldırır, çek/nakit sistemine dokunmaz)
 async function odemeBaglantisiKaldir(id) {
     if (!confirm('Ödeme/tahsilat işaretini kaldırmak istediğinize emin misiniz?\n\nNot: Çek veya nakit sistemine işlenen kayıt otomatik silinmez, sadece bu işlemin "bekliyor" durumuna dönmesini sağlar.')) return;
     try {
@@ -1209,7 +1226,7 @@ function menuAc(ev, id) {
         if (t.tur === 'ALIM') {
             odemeSecenegi = `<button onclick="menuKapat(); cekOdeModalAc(${id})" style="display:flex; align-items:center; gap:10px; width:100%; padding:9px 11px; background:none; border:none; border-radius:7px; font-size:13px; font-weight:600; color:var(--accent); cursor:pointer; font-family:inherit; text-align:left;"><i class="fa-solid fa-money-check" style="width:15px;"></i> Çekle Öde</button><div class="im-ayrac" style="height:1px; background:var(--border); margin:5px 0;"></div>`;
         } else {
-            odemeSecenegi = `<button onclick="menuKapat(); nakitTahsilModalAc(${id})" style="display:flex; align-items:center; gap:10px; width:100%; padding:9px 11px; background:none; border:none; border-radius:7px; font-size:13px; font-weight:600; color:var(--success); cursor:pointer; font-family:inherit; text-align:left;"><i class="fa-solid fa-hand-holding-dollar" style="width:15px;"></i> Nakit Tahsil Et</button><div class="im-ayrac" style="height:1px; background:var(--border); margin:5px 0;"></div>`;
+            odemeSecenegi = `<button onclick="menuKapat(); odemeAlModalAc(${id})" style="display:flex; align-items:center; gap:10px; width:100%; padding:9px 11px; background:none; border:none; border-radius:7px; font-size:13px; font-weight:600; color:var(--success); cursor:pointer; font-family:inherit; text-align:left;"><i class="fa-solid fa-hand-holding-dollar" style="width:15px;"></i> Ödeme Al</button><div class="im-ayrac" style="height:1px; background:var(--border); margin:5px 0;"></div>`;
         }
     } else {
         odemeSecenegi = `<button onclick="menuKapat(); odemeBaglantisiKaldir(${id})" style="display:flex; align-items:center; gap:10px; width:100%; padding:9px 11px; background:none; border:none; border-radius:7px; font-size:12.5px; font-weight:500; color:var(--muted); cursor:pointer; font-family:inherit; text-align:left;"><i class="fa-solid fa-rotate-left" style="width:15px;"></i> Ödeme İşaretini Kaldır</button><div class="im-ayrac" style="height:1px; background:var(--border); margin:5px 0;"></div>`;
