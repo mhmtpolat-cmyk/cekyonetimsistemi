@@ -338,8 +338,8 @@
                     <div class="metrik m-amber"><div class="lbl">Son İşlem</div><div class="val" id="cdSon" style="font-size:15px;">—</div><div class="alt" id="cdSonAlt"></div></div>
                 </div>
                 <div class="grid-2" style="margin-bottom:18px;">
-                    <div class="metrik" style="background:#fef2f2; border-color:#fecaca;"><div class="lbl" style="color:#991b1b;">Bekleyen Borcumuz <span style="font-weight:400;">(ödenmemiş alım)</span></div><div class="val" style="color:var(--danger);" id="cdBekleyenBorc">₺0</div><div class="alt" id="cdBekleyenBorcAdet"></div></div>
-                    <div class="metrik" style="background:#ecfdf5; border-color:#a7f3d0;"><div class="lbl" style="color:#065f46;">Bekleyen Alacağımız <span style="font-weight:400;">(tahsil edilmemiş satım)</span></div><div class="val" style="color:var(--success);" id="cdBekleyenAlacak">₺0</div><div class="alt" id="cdBekleyenAlacakAdet"></div></div>
+                    <div class="metrik" style="background:#fef2f2; border-color:#fecaca;"><div class="lbl" style="color:#991b1b;" id="cdBekleyenBorcEtiket">Bekleyen Borcumuz <span style="font-weight:400;">(ödenmemiş alım)</span></div><div class="val" style="color:var(--danger);" id="cdBekleyenBorc">₺0</div><div class="alt" id="cdBekleyenBorcAdet"></div></div>
+                    <div class="metrik" style="background:#ecfdf5; border-color:#a7f3d0;"><div class="lbl" style="color:#065f46;" id="cdBekleyenAlacakEtiket">Bekleyen Alacağımız <span style="font-weight:400;">(tahsil edilmemiş satım)</span></div><div class="val" style="color:var(--success);" id="cdBekleyenAlacak">₺0</div><div class="alt" id="cdBekleyenAlacakAdet"></div></div>
                 </div>
                 <div class="masa-tablo tablo-sarmal">
                     <table>
@@ -353,22 +353,41 @@
 
         <!-- ============ RAPORLAR ============ -->
         <div id="v-rapor" class="hidden">
-            <div class="header"><div><h1>Raporlar</h1><div class="alt">Dönemsel alım/satım özeti</div></div></div>
+            <div class="header">
+                <div><h1>Raporlar</h1><div class="alt">Alım/Satım ve Ödeme/Tahsilat ayrı raporlanır</div></div>
+                <select id="raporDonemTuru" onchange="raporYaz()" style="padding:7px 11px; border:1px solid var(--border); border-radius:8px; font-size:12.5px; font-weight:600; background:#fff; font-family:inherit;">
+                    <option value="AY">Aylık</option>
+                    <option value="YIL">Yıllık</option>
+                </select>
+            </div>
+
             <div class="card">
-                <h2><i class="fa-solid fa-calendar" style="color:var(--accent);"></i> Aylık Özet</h2>
+                <h2><i class="fa-solid fa-cart-shopping" style="color:var(--accent);"></i> Alım & Satım Raporu <span class="sub">ticari işlemler — ödeme/tahsilat dahil değil</span></h2>
                 <div class="tablo-sarmal">
                     <table>
-                        <thead><tr><th>Dönem</th><th style="text-align:right;">Alım</th><th style="text-align:right;">Satım</th><th style="text-align:right;">Net</th><th style="text-align:right;">İşlem</th></tr></thead>
-                        <tbody id="aylikRapor"></tbody>
-                        <tfoot id="aylikRaporAlt"></tfoot>
+                        <thead><tr><th id="alimSatimDonemBaslik">Ay</th><th style="text-align:right;">Toplam Aldıklarım</th><th style="text-align:right;">Toplam Sattıklarım</th><th style="text-align:right;">Net</th><th style="text-align:right;">İşlem</th></tr></thead>
+                        <tbody id="alimSatimRapor"></tbody>
+                        <tfoot id="alimSatimRaporAlt"></tfoot>
                     </table>
                 </div>
             </div>
+
             <div class="card">
-                <h2><i class="fa-solid fa-users" style="color:var(--accent);"></i> Cari Bazlı Özet</h2>
+                <h2><i class="fa-solid fa-money-bill-transfer" style="color:var(--accent);"></i> Ödeme & Tahsilat Raporu <span class="sub">nakit/çek hareketleri — alım/satım dahil değil</span></h2>
                 <div class="tablo-sarmal">
                     <table>
-                        <thead><tr><th>Cari</th><th style="text-align:right;">Alım</th><th style="text-align:right;">Satım</th><th style="text-align:right;">Net</th><th style="text-align:right;">İşlem</th><th>Son İşlem</th></tr></thead>
+                        <thead><tr><th id="odemeTahsilatDonemBaslik">Ay</th><th style="text-align:right;">Yaptığım Ödemeler</th><th style="text-align:right;">Aldığım Tahsilatlar</th><th style="text-align:right;">Net</th><th style="text-align:right;">İşlem</th></tr></thead>
+                        <tbody id="odemeTahsilatRapor"></tbody>
+                        <tfoot id="odemeTahsilatRaporAlt"></tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2><i class="fa-solid fa-users" style="color:var(--accent);"></i> Cari Bazlı Özet <span class="sub">tüm zamanlar</span></h2>
+                <div class="tablo-sarmal">
+                    <table>
+                        <thead><tr><th>Cari</th><th style="text-align:right;">Alım</th><th style="text-align:right;">Satım</th><th style="text-align:right;">Ödeme</th><th style="text-align:right;">Tahsilat</th><th style="text-align:right;">Kalan Borç</th><th style="text-align:right;">Kalan Alacak</th><th>Son İşlem</th></tr></thead>
                         <tbody id="cariRapor"></tbody>
                     </table>
                 </div>
@@ -824,28 +843,36 @@ function topListeYaz() {
 
 // Ana sayfa — tedarikçi/müşteri güncel bakiyeleri (her zaman tüm zamanlar, bakiye kümülatif olduğu için dönem filtresi uygulanmaz)
 function cariBakiyeleriYaz() {
-    const borclular = cariler
-        .map(c => ({ ad: c.unvan, bakiye: cariKalanBorc(c.unvan) }))
-        .filter(x => x.bakiye > 0.01)
-        .sort((a, b) => b.bakiye - a.bakiye);
+    const borcHesaplari = cariler.map(c => ({ ad: c.unvan, bakiye: cariKalanBorc(c.unvan) }));
+    const borclular = borcHesaplari.filter(x => x.bakiye > 0.01).sort((a, b) => b.bakiye - a.bakiye);
+    // Tedarikçiye fazla ödeme yapıldıysa (kalan borç negatif) — onlar bize borçlu demektir
+    const fazlaOdenenler = borcHesaplari.filter(x => x.bakiye < -0.01).map(x => ({ ad: x.ad, bakiye: Math.abs(x.bakiye) })).sort((a, b) => b.bakiye - a.bakiye);
 
-    const alacaklilar = cariler
-        .map(c => ({ ad: c.unvan, bakiye: cariKalanAlacak(c.unvan) }))
-        .filter(x => x.bakiye > 0.01)
-        .sort((a, b) => b.bakiye - a.bakiye);
+    const alacakHesaplari = cariler.map(c => ({ ad: c.unvan, bakiye: cariKalanAlacak(c.unvan) }));
+    const alacaklilar = alacakHesaplari.filter(x => x.bakiye > 0.01).sort((a, b) => b.bakiye - a.bakiye);
+    // Müşteriden fazla tahsilat yapıldıysa (kalan alacak negatif) — biz onlara borçlu demektir
+    const fazlaTahsilEdilenler = alacakHesaplari.filter(x => x.bakiye < -0.01).map(x => ({ ad: x.ad, bakiye: Math.abs(x.bakiye) })).sort((a, b) => b.bakiye - a.bakiye);
 
-    const listeYaz = (liste, renk) => {
-        if (!liste.length) return '<div class="empty">Bekleyen bakiye yok — tüm hesaplar kapalı. ✓</div>';
-        const toplam = liste.reduce((s, x) => s + x.bakiye, 0);
-        return `<div style="font-size:12px; color:var(--muted); margin-bottom:8px;">Toplam: <strong style="color:${renk};">${para(toplam)}</strong> · ${liste.length} cari</div>` +
-            liste.map(x => `<div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f2ede4; font-size:13px;">
-                <span style="font-weight:600;">${x.ad}</span>
-                <strong style="color:${renk};">${para(x.bakiye)}</strong>
-            </div>`).join('');
+    const satirlar = (liste, renk) => liste.map(x => `<div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f2ede4; font-size:13px;">
+        <span style="font-weight:600;">${x.ad}</span>
+        <strong style="color:${renk};">${para(x.bakiye)}</strong>
+    </div>`).join('');
+
+    const listeYaz = (liste, renk, ekListe, ekBaslik, ekRenk) => {
+        if (!liste.length && !ekListe.length) return '<div class="empty">Bekleyen bakiye yok — tüm hesaplar kapalı. ✓</div>';
+        let html = '';
+        if (liste.length) {
+            const toplam = liste.reduce((s, x) => s + x.bakiye, 0);
+            html += `<div style="font-size:12px; color:var(--muted); margin-bottom:8px;">Toplam: <strong style="color:${renk};">${para(toplam)}</strong> · ${liste.length} cari</div>` + satirlar(liste, renk);
+        }
+        if (ekListe.length) {
+            html += `<div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; margin:14px 0 6px 0;">${ekBaslik}</div>` + satirlar(ekListe, ekRenk);
+        }
+        return html;
     };
 
-    document.getElementById('tedarikciBakiye').innerHTML = listeYaz(borclular, 'var(--danger)');
-    document.getElementById('musteriBakiye').innerHTML = listeYaz(alacaklilar, 'var(--success)');
+    document.getElementById('tedarikciBakiye').innerHTML = listeYaz(borclular, 'var(--danger)', fazlaOdenenler, 'Fazla Ödeme Yaptıklarımız (onlar bize borçlu)', 'var(--success)');
+    document.getElementById('musteriBakiye').innerHTML = listeYaz(alacaklilar, 'var(--success)', fazlaTahsilEdilenler, 'Fazla Tahsil Ettiklerimiz (biz onlara borçluyuz)', 'var(--danger)');
 }
 
 // ================= HAREKETLER =================
@@ -917,11 +944,13 @@ function carileriYaz() {
         const bekleyenBorc = cariKalanBorc(c.unvan);
         const bekleyenAlacak = cariKalanAlacak(c.unvan);
         const son = kendi[0];
-        const bekleyenRozet = (bekleyenBorc > 0.01 || bekleyenAlacak > 0.01)
-            ? `<div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;">
-                ${bekleyenBorc > 0.01 ? `<span class="badge b-alim" style="font-size:10.5px;">Kalan Borç: ${para(bekleyenBorc)}</span>` : ''}
-                ${bekleyenAlacak > 0.01 ? `<span class="badge b-satim" style="font-size:10.5px;">Kalan Alacak: ${para(bekleyenAlacak)}</span>` : ''}
-               </div>`
+        const rozetler = [];
+        if (bekleyenBorc > 0.01) rozetler.push(`<span class="badge b-alim" style="font-size:10.5px;">Kalan Borç: ${para(bekleyenBorc)}</span>`);
+        else if (bekleyenBorc < -0.01) rozetler.push(`<span class="badge b-satim" style="font-size:10.5px;">Fazla Ödeme: ${para(Math.abs(bekleyenBorc))}</span>`);
+        if (bekleyenAlacak > 0.01) rozetler.push(`<span class="badge b-satim" style="font-size:10.5px;">Kalan Alacak: ${para(bekleyenAlacak)}</span>`);
+        else if (bekleyenAlacak < -0.01) rozetler.push(`<span class="badge b-alim" style="font-size:10.5px;">Fazla Tahsilat: ${para(Math.abs(bekleyenAlacak))}</span>`);
+        const bekleyenRozet = rozetler.length
+            ? `<div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;">${rozetler.join('')}</div>`
             : '';
         return `<div class="hesap-kart" onclick="cariDetayAc(${c.id})">
             <div class="hk-ust">
@@ -958,14 +987,37 @@ function cariDetayYaz() {
     document.getElementById('cdSatimAdet').innerText = liste.filter(t => t.tur === 'SATIM').length + ' işlem';
 
     // Kalan borç/alacak — ledger mantığı: toplam borç/alacak eksi yapılan ödeme/tahsilat hareketleri
+    // NEGATİF çıkabilir: bu, fazla ödeme/tahsilat yapıldığı ve tarafların yer değiştirdiği anlamına gelir.
     const bekleyenBorc = cariKalanBorc(c.unvan);
     const bekleyenAlacak = cariKalanAlacak(c.unvan);
     const odemeAdet = liste.filter(t => t.tur === 'ODEME').length;
     const tahsilatAdet = liste.filter(t => t.tur === 'TAHSILAT').length;
-    document.getElementById('cdBekleyenBorc').innerText = para(Math.max(bekleyenBorc, 0));
-    document.getElementById('cdBekleyenBorcAdet').innerText = bekleyenBorc > 0.01 ? (odemeAdet ? odemeAdet + ' ödeme yapıldı, kalan bu' : 'henüz ödeme yapılmadı') : 'bakiye kapalı';
-    document.getElementById('cdBekleyenAlacak').innerText = para(Math.max(bekleyenAlacak, 0));
-    document.getElementById('cdBekleyenAlacakAdet').innerText = bekleyenAlacak > 0.01 ? (tahsilatAdet ? tahsilatAdet + ' tahsilat yapıldı, kalan bu' : 'henüz tahsilat yapılmadı') : 'bakiye kapalı';
+
+    // Borç tarafı: pozitifse biz borçluyuz, negatifse fazla ödedik — onlar bize borçlu (alacaklıyız)
+    if (bekleyenBorc < -0.01) {
+        document.getElementById('cdBekleyenBorcEtiket').innerHTML = 'Fazla Ödeme <span style="font-weight:400;">(onlar bize borçlu)</span>';
+        document.getElementById('cdBekleyenBorc').innerText = para(Math.abs(bekleyenBorc));
+        document.getElementById('cdBekleyenBorc').style.color = 'var(--success)';
+        document.getElementById('cdBekleyenBorcAdet').innerText = 'fazla ödeme yaptınız — alacaklısınız';
+    } else {
+        document.getElementById('cdBekleyenBorcEtiket').innerHTML = 'Bekleyen Borcumuz <span style="font-weight:400;">(ödenmemiş alım)</span>';
+        document.getElementById('cdBekleyenBorc').innerText = para(bekleyenBorc);
+        document.getElementById('cdBekleyenBorc').style.color = 'var(--danger)';
+        document.getElementById('cdBekleyenBorcAdet').innerText = bekleyenBorc > 0.01 ? (odemeAdet ? odemeAdet + ' ödeme yapıldı, kalan bu' : 'henüz ödeme yapılmadı') : 'bakiye kapalı';
+    }
+
+    // Alacak tarafı: pozitifse bize borçlular, negatifse fazla tahsil ettik — biz onlara borçluyuz
+    if (bekleyenAlacak < -0.01) {
+        document.getElementById('cdBekleyenAlacakEtiket').innerHTML = 'Fazla Tahsilat <span style="font-weight:400;">(biz onlara borçluyuz)</span>';
+        document.getElementById('cdBekleyenAlacak').innerText = para(Math.abs(bekleyenAlacak));
+        document.getElementById('cdBekleyenAlacak').style.color = 'var(--danger)';
+        document.getElementById('cdBekleyenAlacakAdet').innerText = 'fazla tahsilat yapıldı — borçlusunuz';
+    } else {
+        document.getElementById('cdBekleyenAlacakEtiket').innerHTML = 'Bekleyen Alacağımız <span style="font-weight:400;">(tahsil edilmemiş satım)</span>';
+        document.getElementById('cdBekleyenAlacak').innerText = para(bekleyenAlacak);
+        document.getElementById('cdBekleyenAlacak').style.color = 'var(--success)';
+        document.getElementById('cdBekleyenAlacakAdet').innerText = bekleyenAlacak > 0.01 ? (tahsilatAdet ? tahsilatAdet + ' tahsilat yapıldı, kalan bu' : 'henüz tahsilat yapılmadı') : 'bakiye kapalı';
+    }
 
     if (liste.length > 0) {
         const son = liste[0];
@@ -1002,37 +1054,54 @@ function cariDetayYaz() {
 
 // ================= RAPORLAR =================
 function raporYaz() {
-    const aylar = {};
+    const donemTuru = document.getElementById('raporDonemTuru').value;   // 'AY' veya 'YIL'
+    const donemAnahtari = (tarihStr) => {
+        const d = new Date(tarihStr);
+        if (isNaN(d)) return null;
+        return (donemTuru === 'YIL')
+            ? `${d.getFullYear()}`
+            : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    };
+    const donemEtiket = (anahtar) => {
+        if (donemTuru === 'YIL') return anahtar;
+        const [yil, ay] = anahtar.split('-');
+        return `${AYLAR[parseInt(ay) - 1]} ${yil}`;
+    };
+
+    document.getElementById('alimSatimDonemBaslik').innerText = (donemTuru === 'YIL') ? 'Yıl' : 'Ay';
+    document.getElementById('odemeTahsilatDonemBaslik').innerText = (donemTuru === 'YIL') ? 'Yıl' : 'Ay';
+
+    // ================= 1) ALIM & SATIM RAPORU (ticari işlemler) =================
+    const asDonemler = {};
     islemler.forEach(t => {
-        const d = new Date(t.tarih);
-        if (isNaN(d)) return;
-        const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-        if (!aylar[k]) aylar[k] = { etiket: `${AYLAR[d.getMonth()]} ${d.getFullYear()}`, a: 0, s: 0, adet: 0 };
-        if (t.tur === 'ALIM') aylar[k].a += t.tutar; else aylar[k].s += t.tutar;
-        aylar[k].adet++;
+        if (t.tur !== 'ALIM' && t.tur !== 'SATIM') return;   // ödeme/tahsilat KESİNLİKLE dahil edilmez
+        const k = donemAnahtari(t.tarih);
+        if (!k) return;
+        if (!asDonemler[k]) asDonemler[k] = { a: 0, s: 0, adet: 0 };
+        if (t.tur === 'ALIM') asDonemler[k].a += t.tutar; else asDonemler[k].s += t.tutar;
+        asDonemler[k].adet++;
     });
 
-    const sirali = Object.keys(aylar).sort().reverse();
-    const tb = document.getElementById('aylikRapor');
-
-    if (sirali.length === 0) {
-        tb.innerHTML = '<tr><td colspan="5" class="empty">Henüz kayıt yok.</td></tr>';
-        document.getElementById('aylikRaporAlt').innerHTML = '';
+    const asSirali = Object.keys(asDonemler).sort().reverse();
+    const asTb = document.getElementById('alimSatimRapor');
+    if (asSirali.length === 0) {
+        asTb.innerHTML = '<tr><td colspan="5" class="empty">Henüz kayıt yok.</td></tr>';
+        document.getElementById('alimSatimRaporAlt').innerHTML = '';
     } else {
         let ta = 0, ts = 0, tad = 0;
-        tb.innerHTML = sirali.map(k => {
-            const a = aylar[k]; const n = a.s - a.a;
-            ta += a.a; ts += a.s; tad += a.adet;
+        asTb.innerHTML = asSirali.map(k => {
+            const d = asDonemler[k]; const n = d.s - d.a;
+            ta += d.a; ts += d.s; tad += d.adet;
             return `<tr>
-                <td><strong>${a.etiket}</strong></td>
-                <td style="text-align:right; color:var(--danger); font-weight:700;">${para(a.a)}</td>
-                <td style="text-align:right; color:var(--success); font-weight:700;">${para(a.s)}</td>
+                <td><strong>${donemEtiket(k)}</strong></td>
+                <td style="text-align:right; color:var(--danger); font-weight:700;">${para(d.a)}</td>
+                <td style="text-align:right; color:var(--success); font-weight:700;">${para(d.s)}</td>
                 <td style="text-align:right; font-weight:700; color:${n >= 0 ? 'var(--success)' : 'var(--danger)'};">${n >= 0 ? '+' : ''}${para(n)}</td>
-                <td style="text-align:right; color:var(--muted);">${a.adet}</td>
+                <td style="text-align:right; color:var(--muted);">${d.adet}</td>
             </tr>`;
         }).join('');
         const tn = ts - ta;
-        document.getElementById('aylikRaporAlt').innerHTML = `<tr>
+        document.getElementById('alimSatimRaporAlt').innerHTML = `<tr>
             <th>TOPLAM</th>
             <th style="text-align:right; color:var(--danger);">${para(ta)}</th>
             <th style="text-align:right; color:var(--success);">${para(ts)}</th>
@@ -1041,21 +1110,72 @@ function raporYaz() {
         </tr>`;
     }
 
+    // ================= 2) ÖDEME & TAHSİLAT RAPORU (nakit/çek hareketleri) =================
+    const otDonemler = {};
+    islemler.forEach(t => {
+        if (t.tur !== 'ODEME' && t.tur !== 'TAHSILAT') return;   // alım/satım KESİNLİKLE dahil edilmez
+        const k = donemAnahtari(t.tarih);
+        if (!k) return;
+        if (!otDonemler[k]) otDonemler[k] = { odeme: 0, tahsilat: 0, adet: 0 };
+        if (t.tur === 'ODEME') otDonemler[k].odeme += t.tutar; else otDonemler[k].tahsilat += t.tutar;
+        otDonemler[k].adet++;
+    });
+
+    const otSirali = Object.keys(otDonemler).sort().reverse();
+    const otTb = document.getElementById('odemeTahsilatRapor');
+    if (otSirali.length === 0) {
+        otTb.innerHTML = '<tr><td colspan="5" class="empty">Henüz ödeme/tahsilat kaydı yok.</td></tr>';
+        document.getElementById('odemeTahsilatRaporAlt').innerHTML = '';
+    } else {
+        let to = 0, tt = 0, tad2 = 0;
+        otTb.innerHTML = otSirali.map(k => {
+            const d = otDonemler[k]; const n = d.tahsilat - d.odeme;
+            to += d.odeme; tt += d.tahsilat; tad2 += d.adet;
+            return `<tr>
+                <td><strong>${donemEtiket(k)}</strong></td>
+                <td style="text-align:right; color:#2563eb; font-weight:700;">${para(d.odeme)}</td>
+                <td style="text-align:right; color:#0d9488; font-weight:700;">${para(d.tahsilat)}</td>
+                <td style="text-align:right; font-weight:700; color:${n >= 0 ? 'var(--success)' : 'var(--danger)'};">${n >= 0 ? '+' : ''}${para(n)}</td>
+                <td style="text-align:right; color:var(--muted);">${d.adet}</td>
+            </tr>`;
+        }).join('');
+        const tn2 = tt - to;
+        document.getElementById('odemeTahsilatRaporAlt').innerHTML = `<tr>
+            <th>TOPLAM</th>
+            <th style="text-align:right; color:#2563eb;">${para(to)}</th>
+            <th style="text-align:right; color:#0d9488;">${para(tt)}</th>
+            <th style="text-align:right; color:${tn2 >= 0 ? 'var(--success)' : 'var(--danger)'};">${tn2 >= 0 ? '+' : ''}${para(tn2)}</th>
+            <th style="text-align:right;">${tad2}</th>
+        </tr>`;
+    }
+
+    // ================= 3) CARİ BAZLI ÖZET (tüm zamanlar, 4 hareket türü ayrı sütun) =================
     const cr = cariler.map(c => {
         const ler = islemler.filter(t => t.cariUnvan === c.unvan);
-        let a = 0, s = 0;
-        ler.forEach(t => { if (t.tur === 'ALIM') a += t.tutar; else s += t.tutar; });
-        return { ad: c.unvan, a, s, son: ler.length ? ler[0].tarih : null, adet: ler.length };
+        let a = 0, s = 0, o = 0, t3 = 0;
+        ler.forEach(t => {
+            if (t.tur === 'ALIM') a += t.tutar;
+            else if (t.tur === 'SATIM') s += t.tutar;
+            else if (t.tur === 'ODEME') o += t.tutar;
+            else if (t.tur === 'TAHSILAT') t3 += t.tutar;
+        });
+        return {
+            ad: c.unvan, a, s, o, t: t3,
+            kalanBorc: cariKalanBorc(c.unvan), kalanAlacak: cariKalanAlacak(c.unvan),
+            son: ler.length ? ler[0].tarih : null, adet: ler.length
+        };
     }).filter(x => x.adet > 0).sort((x, y) => (y.a + y.s) - (x.a + x.s));
 
     document.getElementById('cariRapor').innerHTML = cr.length ? cr.map(c => `<tr>
         <td><strong>${c.ad}</strong></td>
         <td style="text-align:right; color:var(--danger); font-weight:700;">${para(c.a)}</td>
         <td style="text-align:right; color:var(--success); font-weight:700;">${para(c.s)}</td>
-        <td style="text-align:right; font-weight:700;">${para(c.s - c.a)}</td>
-        <td style="text-align:right; color:var(--muted);">${c.adet}</td>
+        <td style="text-align:right; color:#2563eb; font-weight:700;">${para(c.o)}</td>
+        <td style="text-align:right; color:#0d9488; font-weight:700;">${para(c.t)}</td>
+        <td style="text-align:right; font-weight:700; color:${c.kalanBorc > 0.01 ? 'var(--danger)' : (c.kalanBorc < -0.01 ? 'var(--success)' : 'var(--muted)')};">${c.kalanBorc < -0.01 ? '(' + para(Math.abs(c.kalanBorc)) + ')' : para(c.kalanBorc)}</td>
+        <td style="text-align:right; font-weight:700; color:${c.kalanAlacak > 0.01 ? 'var(--success)' : (c.kalanAlacak < -0.01 ? 'var(--danger)' : 'var(--muted)')};">${c.kalanAlacak < -0.01 ? '(' + para(Math.abs(c.kalanAlacak)) + ')' : para(c.kalanAlacak)}</td>
         <td style="color:var(--muted);">${c.son ? tarihYaz(c.son) : '—'}</td>
-    </tr>`).join('') : '<tr><td colspan="6" class="empty">Henüz kayıt yok.</td></tr>';
+    </tr>`).join('') : '<tr><td colspan="8" class="empty">Henüz kayıt yok.</td></tr>';
 }
 
 // ================= İŞLEM FORMU =================
