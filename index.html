@@ -413,7 +413,7 @@
 
 <!-- ÇEK MODALLARI -->
 <div id="modalKullaniciYonetim" class="modal-overlay"><div class="cek-modal modal-xl"><h2 style="color: var(--primary);">⚙️ Sistem Kullanıcıları Yönetimi</h2><div style="background:#fcf3cf; border:1px solid #f1c40f; padding:12px; border-radius:8px; font-size:13px; margin-bottom:15px;"><strong>ℹ️ Bilgi:</strong> Yeni kullanıcı eklemek için önce Supabase panelinden (Authentication → Users) kullanıcı oluşturmalısınız. Buradan sadece isim ve yetki bilgisi yönetilir.</div><div style="display: flex; gap: 10px; margin-bottom: 15px; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid var(--border);"><div style="flex: 1;"><label style="font-size:11px; font-weight:bold;">Kullanıcı Adı</label><input type="text" id="yeniKullaniciAdi" class="form-control" placeholder="Örn: Mehmet"></div><div style="flex: 1.5;"><label style="font-size:11px; font-weight:bold;">Ad Soyad</label><input type="text" id="yeniKullaniciAdSoyad" class="form-control" placeholder="Mehmet Polat"></div><div style="flex: 1;"><label style="font-size:11px; font-weight:bold;">Şifre</label><input type="password" id="yeniKullaniciSifre" class="form-control" placeholder="****"></div><div style="flex: 1;"><label style="font-size:11px; font-weight:bold;">Finans Yetkisi</label><select id="yeniKullaniciYetki" class="form-control"><option value="true">Açık (Görsün)</option><option value="false">Kapalı (Görmesin)</option></select></div><div style="display: flex; align-items: flex-end;"><button class="btn btn-success" onclick="dbYeniKullaniciEkle()" style="padding: 10px 15px;">+ Kullanıcı Ekle</button></div></div><div style="overflow-x:auto;"><table class="cek-table"><thead><tr><th>Giriş Adı</th><th>Ad Soyad</th><th>Şifre</th><th>Finans Yetkisi</th><th style="text-align:right;">İşlem</th></tr></thead><tbody id="tbodyKullanicilar"></tbody></table></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalKullaniciYonetim')">Kapat</button></div></div></div>
-<div id="modalMetricDetay" class="modal-overlay"><div class="cek-modal modal-large"><h2 id="metricDetayBaslik">Detay</h2><table class="cek-table"><thead><tr><th>Çek No</th><th>Cari</th><th>Banka</th><th>Vade</th><th style="text-align:right;">Tutar</th><th>Durum</th><th style="text-align:right;">İşlem</th></tr></thead><tbody id="tbodyMetricDetay"></tbody></table><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalMetricDetay')">Kapat</button></div></div></div>
+<div id="modalMetricDetay" class="modal-overlay"><div class="cek-modal modal-large"><h2 id="metricDetayBaslik">Detay</h2><table class="cek-table"><thead><tr><th>Çek No</th><th>Cari</th><th>Banka</th><th>Vade</th><th style="text-align:right;">Tutar</th><th>Durum</th><th style="text-align:right;">İşlem</th></tr></thead><tbody id="tbodyMetricDetay"></tbody></table><div class="modal-actions"><button class="btn btn-primary" onclick="metricPdfAl()"><i class="fa-solid fa-file-pdf"></i> PDF Çıktısı</button><button class="btn btn-outline" onclick="closeModal('modalMetricDetay')">Kapat</button></div></div></div>
 <div id="modalIstatistik" class="modal-overlay"><div class="cek-modal modal-xl"><h2><i class="fa-solid fa-chart-column" style="color:var(--accent);"></i> Raporlar</h2>
 
 <div class="rapor-sekme">
@@ -871,6 +871,73 @@
         return s.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
     }
 
+    let metricSonVeri = { baslik: '', data: [] };
+
+    // Açık olan çek listesini (Tahsilde / Kasada / Toplam / Ödenecek) vade ayına göre gruplu PDF olarak verir
+    function metricPdfAl() {
+        const { baslik, data } = metricSonVeri;
+        if (!data || data.length === 0) return alert('PDF için listede çek yok.');
+
+        const bugun = new Date();
+        const tarihStr = `${String(bugun.getDate()).padStart(2,'0')}.${String(bugun.getMonth()+1).padStart(2,'0')}.${bugun.getFullYear()}`;
+
+        const aylar = {};
+        data.forEach(c => {
+            const d = new Date(c.vade_tarihi);
+            const anahtar = isNaN(d) ? 'zzzz' : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            if (!aylar[anahtar]) aylar[anahtar] = { etiket: isNaN(d) ? 'Vadesiz' : `${monthNames[d.getMonth()]} ${d.getFullYear()}`, cekler: [], toplam: 0 };
+            aylar[anahtar].cekler.push(c);
+            aylar[anahtar].toplam += Number(c.tutar) || 0;
+        });
+
+        const td = 'padding:6px 8px; border-bottom:1px solid #e2e8f0;';
+        let satirlar = '', genel = 0;
+        Object.keys(aylar).sort().forEach(k => {
+            const a = aylar[k];
+            genel += a.toplam;
+            satirlar += `<tr style="background:#f1f5f9;">
+                <td colspan="4" style="padding:8px; font-weight:bold; border-top:2px solid #cbd5e1;">${a.etiket} - ${a.cekler.length} cek</td>
+                <td style="padding:8px; text-align:right; font-weight:bold; border-top:2px solid #cbd5e1;">${formatMoney(a.toplam)}</td>
+            </tr>`;
+            a.cekler.sort((x, y) => new Date(x.vade_tarihi) - new Date(y.vade_tarihi)).forEach(c => {
+                satirlar += `<tr>
+                    <td style="${td}">${c.cek_no || '-'}</td>
+                    <td style="${td}">${c.cari_unvan || '-'}</td>
+                    <td style="${td}">${c.banka_adi || c.banka_bilgisi || '-'}</td>
+                    <td style="${td}">${formatDate(c.vade_tarihi)}</td>
+                    <td style="${td} text-align:right; font-weight:bold;">${formatMoney(c.tutar)}</td>
+                </tr>`;
+            });
+        });
+
+        const html = `<div style="font-family:Arial,Helvetica,sans-serif; color:#0f172a; font-size:12px; background:#fff;">
+            <div style="border-bottom:3px solid #2563eb; padding-bottom:10px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:flex-end;">
+                <div style="font-size:18px; font-weight:bold; color:#2563eb;">${baslik}</div>
+                <div style="font-size:10.5px; color:#64748b; text-align:right;">Tarih: ${tarihStr}<br>Hazirlayan: ${aktifKullanici || '-'}</div>
+            </div>
+            <table style="width:100%; border-collapse:collapse; font-size:11px;">
+                <thead><tr style="background:#1e293b; color:#fff;">
+                    <th style="padding:8px; text-align:left;">Cek No</th>
+                    <th style="padding:8px; text-align:left;">Cari</th>
+                    <th style="padding:8px; text-align:left;">Banka</th>
+                    <th style="padding:8px; text-align:left;">Vade</th>
+                    <th style="padding:8px; text-align:right;">Tutar</th>
+                </tr></thead>
+                <tbody>${satirlar}
+                    <tr style="background:#1e293b; color:#fff;">
+                        <td colspan="4" style="padding:10px 8px; font-weight:bold;">GENEL TOPLAM - ${data.length} cek</td>
+                        <td style="padding:10px 8px; text-align:right; font-weight:bold; font-size:13px;">${formatMoney(genel)}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>`;
+
+        const kapsayici = document.createElement('div');
+        kapsayici.innerHTML = html;
+        const ad = baslik.replace(/[^a-zA-Z0-9ğüşıöçĞÜŞİÖÇ ]/g, '').trim().replace(/\s+/g, '_');
+        pdfYazdir(kapsayici, `${ad}_${tarihStr.replace(/\./g, '-')}.pdf`, false);
+    }
+
     function showMetricDetails(type) {
         let baslik = ""; let data = [];
         if(type === 'tahsilde') { baslik = "Banka Tahsildeki Çekler"; data = g_cekler.filter(c => c.durum === 'Tahsilde'); }
@@ -878,6 +945,7 @@
         if(type === 'varlik') { baslik = "Toplam Çek Varlıkları"; data = g_cekler.filter(c => c.durum === 'Kasada' || c.durum === 'Tahsilde'); }
         if(type === 'odenecek') { baslik = "Düzenlenen (Ödenecek) Çekler"; data = g_cekler.filter(c => c.durum === 'Ödenecek'); }
 
+        metricSonVeri = { baslik, data };
         document.getElementById('metricDetayBaslik').innerText = baslik;
         const tbody = document.getElementById('tbodyMetricDetay');
 
