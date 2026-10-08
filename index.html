@@ -1840,12 +1840,14 @@
 
         // html2pdf ekranda olmayan (görünmeyen) içeriği boş basar.
         // Bu yüzden geçici olarak GÖRÜNÜR alana (ekran dışına kaydırarak) ekliyoruz.
-        kapsayici.style.position = 'fixed';
+        // position:fixed + kaydırılmış sayfa = html2canvas boş çıktı verir. Bu yüzden sayfanın en üstüne,
+        // belge koordinatlarında (absolute) yerleştirip kaydırmayı sıfırlıyoruz.
+        window.scrollTo(0, 0);
+        kapsayici.style.position = 'absolute';
         kapsayici.style.left = '0';
         kapsayici.style.top = '0';
         kapsayici.style.width = '850px';
         kapsayici.style.zIndex = '-1';
-        kapsayici.style.opacity = '1';
         kapsayici.style.background = '#fff';
         document.body.appendChild(kapsayici);
 
@@ -1862,7 +1864,7 @@
                     margin: 10,
                     filename: dosyaAdi,
                     image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2, useCORS: true, windowWidth: 850, backgroundColor: '#ffffff' },
+                    html2canvas: { scale: 2, useCORS: true, windowWidth: 850, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0, x: 0, y: 0 },
                     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
                 }).from(kapsayici).save()
                   .then(() => { kapsayici.remove(); closeModal('modalTaslakCikis'); })
@@ -2000,24 +2002,28 @@
         });
 
         // html2pdf ekranda olmayan içeriği boş basar — geçici olarak sayfaya ekliyoruz
-        kapsayici.style.position = 'fixed';
-        kapsayici.style.left = '-10000px';
+        window.scrollTo(0, 0);
+        kapsayici.style.position = 'absolute';
+        kapsayici.style.left = '0';
         kapsayici.style.top = '0';
         kapsayici.style.width = '1120px';
+        kapsayici.style.zIndex = '-1';
         kapsayici.style.background = '#fff';
         document.body.appendChild(kapsayici);
 
         const dosyaAdi = `Ekstre_${cari.unvan.replace(/[^a-zA-Z0-9ğüşıöçĞÜŞİÖÇ ]/g,'').replace(/\s+/g,'_')}_${tarihStr.replace(/\./g,'-')}.pdf`;
 
-        html2pdf().set({
-            margin: 8,
-            filename: dosyaAdi,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, windowWidth: 1120 },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
-        }).from(kapsayici).save()
-          .then(() => kapsayici.remove())
-          .catch((e) => { kapsayici.remove(); alert('PDF oluşturulamadı: ' + e.message); });
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            html2pdf().set({
+                margin: 8,
+                filename: dosyaAdi,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, windowWidth: 1120, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0, x: 0, y: 0 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            }).from(kapsayici).save()
+              .then(() => kapsayici.remove())
+              .catch((e) => { kapsayici.remove(); alert('PDF oluşturulamadı: ' + e.message); });
+        }));
     }
 
     // ================= ÇEK İADESİ / DEĞİŞİMİ =================
